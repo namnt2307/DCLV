@@ -1,0 +1,25 @@
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+.header {
+    display: flex;
+    height: 150px;
+    width: 100%;
+    background-image: linear-gradient(to right , #3092f4 , #00a9f7 , #00bae0 , #00c5b7 , #28cc88);
+}
+.header .left-header {
+    width: 500px;
+    display: flex;
+    padding-left: 50px;
+    padding-top: 15px;
+}
+.header .left-header img {
+    width: 120px;
+    height: 120px;
+}
+.header .left-header h3 {
+    padding-left: 20px;
+    padding-top: 30px;
+}

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>FHIR Index</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/index.css'%}">
+</head>
+<body>
+    <div class="header">
+        <div class="left-header">
+            <img src="{% static 'img/logo.png'%}" alt="logo-bach-khoa">
+            <h3> FHIR WEBSITE</h3>
+        </div>
+        <div class="right-header">
+            {% block login %}
+            {% endblock %}
+        </div>
+    </div>
+    <div class="body">
+        <div class="left-body">
+            <ul>
+                <li> HO SO 1</li>
+                <li> HO SO 2</li>
+                <li> HO SO 3</li>
+                <li> HO SO 4</li>
+            </ul>
+        </div>
+        <div class="right-body">
+
+        </div>
+    </div>
+    <div class="footer"></div>
+</body>
+</html>

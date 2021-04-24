@@ -1,0 +1,11 @@
+.header .right-header {
+    width: 100%;
+    display: block;
+    padding-top: 20px;
+    padding-left: 60%;
+}
+.header .right-header .login-button {
+    background-color: rgb(34, 209, 101);
+    height: 25px;
+    width: 50px;
+}
