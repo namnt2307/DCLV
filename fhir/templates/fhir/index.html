@@ -15,24 +15,21 @@
             <img src="{% static 'img/logo.png'%}" alt="logo-bach-khoa">
             <h3> FHIR WEBSITE</h3>
         </div>
-        <div class="right-header">
-            {% block login %}
-            {% endblock %}
-        </div>
     </div>
-    <div class="body">
-        <div class="left-body">
-            <ul>
-                <li> HO SO 1</li>
-                <li> HO SO 2</li>
-                <li> HO SO 3</li>
-                <li> HO SO 4</li>
-            </ul>
-        </div>
-        <div class="right-body">
 
-        </div>
+    <div class="body">
+        {% load auth_extras %}
+        {% if request.user|has_group:"doctor" %} 
+            {% block doctor %}
+            {% endblock %}
+        {% elif request.user|has_group:"patient" %}
+            {% block patient %}
+            {% endblock %}
+        {% endif %}
     </div>
-    <div class="footer"></div>
+    
+    <div class="footer">
+
+    </div>
 </body>
 </html>
