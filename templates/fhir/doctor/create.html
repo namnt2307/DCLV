@@ -1,0 +1,37 @@
+{% extends 'fhir/doctor.html' %}
+{% block function %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/fhir/doctor.css'%}">
+<link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+<script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
+<script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+    <div class="create">
+        <form class="create-form"action="{% url 'fhir:register' user_name group_name %}" method="post">
+            {% csrf_token %}   
+            <label for="ho_ten">Họ và tên</label>
+            <input type="text" name="ho_ten" id="ho_ten" placeholder="Nhập vào họ và tên bệnh nhân">
+            <br>
+            <br>
+            <input type="radio" name="gioi_tinh" value="Nam" id="nam">
+            <label for="nam">Nam</label>
+            <br>
+            <input type="radio" name="gioi_tinh" value="Nữ" id='nu'>
+            <label for="nu">Nữ</label>
+            <br>
+            <br>
+            <label for="ngay_sinh">Ngày sinh</label>
+            <input type="date" name="ngay_sinh" id="ngay_sinh">
+            <br>
+            <br>
+            <label for="dia_chi">Địa chỉ</label>
+            <input type="text" name="dia_chi" id="dia_chi" placeholder="Số nhà; Thôn, phố; Xã, phường; Huyện (Q, Tx); Tỉnh, thành phố">
+            <br>
+            <br>
+            <label for="noi_lam_viec">Nơi làm việc</label>
+            <input type="text" name="noi_lam_viec" id="noi_lam_viec" placeholder="Số nhà; Thôn, phố; Xã, phường; Huyện (Q, Tx); Tỉnh, thành phố">
+            <br>
+            <br>
+            <input type="submit" value="Submit">
+        </form>   
+    </div> 
+{% endblock %}

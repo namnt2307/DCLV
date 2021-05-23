@@ -1,3 +1,4 @@
 djongo
 django
 django-restframework
+openpyxl

@@ -1,0 +1,10 @@
+>>> from django.contrib.auth import get_user_model
+>>> User = get_user_model()
+>>> a = User.objects.filter(username="doctor")
+>>> a = User.objects.get(id="2")
+a.group_name
+>>> User = get_user_model()
+create
+set pass
+save
+

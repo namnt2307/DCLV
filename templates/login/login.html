@@ -4,16 +4,45 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <title>Document</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/login/login.css'%}">
 </head>
 <body>
-    <div class="login">
-        <form action="" method="post">
-            {% csrf_token %}
-            <input type="text" name="username">
-            <input type="password" name="password">
-            <input type="submit" value="Dang nhap">
-        </form>
+
+<div class="simple-login-container">
+    <div class="header">
+        <h2>Login</h2>
     </div>
+    <form action="" method="post">
+        {% csrf_token %}
+        <div class="row">
+            <div class="col-md-12 form-group">
+                <input type="text" class="form-control" placeholder="Username" name="username" id=>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12 form-group">
+                <input type="password" placeholder="Enter your Password" class="form-control" name="password">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12 form-group">
+                <input type="submit" class="btn btn-block btn-login" placeholder="Enter your Password" >
+            </div>
+        </div>
+        <div class="register">
+            <h4>
+                <a href="{% url 'login:register'%}" >Register</a>
+            </h4>
+            <h4>
+                <a href="">Forgot password?</a>
+            </h4>
+        </div>
+    </form>
+</div>
 </body>
 </html>

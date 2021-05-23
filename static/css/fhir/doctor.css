@@ -1,0 +1,44 @@
+.body {
+    padding-top: 50px;
+    padding-left: 20px;
+    display: flex;
+}
+.left-body ul  {
+    list-style-type: none;
+    width: 150px;
+}
+.verticle-line {
+    width: 1px;
+    background-color: rgb(209, 209, 209);
+    height: 700px;
+}
+
+.right-body {
+    padding-top: 50px;
+    margin-left: 150px;
+    width: 10000px;
+}
+.right-body .search {
+    padding-left: 150px;
+    display: flex;
+}
+
+.right-body .search input {
+    padding-left: 20px;
+    height: 35px;
+    width: 500px;
+    border-radius: 8px;
+    font-size: medium;
+}
+.right-body .create {
+    padding-top: 50px;
+}
+.right-body .create input {
+    border: none;
+    background: transparent;
+    border-bottom: 1px solid rgb(0, 0, 0);
+    outline: none;
+}
+.right-body .create input:focus {
+    border-color: rgb(75, 21, 21);
+}

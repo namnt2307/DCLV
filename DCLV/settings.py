@@ -78,11 +78,15 @@ WSGI_APPLICATION = 'DCLV.wsgi.application'
 
 DATABASES = {
     'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    },
+    'data': {
         'ENGINE': 'djongo',
         'NAME': 'data',
         'CLIENT' : {
         'host': 'localhost',
-        'port': 27018,
+        'port': 27017,
         'username': 'nam',
         'password': 'nam123',
         'authSource': 'data'}
@@ -122,6 +126,7 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
+AUTH_USER_MODEL = 'login.myUser'
 
 
 # Static files (CSS, JavaScript, Images)
@@ -131,4 +136,8 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     BASE_DIR / "static",
     '/var/www/static/',
+]
+STATICFILES_FINDERS = [
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 ]

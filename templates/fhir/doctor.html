@@ -1,6 +1,25 @@
 {% extends 'fhir/index.html' %}
 {% block doctor %}
-    <div class="name">
-        <h1>bacsi</h1>
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/fhir/doctor.css'%}">
+<link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+<script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
+<script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+    <div class="left-body">
+        <ul>
+            <li><a href="{% url 'fhir:register' user_name group_name %}"> Tao ho so </a></li>
+            <li><a href="{% url 'fhir:upload' user_name group_name %}"> Upload Excel </a></li>
+            <li><a href="{% url 'fhir:search' user_name group_name %}"> Tim kiem ho so benh nhan </a></li>
+        </ul>
+    </div>
+    <div class="verticle-line"></div>
+    <div class="right-body">
+        {%if message%}
+            <script>
+                alert('{{message}}');
+            </script>
+        {% endif %}
+        {% block function %}
+        {% endblock %}
     </div>
 {% endblock %}
