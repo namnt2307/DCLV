@@ -8,21 +8,21 @@ import xml.etree.ElementTree as ET
 import requests
 import uuid
 from lib import dttype as dt
+ns = {'d':"http://hl7.org/fhir"}
+
 # Create your views here.
 @login_required(login_url='/login/')
 def user_app(request,group_name,user_name):
     User = get_user_model()
-    user_id = User.objects.get(username=user_name).id
     group_name = User.objects.get(username=user_name).group_name
     page = 'fhir/' + str(group_name) + '.html'
-    return render(request,page,{'user_id':user_id,'group_name':group_name,'user_name':user_name})
+    return render(request,page,{'group_name':group_name,'user_name':user_name})
 
 
 class register(View):
     def get(self,request,group_name,user_name):
         User = get_user_model()
-        user_id = User.objects.get(username=user_name).id
-        return render(request,'fhir/doctor/create.html',{'user_id':user_id,'group_name':group_name,'user_name':user_name})
+        return render(request,'fhir/doctor/create.html',{'group_name':group_name,'user_name':user_name})
     
     def post(self, request,group_name,user_name):
         if request.POST:
@@ -277,20 +277,76 @@ class upload(View):
                         text = ET.tostring(root, encoding="us-ascii", method="xml", xml_declaration=None, default_namespace=None, short_empty_elements=True)
                         post_req = requests.post("http://hapi.fhir.org/baseR4/Observation/", headers={'Content-type': 'application/xml'}, data=text.decode('utf-8'))
                         
-                return render(request, 'fhir/doctor/display.html', {'message': 'Upload successful', 'patient': data['Patient'],'group_name':group_name,'user_name':user_name})
+                return render(request, 'fhir/doctor/display.html', {'message': 'Upload successful', 'data': data,'group_name':group_name,'user_name':user_name})
             else: return render(request, 'fhir/doctor.html',{'message': 'Failed to create resource, please check your file!','group_name':group_name,'user_name':user_name})
         else: return render(request, 'fhir/doctor.html',{'message':'Please upload your file!','group_name':group_name,'user_name':user_name})
 
 class search(View):
     def get(self,request,group_name,user_name):
         return render(request,'fhir/doctor/search.html',{'group_name':group_name,'user_name':user_name})
-    
     def post(self, request,group_name,user_name):
         if request.POST:
             x = requests.get("http://hapi.fhir.org/baseR4/Patient?identifier=urn:trinhcongminh|" + request.POST['identifier'], headers={'Content-type': 'application/xml'})
             if x.status_code == 200 and 'entry' in x.content.decode('utf-8'):
-                return render(request, 'fhir/doctor.html', {'message': 'Patient data existed','group_name':group_name,'user_name':user_name})
+                data={'Patient':{}, 'Encounter':{}}
+                get_root = ET.fromstring(x.content.decode('utf-8'))
+                entry = get_root.find('d:entry', ns)
+                resource = entry.find('d:resource', ns)
+                patient_resource = resource.find('d:Patient', ns)
+                data['Patient']['identifier'] = request.POST['identifier']
+                name_resource = patient_resource.find('d:name', ns)
+                data['Patient']['name'] = name_resource.find('d:family', ns).attrib['value'] +' '+ name_resource.find('d:given', ns).attrib['value']
+                if patient_resource.find('d:gender', ns).attrib['value'] == 'male':
+                    data['Patient']['gender'] = 'Nam'
+                elif patient_resource.find('d:gender', ns).attrib['value'] == 'female':
+                    data['Patient']['gender'] = 'Nữ'
+                data['Patient']['birthDate'] = patient_resource.find('d:birthDate', ns).attrib['value']
+                data['Patient']['address'] = []
+                for address in patient_resource.findall('d:address', ns):
+                    data['Patient']['address'].append({'use':address.find('d:use', ns).attrib['value'], 'address':address.find('d:line', ns).attrib['value']+','+address.find('d:district', ns).attrib['value']+','+address.find('d:city', ns).attrib['value']})
+                get_encounter = requests.get("http://hapi.fhir.org/baseR4/Encounter?subject.identifier=urn:trinhcongminh|" + request.POST['identifier'], headers={'Content-type': 'application/xml'})
+                if get_encounter.status_code == 200 and 'entry' in get_encounter.content.decode('utf-8'):
+                    get_root = ET.fromstring(get_encounter.content.decode('utf-8'))
+                    data['Encounter']=[]
+                    for entry in get_root.findall('d:entry', ns):
+                        resource = entry.find('d:resource', ns)
+                        encounter_resource = resource.find('d:Encounter', ns)
+                        encounter_id = encounter_resource.find('d:id', ns).attrib['value']
+                        period = encounter_resource.find('d:period', ns)
+                        start_date = period.find('d:start', ns).attrib['value']
+                        data['Encounter'].append({'id': encounter_id, 'start_date': start_date})
+                        print(encounter_id)
+                return render(request, 'fhir/doctor/display.html', {'message': 'Upload successful','data': data,'group_name':group_name,'user_name':user_name})
             else: 
                 return render(request, 'fhir/doctor.html', {'message': 'Patient not found in database','group_name':group_name,'user_name':user_name})
         else:
-            return render(request, 'fhir/doctor.html', {'message':'Please enter an identifier', 'group_name':group_name,'user_name':user_name})
+            return render(request, 'fhir/doctor.html', {'message':'Please enter an identifier','group_name':group_name,'user_name':user_name})    
+
+class display_observation(View):
+    def get(self,request,group_name,user_name, encounter_id ):
+        data = {'Encounter':{}, 'Observation':[]}
+        get_encounter =  requests.get("http://hapi.fhir.org/baseR4/Encounter/" + str(encounter_id), headers={'Content-type': 'application/xml'})
+        if get_encounter.status_code == 200:
+            get_root = ET.fromstring(get_encounter.content.decode('utf-8'))
+            data['Encounter']['id'] = get_root.find('d:id', ns).attrib['value']
+            period = get_root.find('d:period', ns)
+            data['Encounter']['start_date'] = period.find('d:start', ns).attrib['value']
+
+            get_observation = requests.get("http://hapi.fhir.org/baseR4/Observation?encounter=" + str(encounter_id), headers={'Content-type': 'application/xml'})
+            if get_observation.status_code == 200 and 'entry' in get_observation.content.decode('utf-8'):
+                get_root = ET.fromstring(get_observation.content.decode('utf-8'))
+                observation = []
+                for entry in get_root.findall('d:entry', ns):
+                    resource = entry.find('d:resource', ns)
+                    observation_resource = resource.find('d:Observation', ns)
+                    code = observation_resource.find('d:code', ns)
+                    coding = code.find('d:coding', ns)
+                    display = coding.find('d:display', ns).attrib['value']
+                    quantity = observation_resource.find('d:valueQuantity', ns)
+                    value = quantity.find('d:value', ns).attrib['value'] + quantity.find('d:unit', ns).attrib['value'] 
+                    data['Observation'].append({'display': display, 'value': value})
+                return render(request, 'fhir/observation.html', {'data': data,'group_name':group_name,'user_name':user_name})
+            else: 
+                return render(request, 'fhir/doctor.html', {'message': "No data found",'group_name':group_name,'user_name':user_name})
+        else:
+            return render(request, 'fhir/doctor.html', {'message': 'Something wrong','group_name':group_name,'user_name':user_name})
