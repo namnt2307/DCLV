@@ -316,7 +316,7 @@ class search(View):
                         start_date = period.find('d:start', ns).attrib['value']
                         data['Encounter'].append({'id': encounter_id, 'start_date': start_date})
                         print(encounter_id)
-                return render(request, 'fhir/doctor/display.html', {'message': 'Upload successful','data': data,'group_name':group_name,'user_name':user_name})
+                return render(request, 'fhir/doctor/display.html', {'message': 'Da tim thay','data': data,'group_name':group_name,'user_name':user_name})
             else: 
                 return render(request, 'fhir/doctor.html', {'message': 'Patient not found in database','group_name':group_name,'user_name':user_name})
         else:

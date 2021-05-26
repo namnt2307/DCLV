@@ -34,4 +34,3 @@ class register_app(View):
                 return HttpResponse('Dang ki thanh cong')
             else:
                 return HttpResponse('Khong hop le')
-

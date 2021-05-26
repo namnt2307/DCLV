@@ -1,3 +1,38 @@
+.top-menu {
+    background-color: #3092f4;
+
+}
+.top-menu ul {
+    list-style: none;
+    display: flex;
+    height: 52px;
+    width: 900px;
+    margin-left: 100px;
+}
+.top-menu ul li {
+    margin-left: auto;
+    margin-right: auto  ;
+    padding-top: 15px;
+    color: white;
+    font-size: large;
+    text-transform: uppercase;
+    display: block;
+    transition: 0.3s;
+}
+.top-menu a{ 
+    color: white;
+    width: 100%;
+    text-align: center;
+
+}
+.top-menu ul li:hover {
+    background: #1c74d1;
+}
+.top-menu a:hover {
+    color: white;
+}
+
+
 .body {
     padding-top: 50px;
     padding-left: 20px;
@@ -41,4 +76,9 @@
 }
 .right-body .create input:focus {
     border-color: rgb(75, 21, 21);
+}
+.top-menu ul li {
+    display: flex;
+    width: 100%;
+    height: 50px;
 }

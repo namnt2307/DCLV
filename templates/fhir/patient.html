@@ -1,15 +1,17 @@
-{% extends 'fhir/index.html'%}
+{% extends 'fhir/index.html' %}
 
 {% block patient %}
-    <div class="left-body">
-        <ul>
-            <h3> benh nhan co id</h3>
-            <li>HO SO 1</li>
-            <li>HO SO 2</li>
-            <li>HO SO 3</li>
-        </ul>
-    </div>
-    <div class="right-body">
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/fhir/doctor.css'%}">
+<link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+<script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+<script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
 
-    </div>
+<div class="top-menu">
+    <ul class="menu">
+        <li><a href="{% url 'fhir:user_detail' user_name group_name %}"><i class="fa fa-home" aria-hidden="true"></i> </a></li>
+        <li><a href=""> Xem thong tin </a></li>
+    </ul>
+</div>
 {% endblock %}

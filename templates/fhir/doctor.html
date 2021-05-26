@@ -4,7 +4,19 @@
 <link rel="stylesheet" href="{% static 'css/fhir/doctor.css'%}">
 <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
 <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
 <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+
+<div class="top-menu">
+    <ul class="menu">
+        <li><a href="{% url 'fhir:user_detail' user_name group_name %}"><i class="fa fa-home" aria-hidden="true"></i> </a></li>
+        <li><a href="{% url 'fhir:register' user_name group_name %}"> Tao ho so </a></li>
+        <li><a href="{% url 'fhir:upload' user_name group_name %}"> Upload Excel </a></li>
+        <li><a href="{% url 'fhir:search' user_name group_name %}"> Tim kiem ho so</a></li>
+    </ul>
+</div>
+
+<div class="body">
     <div class="left-body">
         <ul>
             <li><a href="{% url 'fhir:register' user_name group_name %}"> Tao ho so </a></li>
@@ -22,4 +34,6 @@
         {% block function %}
         {% endblock %}
     </div>
+</div>
+
 {% endblock %}
