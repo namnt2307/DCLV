@@ -80,16 +80,6 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    },
-    'data': {
-        'ENGINE': 'djongo',
-        'NAME': 'data',
-        'CLIENT' : {
-        'host': 'localhost',
-        'port': 27017,
-        'username': 'nam',
-        'password': 'nam123',
-        'authSource': 'data'}
     }
 }
 

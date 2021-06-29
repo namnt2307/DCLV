@@ -1,10 +1,8 @@
 from django import forms
-from django.contrib import admin
-from django.contrib.auth.models import Group
-from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from django.contrib.auth.forms import ReadOnlyPasswordHashField
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
+from lib.tools import generate_password
+
 
 
 class UserCreationForm(forms.ModelForm):
@@ -16,6 +14,7 @@ class UserCreationForm(forms.ModelForm):
     class Meta:
         model = get_user_model()
         fields = ('username', 'email', 'user_identifier','group_name', 'password1','password2' )
+        # fields = ('username','full_name','gender','birth_date','home_address','work_address', 'email', 'user_identifier','group_name', 'password1','password2' )
 
     def clean_password2(self):
         # Check that the two password entries match
@@ -29,6 +28,15 @@ class UserCreationForm(forms.ModelForm):
         # Save the provided password in hashed format
         user = super().save(commit=False)
         user.set_password(self.cleaned_data["password1"])
+        if commit:
+            user.save()
+        return user
+
+    def register_save(self,commit=True):
+        username = self.cleaned_data.get('user_identifier')
+        user = super().save(commit=False)
+        user.create_user(username=username)
+        user.set_password('nam12345')
         if commit:
             user.save()
         return user

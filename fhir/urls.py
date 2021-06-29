@@ -10,4 +10,5 @@ urlpatterns = [
     path('<str:group_name>/<str:user_name>/upload/',views.upload.as_view(),name="upload"),
     path('<str:group_name>/<str:user_name>/search/',views.search.as_view(),name="search"),
     path('<str:group_name>/<str:user_name>/observation/<int:encounter_id>', views.display_observation.as_view(), name='observation'),
+    path('<str:group_name>/<str:user_name>/patient-view/',views.patient_view,name="patient-view"),
     ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

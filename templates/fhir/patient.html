@@ -1,5 +1,4 @@
 {% extends 'fhir/index.html' %}
-
 {% block patient %}
 {% load static %}
 <link rel="stylesheet" href="{% static 'css/fhir/doctor.css'%}">
@@ -11,7 +10,30 @@
 <div class="top-menu">
     <ul class="menu">
         <li><a href="{% url 'fhir:user_detail' user_name group_name %}"><i class="fa fa-home" aria-hidden="true"></i> </a></li>
-        <li><a href=""> Xem thong tin </a></li>
+        <li><a href="{% url 'fhir:patient-view' user_name group_name %}"> Xem hồ sơ </a></li>
+        <li><a href=""> Cập nhật thông tin </a></li>
+        <li><a href="{% url 'fhir:search' user_name group_name %}"> Tim kiem ho so</a></li>
     </ul>
 </div>
+
+<div class="body">
+    <div class="left-body">
+        <ul>
+            <li><a href=""> Func1 </a></li>
+            <li><a href=""> Func2 </a></li>
+            <li><a href=""> Func3 </a></li>
+        </ul>
+    </div>
+    <div class="verticle-line"></div>
+    <div class="right-body">
+        {%if message%}
+            <script>
+                alert('{{message}}');
+            </script>
+        {% endif %}
+        {% block function %}
+        {% endblock %}
+    </div>
+</div>
+
 {% endblock %}

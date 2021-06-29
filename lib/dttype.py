@@ -1,5 +1,6 @@
 import xml.etree.ElementTree as ET
 
+
 def identifier_type(resource, system, value, use="usual", _type=None, period=None, assigner=None):
     ET.SubElement(resource, 'use value=\"{}\"'.format(use))
     if _type:
@@ -12,24 +13,27 @@ def identifier_type(resource, system, value, use="usual", _type=None, period=Non
         period_type(period_res, period)
     if assigner:
         assigner_res = ET.SubElement(resource, 'assigner')
-        reference_type(assigner_res, assigner.reference, assigner._type, assigner_res.identifier)
-    
+        reference_type(assigner_res, assigner.reference,
+                       assigner._type, assigner_res.identifier)
+
 
 def period_type(resource, start=None, end=None):
     if start:
-        ET.SubElement(resource, 'start value=\"{}\"'.format(start))     
-    if end:       
+        ET.SubElement(resource, 'start value=\"{}\"'.format(start))
+    if end:
         ET.SubElement(resource, 'end value=\"{}\"'.format(end))
 
 
-def reference_type(resource, reference, _type, identifier = None, display=None):
+def reference_type(resource, reference, _type, identifier=None, display=None):
     ET.SubElement(resource, 'reference value=\"{}\"'.format(reference))
     ET.SubElement(resource, 'type value=\"{}\"'.format(_type))
-    if identifier:    
+    if identifier:
         _identifier = ET.SubElement(resource, 'identifier')
-        identifier_type(_identifier, identifier.get('system'), identifier.get('value'), identifier.get('use'), identifier.get('type'), identifier.get('period'), identifier('assigner'))
+        identifier_type(_identifier, identifier.get('system'), identifier.get('value'), identifier.get(
+            'use'), identifier.get('type'), identifier.get('period'), identifier('assigner'))
     if display:
         ET.SubElement(resource, 'display value=\"{}\"'.format(display))
+
 
 def name_type(resource, name, text=None, use=None):
     fam_name = name.split(' ')[0]
@@ -41,7 +45,7 @@ def name_type(resource, name, text=None, use=None):
         ET.SubElement(resource, 'text value=\"{}\"'.format(text))
     ET.SubElement(resource, 'family value=\"{}\"'.format(fam_name))
     ET.SubElement(resource, 'given value=\"{}\"'.format(given_name))
-    
+
 
 def address_type(resource, address, postalCode=None, country=None, use=None, type_=None):
     city = address.split(', ')[-1]
@@ -84,14 +88,17 @@ def contactpoint_type(resource, system, value, use=None, rank=None, period=None)
     if period:
         period_type(resource, period)
 
+
 def codeable_concept(resource, num_code, codes, text=None):
     for i in range(num_code):
         coding = ET.SubElement(resource, 'coding')
-        coding_type(coding, codes['codes'][i].get('system'), codes['codes'][i].get('code'), codes['codes'][i].get('display'))
+        coding_type(coding, codes['codes'][i].get('system'), codes['codes'][i].get(
+            'code'), codes['codes'][i].get('display'))
     if text:
         ET.SubElement(resource, 'text value=\"{}\"'.format(text))
 
-def quantity_type(resource, value, unit, system, code,comparator=None):
+
+def quantity_type(resource, value, unit, system, code, comparator=None):
     ET.SubElement(resource, 'value value=\"{}\"'.format(value))
     if comparator:
         ET.SubElement(resource, 'comparator value=\"{}\"'.format(comparator))
@@ -99,21 +106,29 @@ def quantity_type(resource, value, unit, system, code,comparator=None):
     ET.SubElement(resource, 'system value=\"{}\"'.format(system))
     ET.SubElement(resource, 'code value=\"{}\"'.format(code))
 
+
 def money_type(resource, value, currency):
     ET.SubElement(resource, 'value value=\"{}\"'.format(value))
     ET.SubElement(resource, 'currency value=\"{}\"'.format(currency))
 
+
 def range_type(resource, low_limit, high_limit):
     low = ET.SubElement(resource, 'low')
-    quantity_type(low, low_limit.value, low_limit.comparator, low_limit.unit, low_limit.system, low_limit.code)
+    quantity_type(low, low_limit.value, low_limit.comparator,
+                  low_limit.unit, low_limit.system, low_limit.code)
     high = ET.SubElement(resource, 'high')
-    quantity_type(high, high_limit.value, high_limit.comparator, high_limit.unit, high_limit.system, high_limit.code)
+    quantity_type(high, high_limit.value, high_limit.comparator,
+                  high_limit.unit, high_limit.system, high_limit.code)
+
 
 def ratio_type(resource, numerator_value, denominator_value):
     numerator = ET.SubElement(resource, 'numerator')
-    quantity_type(numerator, numerator_value.value, numerator_value.comparator, numerator_value.unit, numerator_value.system, numerator_value.code)
+    quantity_type(numerator, numerator_value.value, numerator_value.comparator,
+                  numerator_value.unit, numerator_value.system, numerator_value.code)
     denominator = ET.SubElement(resource, 'denominator')
-    quantity_type(denominator, denominator_value.value, denominator_value.comparator, denominator_value.unit, denominator_value.system, denominator_value.code)
+    quantity_type(denominator, denominator_value.value, denominator_value.comparator,
+                  denominator_value.unit, denominator_value.system, denominator_value.code)
+
 
 def duration_type(resource, value, unit, system, code):
     ET.SubElement(resource, 'value value=\"{}\"'.format(value))

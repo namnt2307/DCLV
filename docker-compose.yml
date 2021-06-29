@@ -7,15 +7,15 @@ services:
       - MONGODB_ROOT_PASSWORD=root
       - MONGODB_USERNAME=nam
       - MONGODB_PASSWORD=nam123
-      - MONGODB_DATABASE=data 
+      - MONGODB_DATABASE=data
       - MONGODB_PORT_NUMBER=27018
     volumes:
       - ./data:/bitnami/mongodb/
     network_mode: host
     restart: always
-  Django:
-    depends_on: mongodb 
-    build:
-      dockerfile: Dockerfile
-      context: .
-    network_mode: host
+  # Django:
+  #   depends_on: mongodb 
+  #   build:
+  #     dockerfile: Dockerfile
+  #     context: .
+  #   network_mode: host

@@ -1,7 +1,5 @@
 {% extends 'fhir/doctor.html' %}
 {%block function %}
-        {{ data }}
-        {{ message }}
         <h1>Thông tin bệnh nhân</h1>
         <p>Mã y tế: {{data.Patient.identifier}}</p>
         <p>Họ và tên: {{data.Patient.name}}</p>
@@ -14,12 +12,7 @@
                 <p>Nơi làm việc: {{addr.address}}</p>
             {%endif%}
         {%endfor%}
-        {%if data.Encounter%}
-            {%for encounter in data.Encounter%}
-                <a href="{% url 'fhir:observation' group_name user_name encounter.id %}">Lần thăm khám ngày {{encounter.start_date}}</a>
-                <br>
-            {%endfor%}
-        {%endif%}
+
         <button id="myButton" class="float-left submit-button" >Home</button>
 
         <script type="text/javascript">
