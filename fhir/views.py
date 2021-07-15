@@ -41,7 +41,7 @@ def patient_view(request, group_name, user_name):
         message = 'Đây là hồ sơ của bạn'
     else:
         message = 'Bạn chưa có hồ sơ khám bệnh'
-    return render(request, 'fhir/patient/display.html', {'group_name': group_name, 'user_name': user_name,'id':user_id, 'patient': patient, 'message': message})
+    return render(request, 'fhir/patient/display.html', {'group_name': group_name, 'user_name': user_name, 'id': user_id, 'patient': patient, 'message': message})
 
 
 class register(View):
