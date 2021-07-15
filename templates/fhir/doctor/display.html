@@ -15,10 +15,16 @@
             {%endif%}
         {%endfor%}
         {%if data.Encounter%}
-            {%for encounter in data.Encounter%}
-                <a href="{% url 'fhir:observation' group_name user_name encounter.id %}">Lần thăm khám ngày {{encounter.start_date}}</a>
+           {%if data.encounter_type == 'list'%}
+                {%for encounter in data.Encounter%}
+                    <a href="{% url 'fhir:observation' group_name user_name encounter.id %}">Lần thăm khám ngày {{encounter.start_date}}</a>
+                    <br>
+                {%endfor%}
+            
+            {%elif data.encounter_type == 'dict'%}
+                <a href="{% url 'fhir:observation' group_name user_name encounter.id %}">Lần thăm khám ngày {{data.Encounter.period.start}}</a>
                 <br>
-            {%endfor%}
+            {%endif%}
         {%endif%}
         <button id="myButton" class="float-left submit-button" >Home</button>
 
