@@ -6,7 +6,7 @@
 <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
 <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
     <div class="create">
-        <form class="create-form"action="{% url 'fhir:register' user_name group_name %}" method="post">
+        <form class="create-form"action="{% url 'fhir:register' group_name user_name  %}" method="post">
             {% csrf_token %}   
             <br>
             <label for="full_name">Họ và tên</label>
@@ -33,6 +33,7 @@
             {{form.work_address}}
             <br>
             <br>
+            {{form.telecom}}
             <input type="submit" value="Submit">
         </form>   
     </div> 

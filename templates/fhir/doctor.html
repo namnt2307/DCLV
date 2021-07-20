@@ -19,9 +19,11 @@
 <div class="body">
     <div class="left-body">
         <ul>
-            <li><a href=""> Func1 </a></li>
-            <li><a href=""> Func2 </a></li>
-            <li><a href=""> Func3 </a></li>
+            <li><a href={%block url1%}{%endblock%}> Thông tin hành chính </a></li>
+            <li><a href={%block url2%}{%endblock%}> Thông tin đăng ký khám </a></li>
+            <li><a href={%block url3%}{%endblock%}> Thông tin hỏi bệnh </a></li>
+            {%block leftbar%}
+            {%endblock%}
         </ul>
     </div>
     <div class="verticle-line"></div>

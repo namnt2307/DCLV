@@ -1,7 +1,5 @@
 {% extends 'fhir/doctor.html' %}
 {%block function %}
-        {{ data }}
-        {{ message }}
         <h1>Thông tin bệnh nhân</h1>
         <p>Mã y tế: {{data.Patient.identifier}}</p>
         <p>Họ và tên: {{data.Patient.name}}</p>
@@ -14,23 +12,44 @@
                 <p>Nơi làm việc: {{addr.address}}</p>
             {%endif%}
         {%endfor%}
+        <h1>CÁC LẦN ĐĂNG KÝ KHÁM </h1>
+        <table>
+            <tr>
+                <td>Ngày đăng ký</td>
+                <td>Mã đợt khám</td>
+                <td>Loại thăm khám</td>
+                <td>Tình trạng thăm khám</td>
+                <td>Ngày kết thúc</td>
+            </tr>
         {%if data.Encounter%}
            {%if data.encounter_type == 'list'%}
                 {%for encounter in data.Encounter%}
-                    <a href="{% url 'fhir:observation' group_name user_name encounter.id %}">Lần thăm khám ngày {{encounter.start_date}}</a>
-                    <br>
+                    <tr>
+                        <td>{{encounter.period.start}}</td>
+                        <td><a href="{% url 'fhir:observation' group_name user_name data.Patient.identifier encounter.id %}">{{encounter.id}}</a></td>
+                        <td>{{encounter.class}}</td>
+                        <td>{{encounter.status}}</td>
+                        <td>{{encounter.period.end}}</td>
+                    </tr>
                 {%endfor%}
             
             {%elif data.encounter_type == 'dict'%}
-                <a href="{% url 'fhir:observation' group_name user_name encounter.id %}">Lần thăm khám ngày {{data.Encounter.period.start}}</a>
-                <br>
+                <tr>
+                    <td>{{encounter.period.start}}</td>
+                    <td><a href="{% url 'fhir:observation' group_name user_name data.Patient.identifier encounter.id %}">{{encounter.id}}</a></td>
+                    <td>{{encounter.class}}</td>
+                    <td>{{encounter.status}}</td>
+                    <td>{{encounter.period.end}}</td>
+                </tr>
             {%endif%}
         {%endif%}
-        <button id="myButton" class="float-left submit-button" >Home</button>
-
+        <tr>
+            <td colspan="5"><button id="myButton" class="float-left submit-button" >Lần đăng ký khám mới</button></td>
+        </tr>
+        </table>
         <script type="text/javascript">
             document.getElementById("myButton").onclick = function () {
-                location.href = "";
+                location.href = "{%";
             };
         </script>
 {%endblock%}

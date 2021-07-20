@@ -1,7 +1,7 @@
 import xml.etree.ElementTree as ET
 import requests
 import openpyxl as xl
-
+from datetime import datetime
 ns = {'d':"http://hl7.org/fhir"}
 
 def identifier_type(resource, system, value, use="usual", _type=None, period=None, assigner=None):
@@ -168,6 +168,7 @@ def get_encounter(encounter_id):
         encounter['id'] = get_root.find('d:id', ns).attrib['value']
         period = get_root.find('d:period', ns)
         encounter['start_date'] = period.find('d:start', ns).attrib['value']
+        encounter['id'] = encounter_id
         return encounter
     else:
         return None
@@ -287,7 +288,7 @@ def create_encounter_resource(encounter, patient_id, patient_name):
         reference_type(subject, 'Patient/'+ patient_id, 'Patient', display=patient_name)
     if encounter.get('period'):
         period = ET.SubElement(root, 'period')
-        period_type(period, encounter['period'].get('start'), encounter['period'].get('stop'))
+        period_type(period, encounter['period'].get('start'), encounter['period'].get('end'))
     if encounter.get('length'):
         length = ET.SubElement(root, 'length')
         duration_type(length, encounter['length'], 'days', 'http://unitsofmeasure.org', 'd')    
@@ -361,7 +362,7 @@ def query_patient(patient_identifier):
         id_resource = patient_resource.find('d:id', ns)
         patient['id'] = id_resource.attrib['value']
         name_resource = patient_resource.find('d:name', ns)
-        patient['name'] = name_resource.find('d:family', ns).attrib['value'] + name_resource.find('d:given', ns).attrib['value']
+        patient['name'] = name_resource.find('d:family', ns).attrib['value'] + ' ' + name_resource.find('d:given', ns).attrib['value']
         gender = patient_resource.find('d:gender', ns).attrib['value']
         if gender == 'male':
             patient['gender'] = 'Nam'
@@ -371,8 +372,9 @@ def query_patient(patient_identifier):
         patient['address'] = []
         for address in patient_resource.findall('d:address', ns):
             addr_type = address.find('d:use', ns).attrib['value']
-            addr = address.find('d:line', ns).attrib['value'] + address.find('d:district', ns).attrib['value'] + address.find('d:city', ns).attrib['value']
+            addr = address.find('d:line', ns).attrib['value'] + ', ' + address.find('d:district', ns).attrib['value'] + ', ' + address.find('d:city', ns).attrib['value']
             patient['address'].append({'use': addr_type, 'address': addr})
+        patient['identifier'] = patient_identifier
         return patient
     else:
         return None
@@ -390,3 +392,8 @@ def query_encounter(patient_identifier):
             start_date = period.find('d:start', ns).attrib['value']
             encounter.append({'id': encounter_id, 'start_date': start_date})
             print(encounter_id)
+
+def getdatetime(datetime_str):
+    get_datetime = datetime_str.split('+')[0]
+    datetime_obj = datetime.strptime(get_datetime, '%Y-%m-%dT%H:%M:%S')
+    return datetime.strftime(datetime_obj, "%H:%M:%S, %d-%m-%Y")

@@ -1,0 +1,65 @@
+{%extends 'fhir/doctor.html'%}
+{%block url1%}'{%url 'fhir:hanhchinh' group_name user_name data.Patient.identifier data.Encounter.id%}'{%endblock%}
+{%block url2%}'{%url 'fhir:dangky' group_name user_name data.Patient.identifier data.Encounter.id%}'{%endblock%}
+{%block url3%}'{%url 'fhir:hoibenh' group_name user_name data.Patient.identifier data.Encounter.id%}'{%endblock%}
+{%block leftbar%}
+    {%if services%}
+        {%for service in services%}
+            <li><a href="">service.name</a></li>
+        {%endfor%}
+    {%endif%}
+{%endblock%}
+{%block function%}
+    {%if data.Patient.dangky%}
+    <h1>Thông tin bệnh nhân</h1>
+    <p>Mã y tế: {{data.Patient.identifier}}</p>
+    <p>Họ và tên: {{data.Patient.name}}</p>
+    <p>Giới tính: {{data.Patient.gender}}</p>
+    <p>Ngày sinh: {{data.Patient.birthDate}}</p>
+    {%for addr in data.Patient.address %}
+        {%if addr.use == 'home'%}
+            <p>Địa chỉ: {{addr.address}}</p>
+        {%elif addr.use == 'work'%}
+            <p>Nơi làm việc: {{addr.address}}</p>
+        {%endif%}
+    {%endfor%}
+    {%else%}
+        {{data.form.as_p}}
+        <form action="" method="POST">
+            {%csrf_token%}
+            <label for="class_select">Loại hình thăm khám</label>
+            <select name="class_select" id="class_select">
+                <option value="IMP">Nội trú</option>
+                <option value="AMB">Ambulatory</option>
+                <option value="FLD">Khám tại địa điểm ngoài</option>
+                <option value="EMER">Khẩn cấp</option>
+                <option value="HH">Khám tại nhà</option>
+                <option value="ACUTE">Nội trú khẩn cấp</option>
+                <option value="NONAC">Nội trú không khẩn cấp</option>
+                <option value="OBSENC">Thăm khám quan sát</option>
+                <option value="SS">Ngoại trú</option>
+                <option value="VR">Trực tuyến</option>
+                <option value="PRENC">Tái khám</option>
+            </select>
+            <br>
+            <label for="type_select">Loại bệnh án</label>
+            <select name="type_select" id="type_select"></select>
+            <br>
+            <label for="serviceType">Dịch vụ khám bệnh</label>
+            <input type="text" id="serviceType">
+            <br>
+            <label for="priority">Mức độ ưu tiên</label>
+            <input type="text" name="" id="priority">
+            <br>
+            <label for="reasonCode">Lý do đến khám</label>
+            <input type="text" id="reasonCode">
+            <br>
+            <label for="location">Khoa khám bệnh</label>
+            <select name="location" id="location">
+                <option value="1">Khoa Khám bệnh</option>
+            </select>
+            <br>
+            <button type="submit">Lưu lại</button>
+        </form>
+    {%endif%}
+{%endblock%}
