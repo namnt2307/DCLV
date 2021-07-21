@@ -5,16 +5,26 @@
 <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
 <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
 <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+<div class="left-body">
+    <ul>
+        <li><a href="{% url 'fhir:register' user_name group_name %}"> Trong bệnh viện </a></li>
+        <li><a href="{% url 'fhir:search' user_name group_name %}">Ngoài bệnh viện</a></li>
+    </ul>
+</div>
+<div class="right-body">
     <div class="container">
-    	<div class="row">
+        <div class="row">
             <div class="search">
                 <form action="{% url 'fhir:search' group_name user_name %}" method="post">
                     {% csrf_token %}
                     <label for="identifier">Tìm kiếm hồ sơ</label>
-                    <input type="text" class="form-control input-sm" maxlength="64" placeholder="Search" name="identifier" id="identifier" />
+                    <input type="text" class="form-control input-sm" maxlength="64" placeholder="Search"
+                        name="identifier" id="identifier" />
                     <button type="submit" class="btn btn-primary btn-sm">Search</button>
                 </form>
             </div>
         </div>
     </div>
+</div>
+
 {% endblock %}

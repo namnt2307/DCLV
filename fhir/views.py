@@ -51,6 +51,12 @@ class register(View):
 
         return render(request, 'fhir/doctor/create.html', {'group_name': group_name, 'user_name': user_name, 'form': EHRCreationForm})
 
+    def username_exists(self, username):
+        User = get_user_model()
+        if User.objects.filter(username=username).exists():
+            return True
+        return False
+
     def post(self, request, group_name, user_name):
         User = get_user_model()
         if request.POST:
@@ -63,15 +69,23 @@ class register(View):
             patient['identifier'] = request.POST['user_identifier']
 
             xml_data, data = handlers.register_ehr(patient, id_system)
-            hapi_request = requests.post("http://hapi.fhir.org/baseR4/Patient/", headers={
-                'Content-type': 'application/xml'}, data=xml_data.decode('utf-8'))
-            instance = get_object_or_404(
-                User, user_identifier=patient['identifier'])
-            form = EHRCreationForm(request.POST or None, instance=instance)
-            if form.is_valid():
-                form.save()
-            name = instance.username
-            return render(request, 'fhir/doctor/display.html', {'group_name': group_name, 'user_name': user_name, 'data': data, 'message': name})
+            # hapi_request = requests.post("http://hapi.fhir.org/baseR4/Patient/", headers={
+            #     'Content-type': 'application/xml'}, data=xml_data.decode('utf-8'))
+            try:
+                instance = User.objects.get(
+                    user_identifier=patient['identifier'])
+                # instance = get_object_or_404(
+                #     User, user_identifier=patient['identifier'])
+            except User.DoesNotExist:
+                form = EHRCreationForm(request.POST or None)
+                if form.is_valid():
+                    user_n = form.save(commit=False)
+                    user_n.username = patient['identifier']
+                    user_n.set_password('nam12345')
+                    user_n.group_name = 'patient'
+                    user_n.save()
+                    form.save()
+            return render(request, 'fhir/doctor/display.html', {'group_name': group_name, 'user_name': user_name, 'data': data})
         else:
             return HttpResponse("Please enter your information")
 

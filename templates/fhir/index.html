@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -11,21 +12,23 @@
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/fhir/index.css'%}">
 </head>
+
 <body>
     <div class="header">
         <div class="left-header">
             <img src="{% static 'img/logo.png'%}" alt="logo-bach-khoa">
             <h3> FHIR WEBSITE</h3>
         </div>
+        <div class="logout">
+            <a href="{% url 'login:logout' %}"> Đăng xuất </a>
+        </div>
     </div>
-
-        {% block doctor %}
-        {% endblock %}
-        {% block patient %}
-        {% endblock %}
-    
+    {% block doctor %}
+    {% endblock %}
+    {% block patient %}
+    {% endblock %}
     <div class="footer">
-
     </div>
 </body>
+
 </html>

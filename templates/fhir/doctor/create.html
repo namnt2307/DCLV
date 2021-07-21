@@ -5,9 +5,18 @@
 <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
 <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
 <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+<div class="left-body">
+    <ul>
+        <li><a href="{% url 'fhir:register' user_name group_name %}"> Tạo hồ sơ </a></li>
+        <li><a href="">Tạo bệnh án</a></li>
+        <li><a href="{% url 'fhir:upload' user_name group_name %}"> Chuyển đổi excel </a></li>
+        <li><a href="{% url 'fhir:search' user_name group_name %}">Tìm kiếm hồ sơ</a></li>
+    </ul>
+</div>
+<div class="right-body">
     <div class="create">
-        <form class="create-form"action="{% url 'fhir:register' user_name group_name %}" method="post">
-            {% csrf_token %}   
+        <form class="create-form" action="{% url 'fhir:register' user_name group_name %}" method="post">
+            {% csrf_token %}
             <br>
             <label for="full_name">Họ và tên</label>
             {{form.full_name}}
@@ -34,6 +43,9 @@
             <br>
             <br>
             <input type="submit" value="Submit">
-        </form>   
-    </div> 
+        </form>
+    </div>
+
+</div>
+
 {% endblock %}

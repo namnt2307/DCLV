@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.views import View
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth import get_user_model
 from .forms import UserCreationForm
@@ -38,3 +38,8 @@ class register_app(View):
                 return HttpResponse('Dang ki thanh cong')
             else:
                 return HttpResponse('Khong hop le')
+
+
+def logout_request(request):
+    logout(request)
+    return HttpResponseRedirect(f'/login/')
