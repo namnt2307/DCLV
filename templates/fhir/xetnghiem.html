@@ -6,14 +6,27 @@
     {%if services%}
         {%for service in services%}
             {%if service.request_description%}
-            <li><a href="">{{service.request_description}}</a></li>
+            <li><a href="{%url 'fhir:ketqua' group_name user_name data.Patient.identifier data.Encounter.id service.servicerequest_id%}">{{service.request_description}}</a></li>
             {%endif%}
         {%endfor%}
     {%endif%}
 {%endblock%}
 {%block function%}
-    {%if data%}
-        hello
+    {%if observations%}
+        <form action="">
+            {%csrf_token%}
+            {%for observation in observations%}
+                {%if observation.valuequantity%}
+                    <p>{{observation.name}}: {{observation.valuequantity}} {{observation.valueunit}}</p>
+                {%else%}
+                    <label for="{{observation.id}}">{{observation.name}}</label>
+                    <input type="text" name="{{observation.id}}" id="{{observation.id}}">
+                    <p style="display: inline;">{{observation.valueunit}}</p>
+                    <br>
+                {%endif%}
+            {%endfor%}
+            <button type="submit">Update</button>
+        </form>
     {%else%}
     <h1>404 Not Found</h1>
     {%endif%}

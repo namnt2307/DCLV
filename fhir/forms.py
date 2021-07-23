@@ -3,7 +3,7 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
 from django.forms import fields
 from lib.tools import generate_password
-from .models import EncounterModel, ServiceRequestModel, ProcedureModel, AllergyModel, UserModel, ConditionModel
+from .models import EncounterModel, ServiceRequestModel, ProcedureModel, AllergyModel, UserModel, ConditionModel, ObservationModel
 
 class EHRCreationForm(forms.ModelForm):
     class Meta:
@@ -44,3 +44,12 @@ class ConditionForm(forms.ModelForm):
             'family_history': 'Tiền sử bệnh gia đình'
         }
         
+class ObservationForm(forms.ModelForm):
+    class Meta:
+        model = ObservationModel
+        fields = (
+            ('valuequantity','note')
+        )
+        labels = {
+            'note': 'Nhận xét của bác sĩ'
+        }

@@ -111,12 +111,14 @@ class ServiceRequestModel(models.Model):
 
 class ObservationModel(models.Model):
     service_id = models.ForeignKey(ServiceRequestModel,on_delete=models.CASCADE)
-    status = models.CharField(default='',max_length=10)
+    status = models.CharField(default='registered',max_length=10)
+    name  = models.CharField(default='',max_length=100)
     category = models.CharField(default='',max_length=10)
     effective = models.DateTimeField(default=datetime.now)
-    valuequantity = models.CharField(default='',max_length=10)
+    valuequantity = models.CharField(default='',max_length=10,null=True)
     valueunit = models.CharField(default='',max_length = 10)
     performer = models.CharField(default='',max_length=100)
+    note = models.CharField(default='', max_length=300,null=True)
 
 class ProcedureModel(models.Model):
     encounter_id = models.ForeignKey(EncounterModel,on_delete=models.CASCADE)

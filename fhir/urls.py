@@ -12,6 +12,7 @@ urlpatterns = [
     path('<str:group_name>/<str:user_name>/<int:patient_identifier>/encounter/',views.encounter.as_view(), name='encounter'),
     path('<str:group_name>/<str:user_name>/observation/<str:patient_identifier>/<int:encounter_id>/hanhchinh', views.hanhchinh.as_view(), name='hanhchinh'),
     path('<str:group_name>/<str:user_name>/observation/<str:patient_identifier>/<int:encounter_id>/service', views.service.as_view(), name='service'),
+    path('<str:group_name>/<str:user_name>/observation/<str:patient_identifier>/<int:encounter_id>/<int:service_id>/ketqua', views.ketqua.as_view(), name='ketqua'),
     path('<str:group_name>/<str:user_name>/observation/<str:patient_identifier>/<int:encounter_id>/dangky', views.dangky.as_view(), name='dangky'),
     path('<str:group_name>/<str:user_name>/observation/<str:patient_identifier>/<int:encounter_id>/hoibenh', views.hoibenh.as_view(), name='hoibenh'),
     path('<str:group_name>/<str:user_name>/observation/<str:patient_identifier>/<int:encounter_id>/xetnghiem', views.xetnghiem.as_view(), name='xetnghiem'),

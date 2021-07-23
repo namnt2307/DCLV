@@ -6,7 +6,7 @@
     {%if services%}
         {%for service in services%}
             {%if service.request_description%}
-            <li><a href="">{{service.request_description}}</a></li>
+            <li><a href="{%url 'fhir:ketqua' group_name user_name data.Patient.identifier data.Encounter.id service.servicerequest_id%}">{{service.request_description}}</a></li>
             {%endif%}
         {%endfor%}
     {%endif%}
