@@ -10,7 +10,8 @@ from lib import dttype as dt
 from login.forms import UserCreationForm
 from handlers import handlers
 from fhir.forms import EHRCreationForm
-from .forms import Encounter, UserForm
+from .models import EncounterModel, ServiceRequestModel, UserModel, ConditionModel
+from .forms import EncounterForm, ConditionForm
 from django.shortcuts import get_object_or_404
 # Create your views here.
 
@@ -67,21 +68,21 @@ class register(View):
             patient = dt.create_patient_resource(data['Patient'])
             try:
                 instance = User.objects.get(
-                    user_identifier=patient['identifier'])
+                    user_identifier=data['Patient']['identifier'])
                 # instance = get_object_or_404(
                 #     User, user_identifier=patient['identifier'])
             except User.DoesNotExist:
-                user = User.objects.create_user(
-                    patient['identifier'], 'test@gmail.com', 'nam12345')
-                user.save()
-                # form = EHRCreationForm(request.POST or None)
-                # if form.is_valid():
-                #     user_n = form.save(commit=False)
-                #     user_n.username = patient['identifier']
-                #     user_n.set_password('nam12345')
-                #     user_n.group_name = 'patient'
-                #     user_n.save()
-                #     form.save()
+                # user = User.objects.create_user(
+                    # data['Patient']['identifier'], 'test@gmail.com', 'nam12345')
+                # user.save()
+                form = EHRCreationForm(request.POST or None)
+                if form.is_valid():
+                    user_n = form.save(commit=False)
+                    user_n.username = data['Patient']['identifier']
+                    user_n.set_password('nam12345')
+                    user_n.group_name = 'patient'
+                    user_n.save()
+                    form.save()
                 # if patient:
                 #     hapi_request = requests.post("http://hapi.fhir.org/baseR4/Patient/", headers={
                 #         'Content-type': 'application/xml'}, data=patient.decode('utf-8'))
@@ -160,34 +161,64 @@ class search(View):
         return render(request, 'fhir/doctor/search.html', {'group_name': group_name, 'user_name': user_name})
 
     def post(self, request, group_name, user_name):
-        data = {'Patient': {}, 'Encounter': {}}
+        data = {'Patient': {}, 'Encounter': []}
+        patient = get_user_model()
         if request.POST:
-            data['Patient'] = dt.query_patient(request.POST['identifier'])
-            if data['Patient']:
-                get_encounter = requests.get("http://hapi.fhir.org/baseR4/Encounter?subject.identifier=urn:trinhcongminh|" +
-                                             request.POST['identifier'], headers={'Content-type': 'application/xml'})
-                if get_encounter.status_code == 200 and 'entry' in get_encounter.content.decode('utf-8'):
-                    get_root = ET.fromstring(
-                        get_encounter.content.decode('utf-8'))
-                    data['Encounter'] = []
-                    for entry in get_root.findall('d:entry', ns):
-                        resource = entry.find('d:resource', ns)
-                        encounter_resource = resource.find('d:Encounter', ns)
-                        encounter_id = encounter_resource.find(
-                            'd:id', ns).attrib['value']
-                        _class = encounter_resource.find('d:class', ns)
-                        class_value = _class.find('d:code', ns).attrib['value']
-                        status = encounter_resource.find(
-                            'd:status', ns).attrib['value']
-                        period = encounter_resource.find('d:period', ns)
-                        start_date = period.find('d:start', ns).attrib['value']
-                        start_date = dt.getdatetime(start_date)
+            try:
+                instance = patient.objects.get(
+                user_identifier=request.POST['identifier'])
+        # instance = get_object_or_404(
+        #     User, user_identifier=patient['identifier'])
+                data['Patient']['identifier'] = instance.user_identifier
+                data['Patient']['name'] = instance.full_name
+                data['Patient']['birthDate'] = instance.birth_date
+                data['Patient']['gender'] = instance.gender
+                data['Patient']['address'] = [{'address':instance.home_address,'use':'home'}]
+                if instance.work_address:
+                    data['Patient']['address'].append({'address': instance.work_address, 'use':'work'})
+                encounter_instances = EncounterModel.objects.all().filter(user_identifier=instance.user_identifier)
+                print(encounter_instances)
+                if encounter_instances:
+                    for encounter in encounter_instances:
+                        encounter_id = encounter.encounter_id
+                        start_date = encounter.start_date
+                        status = encounter.encounter_status
                         end_date = None
-                        if period.find('d:end', ns) != None:
-                            end_date = period.find('d:end', ns).attrib['value']
-                            end_date = dt.getdatetime(end_date)
+                        if encounter.end_date:
+                            end_date = encounter.end_date
+                        class_value = 'new'
+                        if encounter.class_select:
+                            class_value = encounter.class_select
                         data['Encounter'].append({'id': encounter_id, 'class': class_value, 'status': status, 'period': {
-                                                 'start': start_date, 'end': end_date}})
+                                                    'start': start_date, 'end': end_date}})
+            except patient.DoesNotExist:
+                data['Patient'] = dt.query_patient(request.POST['identifier'])
+                if data['Patient']:
+                    get_encounter = requests.get("http://hapi.fhir.org/baseR4/Encounter?subject.identifier=urn:trinhcongminh|" +
+                                                request.POST['identifier'], headers={'Content-type': 'application/xml'})
+                    if get_encounter.status_code == 200 and 'entry' in get_encounter.content.decode('utf-8'):
+                        get_root = ET.fromstring(
+                            get_encounter.content.decode('utf-8'))
+                        data['Encounter'] = []
+                        for entry in get_root.findall('d:entry', ns):
+                            resource = entry.find('d:resource', ns)
+                            encounter_resource = resource.find('d:Encounter', ns)
+                            encounter_id = encounter_resource.find(
+                                'd:id', ns).attrib['value']
+                            _class = encounter_resource.find('d:class', ns)
+                            class_value = _class.find('d:code', ns).attrib['value']
+                            status = encounter_resource.find(
+                                'd:status', ns).attrib['value']
+                            period = encounter_resource.find('d:period', ns)
+                            start_date = period.find('d:start', ns).attrib['value']
+                            start_date = dt.getdatetime(start_date)
+                            end_date = None
+                            if period.find('d:end', ns) != None:
+                                end_date = period.find('d:end', ns).attrib['value']
+                                end_date = dt.getdatetime(end_date)
+                            data['Encounter'].append({'id': encounter_id, 'class': class_value, 'status': status, 'period': {
+                                                    'start': start_date, 'end': end_date}})
+            if data:
                 data['encounter_type'] = 'list'
                 return render(request, 'fhir/doctor/display.html', {'message': 'Da tim thay', 'data': data, 'group_name': group_name, 'user_name': user_name})
             else:
@@ -196,24 +227,58 @@ class search(View):
             return render(request, 'fhir/doctor.html', {'message': 'Please enter an identifier', 'group_name': group_name, 'user_name': user_name})
 
 
-class display_observation(View):
+class hanhchinh(View):
     def get(self, request, group_name, user_name, patient_identifier, encounter_id):
+        patient = get_user_model()
         data = {'Patient': {}, 'Encounter': {}, 'Observation': []}
-        data['Patient'] = dt.query_patient(patient_identifier)
-        data['Encounter'] = dt.get_encounter(encounter_id)
-        if data['Encounter']:
-            data['Observation'] = dt.get_observation(encounter_id)
-            if data['Observation']:
-                return render(request, 'fhir/hanhchinh.html', {'data': data, 'group_name': group_name, 'user_name': user_name})
-            else:
-                return render(request, 'fhir/doctor.html', {'message': "No data found", 'group_name': group_name, 'user_name': user_name})
+        try:
+            instance = patient.objects.get(
+                user_identifier=patient_identifier)
+            # instance = get_object_or_404(
+            #     User, user_identifier=patient['identifier'])
+            data['Patient']['identifier'] = instance.user_identifier
+            data['Patient']['name'] = instance.full_name
+            data['Patient']['birthDate'] = instance.birth_date
+            data['Patient']['gender'] = instance.gender
+            data['Patient']['address'] = [{'address':instance.home_address,'use':'home'}]
+            if instance.work_address:
+                data['Patient']['address'].append({'address': instance.work_address, 'use':'work'})            
+
+        except patient.DoesNotExist:
+            
+        
+            data['Patient'] = dt.query_patient(patient_identifier)
+            data['Encounter'] = dt.get_encounter(encounter_id)
+            if data['Encounter']:
+                data['Observation'] = dt.get_observation(encounter_id)
+        data['Encounter']['id'] = encounter_id
+        services = ServiceRequestModel.objects.all().filter(encounter_id = encounter_id)
+        if data:
+            return render(request, 'fhir/hanhchinh.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'services':services})
         else:
-            return render(request, 'fhir/doctor.html', {'message': 'Something wrong', 'group_name': group_name, 'user_name': user_name})
+            return render(request, 'fhir/doctor.html', {'message': "No data found", 'group_name': group_name, 'user_name': user_name})
+        # else:
+            # return render(request, 'fhir/doctor.html', {'message': 'Something wrong', 'group_name': group_name, 'user_name': user_name})
 
 
 class encounter(View):
-    def get(self, request, group_name, user_name):
-        return render(request, 'fhir/doctor/encounter.html', {'group_name': group_name, 'user_name': user_name})
+    def get(self, request, group_name, user_name, patient_identifier):
+        patient = get_user_model()
+        data = {'Patient': {}, 'Encounter': {}, 'Observation': []}        
+        instance = patient.objects.get(
+            user_identifier=patient_identifier)
+        # instance = get_object_or_404(
+        #     User, user_identifier=patient['identifier'])
+        data['Patient']['identifier'] = instance.user_identifier
+        data['Patient']['name'] = instance.full_name
+        data['Patient']['birthDate'] = instance.birth_date
+        data['Patient']['gender'] = instance.gender
+        data['Patient']['address'] = [{'address':instance.home_address,'use':'home'}]
+        if instance.work_address:
+            data['Patient']['address'].append({'address': instance.work_address, 'use':'work'})        
+        newencounter = EncounterModel.objects.create(user_identifier=instance)
+        data['Encounter']['id'] = newencounter.encounter_id
+        return render(request, 'fhir/hanhchinh.html', {'data': data, 'group_name': group_name, 'user_name': user_name})
 
 
 class admin(View):
@@ -233,41 +298,70 @@ class admin(View):
 
 class dangky(View):
     def get(self, request, group_name, user_name, patient_identifier, encounter_id):
-        form = Encounter()
-        data = {'Patient': {'identifier': patient_identifier},
-                'Encounter': {'id': encounter_id}, 'dangky': {}, 'form': form}
-        return render(request, 'fhir/dangky.html', {'data': data, 'group_name': group_name, 'user_name': user_name})
+        data = {'Patient': {}, 'Encounter': {}, 'Encounter_Info':{}}
+        encounter_form = EncounterForm()
+        data['Encounter_Info'] = EncounterModel.objects.get(encounter_id = encounter_id)
+        data['Patient']['identifier'] = patient_identifier        
+        data['Encounter']['id'] = encounter_id
+        services = ServiceRequestModel.objects.all().filter(encounter_id = encounter_id)
+        return render(request, 'fhir/dangky.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'form':encounter_form,'services':services})
 
-    def post(self, request, group_name, user_name, encounter_id):
-        pass
+    def post(self, request, group_name, user_name, patient_identifier, encounter_id):
+        data = {'Patient':{}, 'Encounter':{}, 'Encounter_Info': {}}
+        data['Patient']['identifier'] = patient_identifier
+        patient = get_user_model()
+        instance = patient.objects.get(
+        user_identifier=patient_identifier)
+        encounter = EncounterModel.objects.get(encounter_id = encounter_id)
+        form = EncounterForm(request.POST, encounter)
+        if form.is_valid():           
+            encounter_n = form.save(commit=False)
+            encounter_n.encounter_id = encounter_id
+            encounter_n.user_identifier = instance
+            encounter_n.submitted = True
+            form.save()
+        data['Encounter']['id'] = encounter_id
+        data['Encounter_Info'] = EncounterModel.objects.get(encounter_id = encounter_id)
+        return render(request, 'fhir/dangky.html', {'group_name': group_name, 'user_name': user_name,'data': data})
+            
 
 
-class hanhchinh(View):
-    def get(self, request, group_name, user_name, patient_identifier, encounter_id):
-        data = {'Patient': {}, 'Encounter': {}, 'Observation': []}
-        data['Patient'] = dt.query_patient(patient_identifier)
-        data['Encounter'] = dt.get_encounter(encounter_id)
-        if data['Encounter']:
-            data['Observation'] = dt.get_observation(encounter_id)
-            if data['Observation']:
-                return render(request, 'fhir/hanhchinh.html', {'data': data, 'group_name': group_name, 'user_name': user_name})
-            else:
-                return render(request, 'fhir/doctor.html', {'message': "No data found", 'group_name': group_name, 'user_name': user_name})
-        else:
-            return render(request, 'fhir/doctor.html', {'message': 'Something wrong', 'group_name': group_name, 'user_name': user_name})
 
-    def post(self, request, group_name, user_name, encounter_id):
-        pass
+# class hanhchinh(View):
+#     def get(self, request, group_name, user_name, patient_identifier, encounter_id):
+#         data = {'Patient': {}, 'Encounter': {}, 'Observation': []}
+#         data['Patient'] = dt.query_patient(patient_identifier)
+#         data['Encounter'] = dt.get_encounter(encounter_id)
+#         if data['Encounter']:
+#             data['Observation'] = dt.get_observation(encounter_id)
+#             if data['Observation']:
+#                 return render(request, 'fhir/hanhchinh.html', {'data': data, 'group_name': group_name, 'user_name': user_name})
+#             else:
+#                 return render(request, 'fhir/doctor.html', {'message': "No data found", 'group_name': group_name, 'user_name': user_name})
+#         else:
+#             return render(request, 'fhir/doctor.html', {'message': 'Something wrong', 'group_name': group_name, 'user_name': user_name})
+
 
 
 class hoibenh(View):
     def get(self, request, group_name, user_name, patient_identifier, encounter_id):
         data = {'Patient': {'identifier': patient_identifier},
                 'Encounter': {'id': encounter_id}}
-        return render(request, 'fhir/hoibenh.html', {'data': data, 'group_name': group_name, 'user_name': user_name})
+        condition_form = ConditionForm()
+        services = ServiceRequestModel.objects.all().filter(encounter_id = encounter_id)
+        return render(request, 'fhir/hoibenh.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'services':services, 'form': condition_form})
 
-    def post(self, request, group_name, user_name, encounter_id):
-        pass
+    def post(self, request, group_name, user_name, patient_identifier, encounter_id):
+        data = {'Patient': {'identifier': patient_identifier},
+        'Encounter': {'id': encounter_id}}
+        encounter_instance = EncounterModel.objects.get(encounter_id = encounter_id)
+        form = ConditionForm(request.POST, encounter)
+        if form.is_valid():           
+            condition_n = form.save(commit=False)
+            condition_n.encounter_id = encounter_instance
+            form.save()
+        data['Condition'] = ConditionModel.objects.get(encounter_id = encounter_id)
+        return render(request, 'fhir/hoibenh.html', {'data': data, 'group_name': group_name, 'user_name': user_name})
 
 
 class xetnghiem(View):
@@ -284,3 +378,38 @@ class sieuam(View):
 
     def post(self, request, group_name, user_name, encounter_id):
         pass
+
+class service(View):
+    def get(self, request):
+        pass
+    
+    def post(self, request, group_name, user_name, patient_identifier, encounter_id):
+        data = {'Patient':{'identifier': patient_identifier}, 'Encounter':{'id':encounter_id}}
+        encounter_instance = EncounterModel.objects.get(encounter_id = encounter_id)
+        request_category = request.POST['service_category']
+        if request.POST['service'] == 'vital':            
+            request_location = 'room1'
+            request_description = 'Khám tổng quát'
+        elif request.POST['service'] == 'lab1':        
+            request_location = 'room2'
+            request_description = 'Xét nghiệm máu'
+        elif request.POST['service'] == 'lab2':
+            request_location = 'room3'
+            request_description = 'Xét nghiệm nước tiểu'
+        elif request.POST['service'] == 'img1':        
+            request_location = 'room4'     
+            request_description = 'Chụp X-Quang'                   
+        elif request.POST['service'] == 'img2':            
+            request_location = 'room5'     
+            request_description = 'Chụp MRI'                   
+        elif request.POST['service'] == 'img3':
+            request_location = 'room6'     
+            request_description = 'Siêu âm'
+        ServiceRequestModel.objects.create(encounter_id=encounter_instance, request_category=request_category,request_location=request_location,request_description=request_description)
+        services = ServiceRequestModel.objects.all().filter(encounter_id = encounter_id)
+        return render(request,'fhir/xetnghiem.html',{'group_name': group_name, 'user_name': user_name, 'data':data, 'services': services})    
+
+
+            
+                
+

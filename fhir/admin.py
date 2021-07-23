@@ -1,9 +1,10 @@
 from django.contrib import admin
 
-from .models import Encounter,ServiceRequest,Procedure,Allergy,UserModel
+from .models import EncounterModel,ServiceRequestModel,ProcedureModel,AllergyModel,UserModel,ConditionModel
 
-admin.site.register(Encounter)
-admin.site.register(ServiceRequest)
-admin.site.register(Procedure)
-admin.site.register(Allergy)
+admin.site.register(EncounterModel)
+admin.site.register(ServiceRequestModel)
+admin.site.register(ProcedureModel)
+admin.site.register(AllergyModel)
 admin.site.register(UserModel)
+admin.site.register(ConditionModel)

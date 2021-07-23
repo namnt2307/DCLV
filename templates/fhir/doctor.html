@@ -5,8 +5,45 @@
 <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
 <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
-<script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
-
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<style>
+    .servicePopup {
+        position: relative;
+        text-align: center;
+        width: 100%;
+      }
+      .formPopup {
+        display: none;
+        position: fixed;
+        left: 45%;
+        top: 5%;
+        transform: translate(-50%, 5%);
+        border: 3px solid #999999;
+        z-index: 9;
+      }
+      .formContainer {
+        max-width: 300px;
+        padding: 20px;
+        background-color: #fff;
+      }
+      .formContainer .btn {
+        padding: 12px 20px;
+        border: none;
+        background-color: #8ebf42;
+        color: #fff;
+        cursor: pointer;
+        width: 100%;
+        margin-bottom: 15px;
+        opacity: 0.8;
+      }
+      .formContainer .cancel {
+        background-color: #cc0000;
+      }
+      .formContainer .btn:hover,
+      .openButton:hover {
+        opacity: 1;
+      }
+</style>
 <div class="top-menu">
     <ul class="menu">
         <li><a href="{% url 'fhir:user_detail' user_name group_name %}"><i class="fa fa-home" aria-hidden="true"></i> </a></li>
@@ -16,6 +53,8 @@
     </ul>
 </div>
 
+
+
 <div class="body">
     <div class="left-body">
         <ul>
@@ -24,7 +63,15 @@
             <li><a href={%block url3%}{%endblock%}> Thông tin hỏi bệnh </a></li>
             {%block leftbar%}
             {%endblock%}
+      
+            <!-- <button id="myButton" class="float-left submit-button" >Add a service</button>
+            <script type="text/javascript">
+                document.getElementById("myButton").onclick = function () {
+                    location.href = " ";
+                };
+            </script> -->
         </ul>
+    
     </div>
     <div class="verticle-line"></div>
     <div class="right-body">

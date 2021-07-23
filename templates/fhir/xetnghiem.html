@@ -1,25 +1,19 @@
-{%extends 'fhir/doctor.html'%}
+{%extends 'fhir/base.html'%}
+{%block url1%}'{%url 'fhir:hanhchinh' group_name user_name data.Patient.identifier data.Encounter.id%}'{%endblock%}
+{%block url2%}'{%url 'fhir:dangky' group_name user_name data.Patient.identifier data.Encounter.id%}'{%endblock%}
+{%block url3%}'{%url 'fhir:hoibenh' group_name user_name data.Patient.identifier data.Encounter.id%}'{%endblock%}
 {%block leftbar%}
     {%if services%}
         {%for service in services%}
-            <li><a href="">service.name</a></li>
+            {%if service.request_description%}
+            <li><a href="">{{service.request_description}}</a></li>
+            {%endif%}
         {%endfor%}
     {%endif%}
 {%endblock%}
 {%block function%}
     {%if data%}
-    <h1>Thông tin bệnh nhân</h1>
-    <p>Mã y tế: {{data.Patient.identifier}}</p>
-    <p>Họ và tên: {{data.Patient.name}}</p>
-    <p>Giới tính: {{data.Patient.gender}}</p>
-    <p>Ngày sinh: {{data.Patient.birthDate}}</p>
-    {%for addr in data.Patient.address %}
-        {%if addr.use == 'home'%}
-            <p>Địa chỉ: {{addr.address}}</p>
-        {%elif addr.use == 'work'%}
-            <p>Nơi làm việc: {{addr.address}}</p>
-        {%endif%}
-    {%endfor%}
+        hello
     {%else%}
     <h1>404 Not Found</h1>
     {%endif%}

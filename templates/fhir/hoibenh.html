@@ -1,57 +1,23 @@
-{%extends 'fhir/doctor.html'%}
+{%extends 'fhir/base.html'%}
 {%block url1%}'{%url 'fhir:hanhchinh' group_name user_name data.Patient.identifier data.Encounter.id%}'{%endblock%}
 {%block url2%}'{%url 'fhir:dangky' group_name user_name data.Patient.identifier data.Encounter.id%}'{%endblock%}
 {%block url3%}'{%url 'fhir:hoibenh' group_name user_name data.Patient.identifier data.Encounter.id%}'{%endblock%}
 {%block leftbar%}
-{%endblock%}
-{%block function%}
-    {%if data.hoibenh%}
-        <h1>Thông tin bệnh nhân</h1>
-        <p>Mã y tế: {{data.Patient.identifier}}</p>
-        <p>Họ và tên: {{data.Patient.name}}</p>
-        <p>Giới tính: {{data.Patient.gender}}</p>
-        <p>Ngày sinh: {{data.Patient.birthDate}}</p>
-        {%for addr in data.Patient.address %}
-            {%if addr.use == 'home'%}
-                <p>Địa chỉ: {{addr.address}}</p>
-            {%elif addr.use == 'work'%}
-                <p>Nơi làm việc: {{addr.address}}</p>
+    {%if services%}
+        {%for service in services%}
+            {%if service.request_description%}
+            <li><a href="">{{service.request_description}}</a></li>
             {%endif%}
         {%endfor%}
+    {%endif%}
+{%endblock%}
+{%block function%}
+    {%if data.Condition%}
+        {{data.Condition}}
     {%else%}
         <form action="" method = "POST">
             {%csrf_token%}
-            <label for="code">Vấn đề lâm sàng</label>
-            <input type="text" name="code" id="code">
-            <br>
-            <label for="clinicalStatus">Tình trạng</label>
-            <select name="clinicalStatus" id="clinicalStatus">
-                <option value="Active"></option>
-                <option value="Inactive"></option>
-                <option value="Recurrence"></option>
-                <option value="Relapse"></option>
-                <option value="Remission"></option>
-                <option value="Resolved"></option>
-            </select>
-            <br>
-                <label for="onset">Dấu hiệu bắt đầu từ ngày</label>
-                <input type="datetime-local" name="onset" id="onset">
-                <label for="severity">Mức độ</label>
-                <select name="severity" id="severity">
-                    <option value="255604002">Nhẹ</option>
-                    <option value="6736007">Vừa</option>
-                    <option value="24484000">Nặng</option>
-                </select>
-                <br>
-                <label for="selfhistory">Tiền sử bệnh</label>
-                <input type="text" name="selfhistory" id="selfhistory">
-                <br>
-                <label for="allergy">Dị ứng</label>
-                <input type="text" name="allergy" id="allergy">
-                <br>
-                <label for="familyhistory">Tiền sử bệnh gia đình</label>
-                <input type="text" name="familyhistory" id="familyhistory">
-            <br>
+            {{form.as_p}}
             <button type="submit">Lưu lại</button>
         </form>
     {%endif%}

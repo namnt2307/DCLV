@@ -1,11 +1,13 @@
-{%extends 'fhir/doctor.html'%}
+{%extends 'fhir/base.html'%}
 {%block url1%}'{%url 'fhir:hanhchinh' group_name user_name data.Patient.identifier data.Encounter.id%}'{%endblock%}
 {%block url2%}'{%url 'fhir:dangky' group_name user_name data.Patient.identifier data.Encounter.id%}'{%endblock%}
 {%block url3%}'{%url 'fhir:hoibenh' group_name user_name data.Patient.identifier data.Encounter.id%}'{%endblock%}
 {%block leftbar%}
     {%if services%}
         {%for service in services%}
-            <li><a href="">service.name</a></li>
+            {%if service.request_description%}
+            <li><a href="">{{service.request_description}}</a></li>
+            {%endif%}
         {%endfor%}
     {%endif%}
 {%endblock%}

@@ -1,0 +1,139 @@
+{% extends 'fhir/index.html' %}
+{% block doctor %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/fhir/doctor.css'%}">
+<link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+<script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<style>
+    .servicePopup {
+        position: relative;
+        text-align: center;
+        width: 100%;
+      }
+      .formPopup {
+        display: none;
+        position: fixed;
+        left: 45%;
+        top: 5%;
+        transform: translate(-50%, 5%);
+        border: 3px solid #999999;
+        z-index: 9;
+      }
+      .formContainer {
+        max-width: 300px;
+        padding: 20px;
+        background-color: #fff;
+      }
+      .formContainer .btn {
+        padding: 12px 20px;
+        border: none;
+        background-color: #8ebf42;
+        color: #fff;
+        cursor: pointer;
+        width: 100%;
+        margin-bottom: 15px;
+        opacity: 0.8;
+      }
+      .formContainer .cancel {
+        background-color: #cc0000;
+      }
+      .formContainer .btn:hover,
+      .openButton:hover {
+        opacity: 1;
+      }
+</style>
+<div class="top-menu">
+    <ul class="menu">
+        <li><a href="{% url 'fhir:user_detail' user_name group_name %}"><i class="fa fa-home" aria-hidden="true"></i> </a></li>
+        <li><a href="{% url 'fhir:register' user_name group_name %}"> Tao ho so </a></li>
+        <li><a href="{% url 'fhir:upload' user_name group_name %}"> Upload Excel </a></li>
+        <li><a href="{% url 'fhir:search' user_name group_name %}"> Tim kiem ho so</a></li>
+    </ul>
+</div>
+
+
+
+<div class="body">
+    <div class="left-body">
+        <ul>
+            <li><a href={%block url1%}{%endblock%}> Thông tin hành chính </a></li>
+            <li><a href={%block url2%}{%endblock%}> Thông tin đăng ký khám </a></li>
+            <li><a href={%block url3%}{%endblock%}> Thông tin hỏi bệnh </a></li>
+            {%block leftbar%}
+            {%endblock%}
+            <div class="openBtn">
+                <button class="openButton" onclick="openForm()"><strong>Add a service</strong></button>
+            </div>
+            <li>
+            <div class="servicePopup">
+                <div class="formPopup" id="popupForm">
+                  <form action="{% url 'fhir:service' group_name user_name data.Patient.identifier data.Encounter.id%}" class="formContainer" method="POST">
+                    {%csrf_token%}
+                    <h2>Please choose a service</h2>
+                    <label for="service_category"><strong>Service Type</strong></label>
+                    <select name="service_category" id="service_category">
+                      <option value="item0">--select one--</option>
+                      <option value="exam">Khám</option>
+                      <option value="laboratory">Xét nghiệm</option>
+                      <option value="imaging">Chụp</option>
+                    </select>
+                    <br>
+                    <label for="service">
+                      <strong>Service</strong>
+                    </label>
+                    <select name="service" id="service">
+                        <option value="">--select service type--</option>
+                    </select>
+                    <button type="submit" class="btn">Add</button>
+                    <button type="button" class="btn cancel" onclick="closeForm()">Close</button>
+                  </form>
+                </div>
+                <script>$(document).ready(function () {
+                  $("#service_category").change(function () {
+                      var val = $(this).val();
+                      if (val == "exam") {
+                          $("#service").html("<option value='vital'>Kham toan than</option>");
+                      } else if (val == "laboratory") {
+                          $("#service").html("<option value='lab1'>Xét nghiệm máu</option><option value='lab2'>Xét nghiệm nước tiểu</option>");
+                      } else if (val == "imaging") {
+                          $("#service").html("<option value='img1'>Chụp X-Quang</option><option value='img2'>MRI</option><option value='img3'>Siêu âm</option>");
+                      } else if (val == "item0") {
+                          $("#service").html("<option value=''>--select one--</option>");
+                      }
+                  });
+              });
+            </script>
+              </div>
+              <script>
+                function openForm() {
+                  document.getElementById("popupForm").style.display = "block";
+                }
+                function closeForm() {
+                  document.getElementById("popupForm").style.display = "none";
+                }
+              </script>
+            </li>
+            <!-- <button id="myButton" class="float-left submit-button" >Add a service</button>
+            <script type="text/javascript">
+                document.getElementById("myButton").onclick = function () {
+                    location.href = " ";
+                };
+            </script> -->
+        </ul>
+    
+    </div>
+    <div class="verticle-line"></div>
+    <div class="right-body">
+        {%if message%}
+            <script>
+                alert('{{message}}');
+            </script>
+        {% endif %}
+        {% block function %}
+        {% endblock %}
+    </div>
+</div>
+
+{% endblock %}

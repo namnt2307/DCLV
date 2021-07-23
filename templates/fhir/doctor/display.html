@@ -26,7 +26,7 @@
                 {%for encounter in data.Encounter%}
                     <tr>
                         <td>{{encounter.period.start}}</td>
-                        <td><a href="{% url 'fhir:observation' group_name user_name data.Patient.identifier encounter.id %}">{{encounter.id}}</a></td>
+                        <td><a href="{% url 'fhir:hanhchinh' group_name user_name data.Patient.identifier encounter.id %}">{{encounter.id}}</a></td>
                         <td>{{encounter.class}}</td>
                         <td>{{encounter.status}}</td>
                         <td>{{encounter.period.end}}</td>
@@ -36,7 +36,7 @@
             {%elif data.encounter_type == 'dict'%}
                 <tr>
                     <td>{{encounter.period.start}}</td>
-                    <td><a href="{% url 'fhir:observation' group_name user_name data.Patient.identifier encounter.id %}">{{encounter.id}}</a></td>
+                    <td><a href="{% url 'fhir:hanhchinh' group_name user_name data.Patient.identifier encounter.id %}">{{encounter.id}}</a></td>
                     <td>{{encounter.class}}</td>
                     <td>{{encounter.status}}</td>
                     <td>{{encounter.period.end}}</td>
@@ -49,7 +49,7 @@
         </table>
         <script type="text/javascript">
             document.getElementById("myButton").onclick = function () {
-                location.href = "{%";
+                location.href = "{% url 'fhir:encounter' group_name user_name data.Patient.identifier%} ";
             };
         </script>
 {%endblock%}
