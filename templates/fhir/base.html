@@ -66,10 +66,10 @@
             <div class="openBtn">
                 <button class="openButton" onclick="openForm()"><strong>Add a service</strong></button>
             </div>
-            <li>
+            
             <div class="servicePopup">
                 <div class="formPopup" id="popupForm">
-                  <form action="{% url 'fhir:service' group_name user_name data.Patient.identifier data.Encounter.id%}" class="formContainer" method="POST">
+                  <form action="{% url 'fhir:service' group_name user_name data.Patient.identifier data.Encounter.identifier%}" class="formContainer" method="POST">
                     {%csrf_token%}
                     <h2>Please choose a service</h2>
                     <label for="service_category"><strong>Service Type</strong></label>
@@ -113,8 +113,13 @@
                 function closeForm() {
                   document.getElementById("popupForm").style.display = "none";
                 }
-              </script>
-            </li>
+            </script>
+            <button class="btn"  id="myButton">Save</button>
+            <script type="text/javascript">
+              document.getElementById("myButton").onclick = function () {
+                  location.href = "{% url 'fhir:save' group_name user_name data.Patient.identifier data.Encounter.identifier%} ";
+              };
+            </script>
             <!-- <button id="myButton" class="float-left submit-button" >Add a service</button>
             <script type="text/javascript">
                 document.getElementById("myButton").onclick = function () {

@@ -14,15 +14,15 @@ class EHRCreationForm(forms.ModelForm):
 class EncounterForm(forms.ModelForm):
     class Meta:
         model = EncounterModel
-        fields = ('class_select', 'type_select',
-         'service_type', 'priority', 'reason_code', 'location')
+        fields = ('encounter_class', 'encounter_type',
+         'encounter_service', 'encounter_priority', 'encounter_reason', 'encounter_location')
         labels = {
-            'class_select': 'Loại hình thăm khám',
-            'type_select': 'Loại bệnh án',
-            'service_type': 'Dịch vụ khám bệnh',
-            'priority': 'Mức độ ưu tiên',
-            'reason_code': 'Lý do đến khám',
-            'location': 'Khoa khám bệnh'
+            'encounter_class': 'Loại hình thăm khám',
+            'encounter_type': 'Loại bệnh án',
+            'encounter_service': 'Dịch vụ khám bệnh',
+            'encounter_priority': 'Mức độ ưu tiên',
+            'encounter_reason': 'Lý do đến khám',
+            'encounter_location': 'Khoa khám bệnh'
         }
 
 class UserForm(forms.ModelForm):
@@ -33,23 +33,20 @@ class UserForm(forms.ModelForm):
 class ConditionForm(forms.ModelForm):
     class Meta:
         model = ConditionModel
-        fields = ('code','clinicalStatus','onset','severity', 'self_history','allergy','family_history')
+        fields = ('condition_code','condition_clinicalstatus','condition_onset','condition_severity')
         labels = {
-            'code': 'Vấn đề lâm sàng',
-            'clinicalStatus': 'Tình trạng',
-            'onset': 'Dấu hiệu bắt đầu từ ngày',
-            'severity': 'Mức độ',
-            'self_history': 'Tiền sử bệnh',
-            'allergy': 'Dị ứng',
-            'family_history': 'Tiền sử bệnh gia đình'
+            'condition_code': 'Vấn đề lâm sàng',
+            'condition_clinicalstatus': 'Tình trạng',
+            'condition_onset': 'Dấu hiệu bắt đầu từ ngày',
+            'condition_severity': 'Mức độ',
         }
         
 class ObservationForm(forms.ModelForm):
     class Meta:
         model = ObservationModel
         fields = (
-            ('valuequantity','note')
+            ('observation_valuequantity','observation_note')
         )
         labels = {
-            'note': 'Nhận xét của bác sĩ'
+            'observation_note': 'Nhận xét của bác sĩ'
         }

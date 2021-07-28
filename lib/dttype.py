@@ -8,7 +8,7 @@ def identifier_type(resource, system, value, use="usual", _type=None, period=Non
     ET.SubElement(resource, 'use value=\"{}\"'.format(use))
     if _type:
         type_res = ET.SubElement(resource, 'type')
-        codeable_concept(type_res, len(_type['codes']), _type)
+        codeable_concept(type_res, len(_type), _type)
     ET.SubElement(resource, 'system value=\"{}\"'.format(system))
     ET.SubElement(resource, 'value value=\"{:0>5}\"'.format(value))
     if period:
@@ -92,22 +92,25 @@ def contactpoint_type(resource, system, value, use=None, rank=None, period=None)
         period_type(resource, period)
 
 
-def codeable_concept(resource, num_code, codes, text=None):
-    for i in range(num_code):
-        coding = ET.SubElement(resource, 'coding')
-        coding_type(coding, codes['codes'][i].get('system'), codes['codes'][i].get(
-            'code'), codes['codes'][i].get('display'))
+def codeable_concept(resource, num_code=None, codes=None, text=None):
+    if num_code and codes:
+        for i in range(num_code):
+            coding = ET.SubElement(resource, 'coding')
+            coding_type(coding, codes[i].get('system'), codes[i].get(
+                'code'), codes[i].get('display'), version=codes[i].get('version'))
     if text:
         ET.SubElement(resource, 'text value=\"{}\"'.format(text))
 
 
-def quantity_type(resource, value, unit, system, code, comparator=None):
+def quantity_type(resource, value, unit, system=None, code=None, comparator=None):
     ET.SubElement(resource, 'value value=\"{}\"'.format(value))
     if comparator:
         ET.SubElement(resource, 'comparator value=\"{}\"'.format(comparator))
     ET.SubElement(resource, 'unit value=\"{}\"'.format(unit))
-    ET.SubElement(resource, 'system value=\"{}\"'.format(system))
-    ET.SubElement(resource, 'code value=\"{}\"'.format(code))
+    if system:
+        ET.SubElement(resource, 'system value=\"{}\"'.format(system))
+    if code:
+        ET.SubElement(resource, 'code value=\"{}\"'.format(code))
 
 
 def money_type(resource, value, currency):
@@ -243,7 +246,7 @@ def create_patient_resource(patient):
     if patient.get('identifier'):    
      
         identifier_resource = ET.SubElement(root, 'identifier')
-        identifier_type(identifier_resource, 'urn:trinhcongminh', patient['identifier'], 'usual',{'codes': [{'system': 'http://terminology.hl7.org/CodeSystem/v2-0203', 'code': 'MR'}]})
+        identifier_type(identifier_resource, 'urn:trinhcongminh', patient['identifier'], 'usual', [{'system': 'http://terminology.hl7.org/CodeSystem/v2-0203', 'code': 'MR'}])
     
     if patient.get('name'):
         name = ET.SubElement(root, 'name')
@@ -273,6 +276,9 @@ def create_encounter_resource(encounter, patient_id, patient_name):
     root.set("xmlns","http://hl7.org/fhir")
     # identifier = ET.SubElement(root, 'identifier')
     # dttype.identifier_type(identifier, )
+    if encounter.get('identifier'):
+        identifier_resource = ET.SubElement(root, 'identifier')
+        identifier_type(identifier_resource, 'urn:trinhcongminh', encounter['identifier'], 'usual', [{'system': 'http://terminology.hl7.org/CodeSystem/v2-0203', 'code': 'MR'}])
     if not encounter.get('status'):
         status = ET.SubElement(root, 'status')
         status.set('value', 'in-progress')
@@ -282,10 +288,17 @@ def create_encounter_resource(encounter, patient_id, patient_name):
     if encounter.get('class'):
         _class = ET.SubElement(root, 'class')
         coding_type(_class, 'http://terminology.hl7.org/CodeSystem/v3-ActCode', encounter['class'])
+    if encounter.get('type'):
+        _type = ET.SubElement(root, 'type')
+        codeable_concept(_type,text=encounter['type'])
     if encounter.get('serviceType'):
         serviceType = ET.SubElement(root, 'serviceType')
-        subject = ET.SubElement(root, 'subject')
-        reference_type(subject, 'Patient/'+ patient_id, 'Patient', display=patient_name)
+        codeable_concept(serviceType,text=encounter['serviceType'])
+    if encounter.get('priority'):
+        priority = ET.SubElement(root, 'priority')
+        codeable_concept(priority,1,[{'system':'http://terminology.hl7.org/ValueSet/v3-ActPriority','code':encounter['priority'], 'version':'2018-08-12'}])
+    subject = ET.SubElement(root, 'subject')
+    reference_type(subject, 'Patient/'+ patient_id, 'Patient', display=patient_name)
     if encounter.get('period'):
         period = ET.SubElement(root, 'period')
         period_type(period, encounter['period'].get('start'), encounter['period'].get('end'))
@@ -379,9 +392,9 @@ def query_patient(patient_identifier):
     else:
         return None
 
-def query_encounter(patient_identifier):
+def query_encounter(encounter_identifier):
     encounter = []
-    get_encounter = requests.get("http://hapi.fhir.org/baseR4/Encounter?subject.identifier=urn:trinhcongminh|" + patient_identifier, headers={'Content-type': 'application/xml'})
+    get_encounter = requests.get("http://hapi.fhir.org/baseR4/Encounter?identifier=urn:trinhcongminh|" + encounter_identifier, headers={'Content-type': 'application/xml'})
     if get_encounter.status_code == 200 and 'entry' in get_encounter.content.decode('utf-8'):
         get_root = ET.fromstring(get_encounter.content.decode('utf-8'))
         for entry in get_root.findall('d:entry', ns):
@@ -397,3 +410,90 @@ def getdatetime(datetime_str):
     get_datetime = datetime_str.split('+')[0]
     datetime_obj = datetime.strptime(get_datetime, '%Y-%m-%dT%H:%M:%S')
     return datetime.strftime(datetime_obj, "%H:%M:%S, %d-%m-%Y")
+
+def create_condition_resource(condition, patient_id, patient_name, encounter_id):
+    root = ET.Element('Condition')
+    tree = ET.ElementTree(root)
+    root.set('xmlns', 'http://hl7.org/fhir')
+    if condition.get('identifier'):
+        identifier = ET.SubElement(root, 'identifier')
+        identifier_type(identifier, 'urn:trinhcongminh', condition['identifier'], 'usual')
+    if condition.get('clinicalStatus'):
+        clinical = ET.SubElement(root, 'clinicalStatus')
+        codeable_concept(clinical, text=condition['clinicalStatus'])
+    if condition.get('verificationStatus'):
+        verify = ET.SubElement(root, 'verificationStatus')
+        codeable_concept(verify, text=condition['verificationStatus'])
+    if condition.get('category'):
+        category = ET.SubElement(root, 'category')
+        codeable_concept(category, text=condition['category'])
+    if condition.get('severity'):
+        severity = ET.SubElement(root, 'severity')
+        codeable_concept(severity, text=condition['severity'])
+    if condition.get('code'):
+        code = ET.SubElement(root, 'code')
+        codeable_concept(code, text=condition['code'])
+    subject = ET.SubElement(root, 'subject')
+    reference_type(subject, 'Patient/' + patient_id, 'Patient', display=patient_name)
+    encounter = ET.SubElement(root, 'encounter')
+    reference_type(encounter, 'Encounter/'+encounter_id, 'Encounter')            
+    if condition.get('onset'):
+        onset = ET.SubElement(root, 'onsetdateTime')
+        onset.set('value', condition['onset'])
+    return ET.tostring(root, encoding="us-ascii", method="xml", xml_declaration=None, default_namespace=None, short_empty_elements=True)
+
+
+def create_service_resource(service, patient_id, patient_name, encounter_id):
+    root = ET.Element('ServiceRequest')
+    tree = ET.ElementTree(root)
+    root.set('xmlns', 'http://hl7.org/fhir')
+    if service.get('identifier'):
+        identifier = ET.SubElement(root, 'identifier')
+        identifier_type(identifier, 'urn:trinhcongminh', service['identifier'], 'usual')
+    if service.get('status'):
+        status = ET.SubElement(root, 'status')
+        status.set('value', service['status'])
+    if service.get('intent'):
+        intent = ET.SubElement(root, 'intent')
+        intent.set('value', service['intent'])
+    if service.get('category'):
+        category = ET.SubElement(root, 'category')
+        codeable_concept(category, text=service['category'])
+    if service.get('code'):
+        code = ET.SubElement(root, 'code')
+        codeable_concept(code, text=service['code'])
+    subject = ET.SubElement(root, 'subject')
+    reference_type(subject, 'Patient/'+ patient_id, 'Patient', display=patient_name)
+    encounter = ET.SubElement(root, 'encounter')
+    reference_type(encounter, 'Encounter/'+ encounter_id, 'Patient')
+    return ET.tostring(root, encoding="us-ascii", method="xml", xml_declaration=None, default_namespace=None, short_empty_elements=True)
+
+def create_observation_resource(observation, patient_id, patient_name, encounter_id, service_id):
+    root = ET.Element('Observation')
+    tree = ET.ElementTree(root)
+    root.set('xmlns', 'http://hl7.org/fhir')
+    if observation.get('identifier'):
+        identifier = ET.SubElement(root, 'identifier')
+        identifier_type(identifier, 'urn:trinhcongminh', observation['identifier'], 'usual')
+    basedOn = ET.SubElement(root, 'basedOn')
+    reference_type(basedOn, 'ServiceRequest/' + service_id, 'ServiceRequest')
+    if observation.get('status'):
+        status = ET.SubElement(root, 'status')
+        status.set('value', observation['status'])
+    if observation.get('category'):
+        category = ET.SubElement(root, 'category')
+        codeable_concept(category, text=observation['category'])
+    if observation.get('code'):
+        code = ET.SubElement(root, 'code')
+        codeable_concept(code, text=observation['code'])
+    subject = ET.SubElement(root, 'subject')
+    reference_type(subject, 'Patient/' + patient_id, 'Patient', display=patient_name)
+    encounter = ET.SubElement(root, 'encounter')
+    reference_type(encounter, 'Encounter/' + encounter_id, 'Encounter')
+    if observation.get('effective'):
+        effectiveDateTime = ET.SubElement(root, 'effectiveDateTime')
+        effectiveDateTime.set('value', observation['effective'])
+    if observation.get('valuequantity'):
+        valueQuantity = ET.SubElement(root, 'valueQuantity')
+        quantity_type(valueQuantity, observation['valuequantity'], observation['valueunit'])
+    return ET.tostring(root, encoding="us-ascii", method="xml", xml_declaration=None, default_namespace=None, short_empty_elements=True)

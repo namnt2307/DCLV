@@ -1,26 +1,26 @@
 {%extends 'fhir/base.html'%}
-{%block url1%}'{%url 'fhir:hanhchinh' group_name user_name data.Patient.identifier data.Encounter.id%}'{%endblock%}
-{%block url2%}'{%url 'fhir:dangky' group_name user_name data.Patient.identifier data.Encounter.id%}'{%endblock%}
-{%block url3%}'{%url 'fhir:hoibenh' group_name user_name data.Patient.identifier data.Encounter.id%}'{%endblock%}
+{%block url1%}'{%url 'fhir:hanhchinh' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url2%}'{%url 'fhir:dangky' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url3%}'{%url 'fhir:hoibenh' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
 {%block leftbar%}
     {%if services%}
         {%for service in services%}
-            {%if service.request_description%}
-            <li><a href="{%url 'fhir:ketqua' group_name user_name data.Patient.identifier data.Encounter.id service.servicerequest_id%}">{{service.request_description}}</a></li>
+            {%if service.service_description%}
+            <li><a href="{%url 'fhir:ketqua' group_name user_name data.Patient.identifier data.Encounter.identifier service.service_identifier%}">{{service.service_description}}</a></li>
             {%endif%}
         {%endfor%}
     {%endif%}
 {%endblock%}
 {%block function%}
-    {%if data.Encounter_Info.submitted%}
-        <p>Loại hình thăm khám: {{data.Encounter_Info.class_select}}</p>
-        <p>Loại bệnh án: {{data.Encounter_Info.type_select}}</p>
-        <p>Dịch vụ khám bệnh: {{data.Encounter_Info.service_type}}</p>
-        <p>Mức độ ưu tiên: {{data.Encounter_Info.priority}}</p>
-        <p>Lý do đến khám: {{data.Encounter_Info.reason_code}}</p>
-        <p>Khoa khám bệnh: {{data.Encounter_Info.location}}</p>
+    {%if data.Encounter_Info.encounter_submitted%}
+        <p>Loại hình thăm khám: {{data.Encounter_Info.encounter_class}}</p>
+        <p>Loại bệnh án: {{data.Encounter_Info.encounter_type}}</p>
+        <p>Dịch vụ khám bệnh: {{data.Encounter_Info.encounter_service}}</p>
+        <p>Mức độ ưu tiên: {{data.Encounter_Info.encounter_priority}}</p>
+        <p>Lý do đến khám: {{data.Encounter_Info.encounter_reason}}</p>
+        <p>Khoa khám bệnh: {{data.Encounter_Info.encounter_location}}</p>
     {%else%}
-    <form action="{% url 'fhir:dangky' group_name user_name data.Patient.identifier data.Encounter.id %}" method="POST">
+    <form action="{% url 'fhir:dangky' group_name user_name data.Patient.identifier data.Encounter.identifier %}" method="POST">
         {%csrf_token%}
         {{form.as_p}}
         <input type="submit" value="Submit">

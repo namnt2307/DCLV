@@ -1,27 +1,27 @@
 {%extends 'fhir/base.html'%}
-{%block url1%}'{%url 'fhir:hanhchinh' group_name user_name data.Patient.identifier data.Encounter.id%}'{%endblock%}
-{%block url2%}'{%url 'fhir:dangky' group_name user_name data.Patient.identifier data.Encounter.id%}'{%endblock%}
-{%block url3%}'{%url 'fhir:hoibenh' group_name user_name data.Patient.identifier data.Encounter.id%}'{%endblock%}
+{%block url1%}'{%url 'fhir:hanhchinh' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url2%}'{%url 'fhir:dangky' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url3%}'{%url 'fhir:hoibenh' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
 {%block leftbar%}
     {%if services%}
         {%for service in services%}
-            {%if service.request_description%}
-            <li><a href="{%url 'fhir:ketqua' group_name user_name data.Patient.identifier data.Encounter.id service.servicerequest_id%}">{{service.request_description}}</a></li>
+            {%if service.service_description%}
+            <li><a href="{%url 'fhir:ketqua' group_name user_name data.Patient.identifier data.Encounter.identifier service.service_identifier%}">{{service.service_description}}</a></li>
             {%endif%}
         {%endfor%}
     {%endif%}
 {%endblock%}
 {%block function%}
     {%if observations%}
-        <form action="">
+        <form action="" method="POST">
             {%csrf_token%}
             {%for observation in observations%}
-                {%if observation.valuequantity%}
-                    <p>{{observation.name}}: {{observation.valuequantity}} {{observation.valueunit}}</p>
+                {%if observation.observation_valuequantity%}
+                    <p>{{observation.observation_name}}: {{observation.observation_valuequantity}} {{observation.observation_valueunit}}</p>
                 {%else%}
-                    <label for="{{observation.id}}">{{observation.name}}</label>
-                    <input type="text" name="{{observation.id}}" id="{{observation.id}}">
-                    <p style="display: inline;">{{observation.valueunit}}</p>
+                    <label for="{{observation.observation_identifier}}">{{observation.observation_name}}</label>
+                    <input type="text" name="{{observation.observation_identifier}}" id="{{observation.observation_identifier}}">
+                    <p style="display: inline;">{{observation.observation_valueunit}}</p>
                     <br>
                 {%endif%}
             {%endfor%}
