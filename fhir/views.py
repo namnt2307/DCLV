@@ -61,8 +61,8 @@ class register(View):
             data['Patient']['name'] = request.POST['full_name']
             data['Patient']['gender'] = request.POST['gender']
             data['Patient']['birthDate'] = request.POST['birth_date']
-            data['Patient']['address'] = [{'address': request.POST['home_address'], 'use': 'home'},
-                                          {'address': request.POST['work_address'], 'use': 'work'}]
+            data['Patient']['home_address'] = request.POST['home_address']
+            data['Patient']['work_address'] = request.POST['work_address']
             data['Patient']['identifier'] = request.POST['user_identifier']
             data['Patient']['telecom'] = request.POST['telecom']
             # xml_data, data = handlers.register_ehr(patient, id_system)
@@ -177,32 +177,32 @@ class search(View):
         # instance = get_object_or_404(
         #     User, user_identifier=patient['identifier'])
                 data['Patient']['identifier'] = instance.user_identifier
-                data['Patient']['name'] = instance.full_name
-                data['Patient']['birthDate'] = instance.birth_date
+                data['Patient']['name'] = instance.name
+                data['Patient']['birthDate'] = instance.birthDate
                 data['Patient']['gender'] = instance.gender
-                data['Patient']['address'] = [{'address':instance.home_address,'use':'home'}]
-                if instance.work_address:
-                    data['Patient']['address'].append({'address': instance.work_address, 'use':'work'})
-                encounter_instances = EncounterModel.objects.all().filter(user_identifier=instance.user_identifier)
+                data['Patient']['home_address'] = instance.home_address                
+                data['Patient']['work_address'] = instance.work_address
+                data['Encounter'] =  EncounterModel.objects.all().filter(user_identifier=instance.user_identifier)
 
-                print(encounter_instances)
-                print(len(encounter_instances))
-                if encounter_instances:
-                    for encounter in encounter_instances:
-                        encounter_identifier = encounter.encounter_identifier
-                        start_date = encounter.encounter_start
-                        status = encounter.encounter_status
-                        end_date = None
-                        if encounter.encounter_end:
-                            end_date = encounter.encounter_end
-                        class_value = 'new'
-                        if encounter.encounter_class:
-                            class_value = encounter.encounter_class
-                        data['Encounter'].append({'identifier': encounter_identifier, 'class': class_value, 'status': status, 'period': {
-                                                    'start': start_date, 'end': end_date}})
+                # print(encounter_instances)
+                # print(len(encounter_instances))
+                # if encounter_instances:
+                #     for encounter in encounter_instances:
+                #         encounter_identifier = encounter.encounter_identifier
+                #         start_date = encounter.encounter_start
+                #         status = encounter.encounter_status
+                #         end_date = None
+                #         if encounter.encounter_end:
+                #             end_date = encounter.encounter_end
+                #         class_value = 'new'
+                #         if encounter.encounter_class:
+                #             class_value = encounter.encounter_class
+                #         data['Encounter'].append({'identifier': encounter_identifier, 'class': class_value, 'status': status, 'period': {
+                #                                     'start': start_date, 'end': end_date}})
             except patient.DoesNotExist:
                 data['Patient'] = dt.query_patient(request.POST['identifier'])
                 if data['Patient']:
+                    new_patient = patient.objects.create_user(**data['Patient'])
                     get_encounter = requests.get("http://hapi.fhir.org/baseR4/Encounter?subject.identifier=urn:trinhcongminh|" +
                                                 request.POST['identifier'], headers={'Content-type': 'application/xml'})
                     if get_encounter.status_code == 200 and 'entry' in get_encounter.content.decode('utf-8'):
@@ -210,23 +210,32 @@ class search(View):
                             get_encounter.content.decode('utf-8'))
                         data['Encounter'] = []
                         for entry in get_root.findall('d:entry', ns):
+                            encounter = {}
                             resource = entry.find('d:resource', ns)
                             encounter_resource = resource.find('d:Encounter', ns)
-                            encounter_id = encounter_resource.find(
-                                'd:id', ns).attrib['value']
+                            encounter['id'] = encounter_resource.find('d:id', ns).attrib['value']
+                            identifier = encounter_resource.find('d:identifier', ns)
+                            encounter['encounter_identifier'] = identifier.find('d:value', ns).attrib['value']
+                            encounter['encounter_status'] = encounter_resource.find('d:status', ns).attrib['value']
                             _class = encounter_resource.find('d:class', ns)
-                            class_value = _class.find('d:code', ns).attrib['value']
-                            status = encounter_resource.find(
-                                'd:status', ns).attrib['value']
+                            encounter['encounter_class'] = _class.find('d:code', ns).attrib['value']
+                            _type = encounter_resource.find('d:type', ns)
+                            encounter['encounter_type'] = _type.find('d:text', ns).attrib['value']
+                            servicetype = encounter_resource.find('d:serviceType', ns)
+                            encounter['encounter_service'] = servicetype.find('d:text', ns).attrib['value']
+                            priority = encounter_resource.find('d:priority', ns)
+                            encounter['encounter_priority'] = priority.find('d:text', ns)
                             period = encounter_resource.find('d:period', ns)
-                            start_date = period.find('d:start', ns).attrib['value']
-                            start_date = dt.getdatetime(start_date)
+                            encounter['encounter_start'] = period.find('d:start', ns).attrib['value']
                             end_date = None
                             if period.find('d:end', ns) != None:
                                 end_date = period.find('d:end', ns).attrib['value']
-                                end_date = dt.getdatetime(end_date)
-                            data['Encounter'].append({'id': encounter_id, 'class': class_value, 'status': status, 'period': {
-                                                    'start': start_date, 'end': end_date}})
+                                encounter['encounter_end'] = dt.getdatetime(end_date)
+                            reason = encounter_resource.find('d:reasonCode', ns)
+                            encounter['encounter_reason'] = reason.find('d:text', ns).attrib['value']
+                            encounter['encounter_submitted'] = True
+                            EncounterModel.objects.create(**encounter)
+                            data['Encounter'].append(encounter)
             if data:
                 data['encounter_type'] = 'list'
                 return render(request, 'fhir/doctor/display.html', {'message': 'Da tim thay', 'data': data, 'group_name': group_name, 'user_name': user_name})

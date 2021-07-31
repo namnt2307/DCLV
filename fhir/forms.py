@@ -8,7 +8,7 @@ from .models import EncounterModel, ServiceRequestModel, ProcedureModel, Allergy
 class EHRCreationForm(forms.ModelForm):
     class Meta:
         model = get_user_model()
-        fields = ('full_name', 'gender', 'birth_date',
+        fields = ('name', 'gender', 'birthDate',
                   'home_address', 'work_address', 'user_identifier', 'telecom')
 
 class EncounterForm(forms.ModelForm):
@@ -28,7 +28,7 @@ class EncounterForm(forms.ModelForm):
 class UserForm(forms.ModelForm):
     class Meta:
         model = UserModel()
-        fields = ('user_identifier', 'full_name', 'gender', 'birth_date', 'home_address', 'work_address', 'telecom')
+        fields = ('identifier', 'name', 'gender', 'birthDate', 'home_address', 'work_address', 'telecom')
 
 class ConditionForm(forms.ModelForm):
     class Meta:

@@ -267,10 +267,12 @@ def create_patient_resource(patient):
     if patient.get('birthDate'):
         birthDate = ET.SubElement(root, 'birthDate')
         birthDate.set('value', patient['birthDate'])
-    if patient.get('address'):
-        for value in patient['address']:
-            address = ET.SubElement(root,'address')
-            address_type(address, value.get('address'),value.get('postalCode'),value.get('country'),value.get('use'),value.get('type'))
+    if patient.get('home_address'):
+        address = ET.SubElement(root,'address')
+        address_type(address, patient['home_address'], use='home')
+    if patient.get('work_address'):
+        address = ET.SubElement(root,'address')
+        address_type(address, patient['work_address'], use='work')
     if patient.get('contact'):
         contact = ET.SubElement(root, 'contact')
     return ET.tostring(root, encoding="us-ascii", method="xml", xml_declaration=None, default_namespace=None, short_empty_elements=True)
@@ -481,8 +483,10 @@ def query_patient(patient_identifier):
         patient['address'] = []
         for address in patient_resource.findall('d:address', ns):
             addr_type = address.find('d:use', ns).attrib['value']
-            addr = address.find('d:line', ns).attrib['value'] + ', ' + address.find('d:district', ns).attrib['value'] + ', ' + address.find('d:city', ns).attrib['value']
-            patient['address'].append({'use': addr_type, 'address': addr})
+            if addr_type == 'home':
+                patient['home_address'] = address.find('d:line', ns).attrib['value'] + ', ' + address.find('d:district', ns).attrib['value'] + ', ' + address.find('d:city', ns).attrib['value']
+            elif addr_type == 'work':
+                patient['work_address'] = address.find('d:line', ns).attrib['value'] + ', ' + address.find('d:district', ns).attrib['value'] + ', ' + address.find('d:city', ns).attrib['value']
         patient['identifier'] = patient_identifier
         return patient
     else:

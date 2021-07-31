@@ -5,13 +5,8 @@
         <p>Họ và tên: {{data.Patient.name}}</p>
         <p>Giới tính: {{data.Patient.gender}}</p>
         <p>Ngày sinh: {{data.Patient.birthDate}}</p>
-        {%for addr in data.Patient.address %}
-            {%if addr.use == 'home'%}
-                <p>Địa chỉ: {{addr.address}}</p>
-            {%elif addr.use == 'work'%}
-                <p>Nơi làm việc: {{addr.address}}</p>
-            {%endif%}
-        {%endfor%}
+        <p>Địa chỉ: {{data.Patient.home_address}}</p>
+        <p>Nơi làm việc: {{data.Patient.work_address}}</p>
         <p>Số điện thoại: {{data.Patient.telecom}}</p>
         <h1>CÁC LẦN ĐĂNG KÝ KHÁM </h1>
         <table>
@@ -26,11 +21,11 @@
            {%if data.encounter_type == 'list'%}
                 {%for encounter in data.Encounter%}
                     <tr>
-                        <td>{{encounter.period.start}}</td>
-                        <td><a href="{% url 'fhir:hanhchinh' group_name user_name data.Patient.identifier encounter.identifier %}">{{encounter.identifier}}</a></td>
-                        <td>{{encounter.class}}</td>
-                        <td>{{encounter.status}}</td>
-                        <td>{{encounter.period.end}}</td>
+                        <td>{{encounter.encounter_start}}</td>
+                        <td><a href="{% url 'fhir:hanhchinh' group_name user_name data.Patient.identifier encounter.encounter_identifier %}">{{encounter.encounter_identifier}}</a></td>
+                        <td>{{encounter.encounter_class}}</td>
+                        <td>{{encounter.encounter_status}}</td>
+                        <td>{{encounter.encounter_end}}</td>
                     </tr>
                 {%endfor%}
             

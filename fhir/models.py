@@ -68,14 +68,14 @@ class UserModel(models.Model):
     ('Nam','Nam'),
     ('Nữ','Nữ')
     )
-    user_identifier = models.CharField(primary_key=True, max_length=10)
-    full_name = models.CharField(default='',max_length=100)
-    birth_date = models.DateField(default=datetime.now)
+    identifier = models.CharField(primary_key=True, max_length=10)
+    name = models.CharField(default='',max_length=100)
+    birthDate = models.DateField(default=datetime.now)
     gender = models.CharField(max_length=3,choices=GENDER_CHOICES,default='')
     work_address = models.CharField(default= '',max_length=255)
     home_address = models.CharField(default= '',max_length=255)
-    telecom = models.CharField(default = '', max_length=10)
-    group_name = models.CharField(default='',max_length=20)   
+    telecom = models.CharField(default='', max_length=10)
+    group_name = models.CharField(default='patient',max_length=20)   
 
 class ConditionModel(models.Model):
     CLINICAL_CHOICES = (
