@@ -1,3 +1,4 @@
+from fhir.models import EncounterModel
 import xml.etree.ElementTree as ET
 import requests
 import openpyxl as xl
@@ -163,7 +164,7 @@ def get_observation(encounter_id):
 def getdatetime(datetime_str):
     get_datetime = datetime_str.split('+')[0]
     datetime_obj = datetime.strptime(get_datetime, '%Y-%m-%dT%H:%M:%S')
-    return datetime.strftime(datetime_obj, "%H:%M:%S, %d-%m-%Y")
+    return datetime.strftime(datetime_obj, "%Y-%m-%d %H:%M:%S")
 
 
 def get_encounter(encounter_id):
@@ -304,7 +305,7 @@ def create_encounter_resource(encounter, patient_id, patient_name):
         codeable_concept(serviceType,text=encounter['serviceType'])
     if encounter.get('priority'):
         priority = ET.SubElement(root, 'priority')
-        codeable_concept(priority,1,[{'system':'http://terminology.hl7.org/ValueSet/v3-ActPriority','code':encounter['priority'], 'version':'2018-08-12'}])
+        codeable_concept(priority,1,[{'system':'http://terminology.hl7.org/CodeSystem/v3-ActPriority','code':encounter['priority'], 'version':'2018-08-12'}])
     subject = ET.SubElement(root, 'subject')
     reference_type(subject, 'Patient/'+ patient_id, 'Patient', display=patient_name)
     if encounter.get('period'):
@@ -313,6 +314,9 @@ def create_encounter_resource(encounter, patient_id, patient_name):
     if encounter.get('length'):
         length = ET.SubElement(root, 'length')
         duration_type(length, encounter['length'], 'days', 'http://unitsofmeasure.org', 'd')    
+    if encounter.get('reasonCode'):
+        reason = ET.SubElement(root, 'reasonCode')
+        codeable_concept(reason, text=encounter['reasonCode'])
     # if data['Encounter'].get('location'):
     #     location = ET.SubElement(root, 'location')
     if encounter.get('serviceProvider'):
@@ -379,7 +383,7 @@ def create_condition_resource(condition, patient_id, patient_name, encounter_id)
         identifier_type(identifier, 'urn:trinhcongminh', condition['identifier'], 'usual')
     if condition.get('clinicalStatus'):
         clinical = ET.SubElement(root, 'clinicalStatus')
-        codeable_concept(clinical, text=condition['clinicalStatus'])
+        codeable_concept(clinical,1,[{'system':'http://terminology.hl7.org/CodeSystem/condition-clinical','code':condition['clinicalStatus'], 'version':'2018-08-12'}], text=condition['clinicalStatus'])
     if condition.get('verificationStatus'):
         verify = ET.SubElement(root, 'verificationStatus')
         codeable_concept(verify, text=condition['verificationStatus'])
@@ -397,7 +401,7 @@ def create_condition_resource(condition, patient_id, patient_name, encounter_id)
     encounter = ET.SubElement(root, 'encounter')
     reference_type(encounter, 'Encounter/'+encounter_id, 'Encounter')            
     if condition.get('onset'):
-        onset = ET.SubElement(root, 'onsetdateTime')
+        onset = ET.SubElement(root, 'onsetDateTime')
         onset.set('value', condition['onset'])
     return ET.tostring(root, encoding="us-ascii", method="xml", xml_declaration=None, default_namespace=None, short_empty_elements=True)
 
@@ -424,7 +428,7 @@ def create_service_resource(service, patient_id, patient_name, encounter_id):
     subject = ET.SubElement(root, 'subject')
     reference_type(subject, 'Patient/'+ patient_id, 'Patient', display=patient_name)
     encounter = ET.SubElement(root, 'encounter')
-    reference_type(encounter, 'Encounter/'+ encounter_id, 'Patient')
+    reference_type(encounter, 'Encounter/'+ encounter_id, 'Encounter')
     return ET.tostring(root, encoding="us-ascii", method="xml", xml_declaration=None, default_namespace=None, short_empty_elements=True)
 
 def create_observation_resource(observation, patient_id, patient_name, encounter_id, service_id=None):
@@ -455,7 +459,7 @@ def create_observation_resource(observation, patient_id, patient_name, encounter
         effectiveDateTime.set('value', observation['effective'])
     if observation.get('valuequantity'):
         valueQuantity = ET.SubElement(root, 'valueQuantity')
-        quantity_type(valueQuantity, observation['valuequantity'], observation['valueunit'])
+        quantity_type(valueQuantity, observation['valuequantity'], observation['valueunit'], comparator='=')
     return ET.tostring(root, encoding="us-ascii", method="xml", xml_declaration=None, default_namespace=None, short_empty_elements=True)
 
 
@@ -480,7 +484,6 @@ def query_patient(patient_identifier):
         elif gender == 'female':
             patient['gender'] = 'Nữ'
         patient['birthDate'] = patient_resource.find('d:birthDate', ns).attrib['value']
-        patient['address'] = []
         for address in patient_resource.findall('d:address', ns):
             addr_type = address.find('d:use', ns).attrib['value']
             if addr_type == 'home':

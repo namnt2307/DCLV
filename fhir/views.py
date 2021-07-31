@@ -35,7 +35,7 @@ def patient_view(request, group_name, user_name):
     user = User.objects.get(username=user_name)
     user_id = user.identifier
     if user:
-        patient['name'] = user.full_name
+        patient['name'] = user.name
         patient['gender'] = user.gender
         patient['birthDate'] = user.birth_date
         patient['address'] = [{'address': user.home_address, 'use': 'home'},
@@ -205,18 +205,18 @@ class search(View):
                 print(data['Patient'])
                 if data['Patient']:
                     print(data['Patient'])
-                    new_patient = patient.objects.create_user(**data['Patient'], email='123@gmail.com', password='123')
+                    create_data = data['Patient']
+                    create_data.pop('id', None)
+                    new_patient = patient.objects.create_user(**create_data,username=data['Patient']['identifier'], email='123@gmail.com', password='123')
                     get_encounter = requests.get("http://hapi.fhir.org/baseR4/Encounter?subject.identifier=urn:trinhcongminh|" +
-                                                request.POST['identifier'], headers={'Content-type': 'application/xml'})
+                    request.POST['identifier'], headers={'Content-type': 'application/xml'})
                     if get_encounter.status_code == 200 and 'entry' in get_encounter.content.decode('utf-8'):
-                        get_root = ET.fromstring(
-                            get_encounter.content.decode('utf-8'))
+                        get_root = ET.fromstring(get_encounter.content.decode('utf-8'))
                         data['Encounter'] = []
                         for entry in get_root.findall('d:entry', ns):
                             encounter = {}
                             resource = entry.find('d:resource', ns)
                             encounter_resource = resource.find('d:Encounter', ns)
-                            encounter['id'] = encounter_resource.find('d:id', ns).attrib['value']
                             identifier = encounter_resource.find('d:identifier', ns)
                             encounter['encounter_identifier'] = identifier.find('d:value', ns).attrib['value']
                             encounter['encounter_status'] = encounter_resource.find('d:status', ns).attrib['value']
@@ -227,18 +227,19 @@ class search(View):
                             servicetype = encounter_resource.find('d:serviceType', ns)
                             encounter['encounter_service'] = servicetype.find('d:text', ns).attrib['value']
                             priority = encounter_resource.find('d:priority', ns)
-                            encounter['encounter_priority'] = priority.find('d:text', ns)
+                            priority_coding = priority.find('d:coding', ns)
+                            encounter['encounter_priority'] = priority_coding.find('d:value', ns)
                             period = encounter_resource.find('d:period', ns)
-                            encounter['encounter_start'] = period.find('d:start', ns).attrib['value']
+                            encounter['encounter_start'] = dt.getdatetime(period.find('d:start', ns).attrib['value'])
                             end_date = None
                             if period.find('d:end', ns) != None:
                                 end_date = period.find('d:end', ns).attrib['value']
                                 encounter['encounter_end'] = dt.getdatetime(end_date)
                             reason = encounter_resource.find('d:reasonCode', ns)
                             encounter['encounter_reason'] = reason.find('d:text', ns).attrib['value']
-                            encounter['encounter_submitted'] = True
+                            encounter['encounter_submitted'] = True                                                        
                             EncounterModel.objects.create(**encounter, user_identifier=new_patient)
-                            data['Encounter'].append(encounter)
+                            data['Encounter'].append(encounter)                        
                 else:
                     return HttpResponse('No data found')
             if data:
@@ -254,28 +255,132 @@ class hanhchinh(View):
     def get(self, request, group_name, user_name, patient_identifier, encounter_identifier):
         patient = get_user_model()
         data = {'Patient': {}, 'Encounter': {}, 'Observation': []}
-        try:
-            instance = patient.objects.get(
-                identifier=patient_identifier)
-            # instance = get_object_or_404(
-            #     User, user_identifier=patient['identifier'])
-            data['Patient']['identifier'] = instance.identifier
-            data['Patient']['name'] = instance.full_name
-            data['Patient']['birthDate'] = instance.birth_date
-            data['Patient']['gender'] = instance.gender
-            data['Patient']['address'] = [{'address':instance.home_address,'use':'home'}]
-            if instance.work_address:
-                data['Patient']['address'].append({'address': instance.work_address, 'use':'work'})            
-
-        except patient.DoesNotExist:
-            
-        
-            data['Patient'] = dt.query_patient(patient_identifier)
-            data['Encounter'] = dt.get_encounter(encounter_identifier)
-            if data['Encounter']:
-                data['Observation'] = dt.get_observation(encounter_identifier)
+        instance = patient.objects.get(
+            identifier=patient_identifier)
+        # instance = get_object_or_404(
+        #     User, user_identifier=patient['identifier'])
+        data['Patient']['identifier'] = instance.identifier
+        data['Patient']['name'] = instance.name
+        data['Patient']['birthDate'] = instance.birthDate
+        data['Patient']['gender'] = instance.gender
+        data['Patient']['home_address'] = instance.home_address  
+        data['Patient']['work_address'] = instance.work_address            
+        # except patient.DoesNotExist:
+        #     data['Patient'] = dt.query_patient(patient_identifier)
+        #     data['Encounter'] = dt.get_encounter(encounter_identifier)
+        #     if data['Encounter']:
+        #         data['Observation'] = dt.get_observation(encounter_identifier)
+        encounter_instance = EncounterModel.objects.get(encounter_identifier = encounter_identifier)
         data['Encounter']['identifier'] = encounter_identifier
-        services = ServiceRequestModel.objects.all().filter(encounter_identifier = encounter_identifier)
+        if encounter_instance.encounter_status == 'finished':
+            conditions = ConditionModel.objects.all().filter(encounter_identifier = encounter_instance)
+            print(conditions)
+            if len(conditions) == 0:
+                get_condition = requests.get("http://hapi.fhir.org/baseR4/Condition?encounter.identifier=urn:trinhcongminh|" +
+                    encounter_identifier, headers={'Content-type': 'application/xml'})
+                print(get_condition.content)
+                if get_condition.status_code == 200 and 'entry' in get_condition.content.decode('utf-8'):
+                    get_root = ET.fromstring(get_condition.content.decode('utf-8'))
+                    data['Condition'] = []
+                    for entry in get_root.findall('d:entry', ns):
+                        condition = {}
+                        resource = entry.find('d:resource', ns)
+                        condition_resource = resource.find('d:Condition', ns)
+                        print(condition_resource.find('d:id', ns).attrib['value'])
+                        condition_identifier = condition_resource.find('d:identifier', ns)
+                        condition['condition_identifier'] = condition_identifier.find('d:value', ns).attrib['value']
+                        clinicalstatus = condition_resource.find('d:clinicalStatus', ns)
+                        clinicalstatus_coding = clinicalstatus.find('d:coding', ns)
+                        condition['condition_clinicalstatus'] = clinicalstatus_coding.find('d:code', ns).attrib['value']
+                        severity = condition_resource.find('d:severity', ns)
+                        condition['condition_severity'] = severity.find('d:text', ns).attrib['value']
+                        code = condition_resource.find('d:code', ns)
+                        condition['condition_code'] = code.find('d:text', ns).attrib['value']
+                        onset = condition_resource.find('d:onsetDateTime', ns)
+                        condition['condition_onset'] = dt.getdatetime(onset.attrib['value'])
+                        ConditionModel.objects.create(**condition, encounter_identifier = encounter_instance)
+            services = ServiceRequestModel.objects.all().filter(encounter_identifier = encounter_instance)
+            print(services)
+            if len(services) == 0:
+                get_services = requests.get("http://hapi.fhir.org/baseR4/ServiceRequest?encounter.identifier=urn:trinhcongminh|" +
+                    encounter_identifier, headers={'Content-type': 'application/xml'})
+                if get_services.status_code == 200 and 'entry' in get_services.content.decode('utf-8'):
+                    get_root = ET.fromstring(get_services.content.decode('utf-8'))
+                    data['Service'] = []
+                    for entry in get_root.findall('d:entry', ns):
+                        service = {}
+                        resource = entry.find('d:resource', ns)
+                        service_resource = resource.find('d:ServiceRequest', ns)
+                        service_identifier = service_resource.find('d:identifier', ns)
+                        service['service_identifier'] = service_identifier.find('d:value', ns).attrib['value']
+                        service['service_status'] = service_resource.find('d:status', ns).attrib['value']
+                        category = service_resource.find('d:category', ns)
+                        service['service_category'] = category.find('d:text', ns).attrib['value']
+                        code = service_resource.find('d:code', ns)
+                        service['service_code'] = code.find('d:text', ns).attrib['value']
+                        ServiceRequestModel.objects.create(**service, encounter_identifier = encounter_instance)
+                        service_observations = requests.get("http://hapi.fhir.org/baseR4/Observation?based-on.identifier=urn:trinhcongminh|" +
+                            service['service_identifier'], headers={'Content-type': 'application/xml'})
+                        print(service_observations.content)
+                        if service_observations.status_code == 200 and 'entry' in service_observations.content.decode('utf-8'):
+                            get_root = ET.fromstring(service_observations.content.decode('utf-8'))
+                            for entry in get_root.findall('d:entry', ns):
+                                observation = {}
+                                resource = entry.find('d:resource', ns)
+                                observation_resource = resource.find('d:Observation', ns)
+                                observation_identifier = observation_resource.find('d:identifier', ns)
+                                observation['observation_identifier'] = observation_identifier.find('d:value', ns).attrib['value']
+                                observation['observation_status'] = observation_resource.find('d:status', ns).attrib['value']
+                                category = observation_resource.find('d:category', ns)
+                                observation['observation_category'] = category.find('d:text', ns).attrib['value']
+                                code = observation_resource.find('d:code', ns)
+                                observation['observation_name'] = code.find('d:text', ns).attrib['value']
+                                effective = observation_resource.find('d:effectiveDateTime', ns).attrib['value']
+                                observation['observation_effective'] = dt.getdatetime(effective)
+                                valuequantity = observation_resource.find('d:valueQuantity', ns)
+                                observation['observation_valuequantity'] = valuequantity.find('d:value', ns).attrib['value']
+                                unit = valuequantity.find('d:unit', ns)
+                                if unit is not None:
+                                    observation['observation_valueunit'] = unit.attrib['value']
+                                   
+                                observation['service_identifier'] = service['service_identifier']
+                                ObservationModel.objects.create(**observation, encounter_identifier = encounter_instance) 
+                        else:
+                            pass                                                                                           
+                else:
+                    pass
+            observations = ObservationModel.objects.all().filter(encounter_identifier=encounter_instance, observation_category = 'vital-signs')            
+            if len(observations) == 0:
+                get_observations = requests.get("http://hapi.fhir.org/baseR4/Observation?encounter.identifier=urn:trinhcongminh|" +
+                    encounter_identifier + "&category:text=vital-signs", headers={'Content-type': 'application/xml'})
+                if get_observations.status_code == 200 and 'entry' in get_observations.content.decode('utf-8'):
+                    get_root = ET.fromstring(get_observations.content.decode('utf-8'))
+                    for entry in get_root.findall('d:entry', ns):
+                        observation = {}
+                        resource = entry.find('d:resource', ns)
+                        observation_resource = resource.find('d:Observation', ns)
+                        observation_identifier = observation_resource.find('d:identifier', ns)
+                        observation['observation_identifier'] = observation_identifier.find('d:value', ns).attrib['value']
+                        observation['observation_status'] = observation_resource.find('d:status', ns).attrib['value']
+                        category = observation_resource.find('d:category', ns)
+                        observation['observation_category'] = category.find('d:text', ns).attrib['value']
+                        code = observation_resource.find('d:code', ns)
+                        observation['observation_name'] = code.find('d:text', ns).attrib['value']
+                        effective = observation_resource.find('d:effectiveDateTime', ns).attrib['value']
+                        observation['observation_effective'] = dt.getdatetime(effective)
+                        valuequantity = observation_resource.find('d:valueQuantity', ns)
+                        observation['observation_valuequantity'] = valuequantity.find('d:value', ns).attrib['value']
+                        unit = valuequantity.find('d:unit', ns)
+                        if unit is not None:
+                            observation['observation_valueunit'] = unit.attrib['value']
+                            print(observation['observation_valueunit'])
+                            # print(unit.attrib['value'])
+                        ObservationModel.objects.create(**observation, encounter_identifier = encounter_instance)
+                else:
+                    pass 
+            else:
+                pass
+        services = ServiceRequestModel.objects.all().filter(encounter_identifier = encounter_instance)               
         if data:
             return render(request, 'fhir/hanhchinh.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'services':services})
         else:
@@ -293,12 +398,11 @@ class encounter(View):
         # instance = get_object_or_404(
         #     User, user_identifier=patient['identifier'])
         data['Patient']['identifier'] = instance.identifier
-        data['Patient']['name'] = instance.full_name
-        data['Patient']['birthDate'] = instance.birth_date
+        data['Patient']['name'] = instance.name
+        data['Patient']['birthDate'] = instance.birthDate
         data['Patient']['gender'] = instance.gender
-        data['Patient']['address'] = [{'address':instance.home_address,'use':'home'}]
-        if instance.work_address:
-            data['Patient']['address'].append({'address': instance.work_address, 'use':'work'})
+        data['Patient']['home_address'] = instance.home_address
+        data['Patient']['work_address'] = instance.work_address
         encounter_instances = EncounterModel.objects.all().filter(user_identifier=instance)
         newencounter_identifier = patient_identifier + '_' + str(len(encounter_instances)+1)
         newencounter = EncounterModel.objects.create(user_identifier=instance, encounter_identifier=newencounter_identifier)
@@ -329,7 +433,7 @@ class dangky(View):
         data['Encounter_Info'] = EncounterModel.objects.get(encounter_identifier = encounter_identifier)
         data['Patient']['identifier'] = patient_identifier        
         data['Encounter']['identifier'] = encounter_identifier
-        services = ServiceRequestModel.objects.all().filter(encounter_identifier = encounter_identifier)
+        services = ServiceRequestModel.objects.all().filter(encounter_identifier = data['Encounter_Info'])
         return render(request, 'fhir/dangky.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'form':encounter_form,'services':services})
 
     def post(self, request, group_name, user_name, patient_identifier, encounter_identifier):
@@ -434,15 +538,15 @@ class service(View):
             service.service_location = 'room3'
             service.service_code = 'Xét nghiệm nước tiểu'
             ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier + '_1', observation_name='Leukocytes', observation_category=request.POST['service_category'], observation_valueunit='LEU/UL')
-            ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier + '_1', observation_name='Nitrate', observation_category=request.POST['service_category'], observation_valueunit='mg/dL')
-            ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier + '_1', observation_name='Urobilinogen', observation_category=request.POST['service_category'], observation_valueunit='mmol/L')
-            ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier + '_1', observation_name='Billirubin', observation_category=request.POST['service_category'], observation_valueunit='mmol/L')
-            ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier + '_1', observation_name='Protein', observation_category=request.POST['service_category'], observation_valueunit='mg/dL')
-            ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier + '_1', observation_name='Chỉ số pH', observation_category=request.POST['service_category'], observation_valueunit='')
-            ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier + '_1', observation_name='Blood', observation_category=request.POST['service_category'], observation_valueunit='mg/dL')
-            ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier + '_1', observation_name='Specific Gravity', observation_category=request.POST['service_category'], observation_valueunit='Cel')
-            ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier + '_1', observation_name='Ketone', observation_category=request.POST['service_category'], observation_valueunit='mg/dL')
-            ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier + '_1', observation_name='Glucose', observation_category=request.POST['service_category'], observation_valueunit='Cel')
+            ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier + '_2', observation_name='Nitrate', observation_category=request.POST['service_category'], observation_valueunit='mg/dL')
+            ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier + '_3', observation_name='Urobilinogen', observation_category=request.POST['service_category'], observation_valueunit='mmol/L')
+            ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier + '_4', observation_name='Billirubin', observation_category=request.POST['service_category'], observation_valueunit='mmol/L')
+            ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier + '_5', observation_name='Protein', observation_category=request.POST['service_category'], observation_valueunit='mg/dL')
+            ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier + '_6', observation_name='Chỉ số pH', observation_category=request.POST['service_category'], observation_valueunit='')
+            ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier + '_7', observation_name='Blood', observation_category=request.POST['service_category'], observation_valueunit='mg/dL')
+            ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier + '_8', observation_name='Specific Gravity', observation_category=request.POST['service_category'], observation_valueunit='Cel')
+            ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier + '_9', observation_name='Ketone', observation_category=request.POST['service_category'], observation_valueunit='mg/dL')
+            ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier + '_10', observation_name='Glucose', observation_category=request.POST['service_category'], observation_valueunit='Cel')
             service.save()
         elif request.POST['service'] == 'img1':        
             service.service_location = 'room4'     

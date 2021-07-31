@@ -79,12 +79,12 @@ class UserModel(models.Model):
 
 class ConditionModel(models.Model):
     CLINICAL_CHOICES = (
-        ('Active', 'Active'),
-        ('Inactive', 'Inactive'),
-        ('Recurrence', 'Recurrence'),
-        ('Relapse', 'Relapse'),
-        ('Remission', 'Remission'),
-        ('Resolved', 'Resolves')
+        ('active', 'Active'),
+        ('inactive', 'Inactive'),
+        ('recurrence', 'Recurrence'),
+        ('relapse', 'Relapse'),
+        ('remission', 'Remission'),
+        ('resolved', 'Resolves')
     )
     SEVERITY_CHOICES = (
         ('24484000', 'Nặng'),
@@ -103,7 +103,7 @@ class ServiceRequestModel(models.Model):
     service_identifier = models.CharField(max_length=100, primary_key=True)
     service_status = models.CharField(default='active', max_length=100)
     service_category = models.CharField(max_length=10)
-    service_location = models.CharField(max_length = 100)
+    service_location = models.CharField(null=True,max_length = 100)
     service_note = models.TextField(null=True)
     service_code = models.TextField(null=True)
 

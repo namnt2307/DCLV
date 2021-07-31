@@ -6,8 +6,8 @@
 {%block leftbar%}
     {%if services%}
         {%for service in services%}
-            {%if service.service_description%}
-            <li><a href="{%url 'fhir:ketqua' group_name user_name data.Patient.identifier data.Encounter.identifier service.service_identifier%}">{{service.service_description}}</a></li>
+            {%if service.service_code%}
+            <li><a href="{%url 'fhir:ketqua' group_name user_name data.Patient.identifier data.Encounter.identifier service.service_identifier%}">{{service.service_code}}</a></li>
             {%endif%}
         {%endfor%}
     {%endif%}

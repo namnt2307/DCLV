@@ -6,8 +6,8 @@
 {%block leftbar%}
     {%if services%}
         {%for service in services%}
-            {%if service.service_description%}
-            <li><a href="{%url 'fhir:ketqua' group_name user_name data.Patient.identifier data.Encounter.identifier service.service_identifier%}">{{service.service_description}}</a></li>
+            {%if service.service_code%}
+            <li><a href="{%url 'fhir:ketqua' group_name user_name data.Patient.identifier data.Encounter.identifier service.service_identifier%}">{{service.service_code}}</a></li>
             {%endif%}
         {%endfor%}
     {%endif%}
@@ -19,13 +19,8 @@
     <p>Họ và tên: {{data.Patient.name}}</p>
     <p>Giới tính: {{data.Patient.gender}}</p>
     <p>Ngày sinh: {{data.Patient.birthDate}}</p>
-    {%for addr in data.Patient.address %}
-        {%if addr.use == 'home'%}
-            <p>Địa chỉ: {{addr.address}}</p>
-        {%elif addr.use == 'work'%}
-            <p>Nơi làm việc: {{addr.address}}</p>
-        {%endif%}
-    {%endfor%}
+    <p>Địa chỉ: {{data.Patient.home_address}}</p>
+    <p>Nơi làm việc: {{data.Patient.work_address}}</p>
     {%else%}
     <h1>404 Not Found</h1>
     {%endif%}
