@@ -33,14 +33,14 @@ def patient_view(request, group_name, user_name):
     User = get_user_model()
     patient = {}
     user = User.objects.get(username=user_name)
-    user_id = user.user_identifier
+    user_id = user.identifier
     if user:
         patient['name'] = user.full_name
         patient['gender'] = user.gender
         patient['birthDate'] = user.birth_date
         patient['address'] = [{'address': user.home_address, 'use': 'home'},
                               {'address': user.work_address, 'use': 'work'}]
-        patient['identifier'] = user.user_identifier
+        patient['identifier'] = user.identifier
         message = 'Đây là hồ sơ của bạn'
     else:
         message = 'Bạn chưa có hồ sơ khám bệnh'
@@ -58,12 +58,12 @@ class register(View):
         User = get_user_model()
         if request.POST:
             data = {'Patient': {}}
-            data['Patient']['name'] = request.POST['full_name']
+            data['Patient']['name'] = request.POST['name']
             data['Patient']['gender'] = request.POST['gender']
-            data['Patient']['birthDate'] = request.POST['birth_date']
+            data['Patient']['birthDate'] = request.POST['birthDate']
             data['Patient']['home_address'] = request.POST['home_address']
             data['Patient']['work_address'] = request.POST['work_address']
-            data['Patient']['identifier'] = request.POST['user_identifier']
+            data['Patient']['identifier'] = request.POST['identifier']
             data['Patient']['telecom'] = request.POST['telecom']
             # xml_data, data = handlers.register_ehr(patient, id_system)
             patient = dt.create_patient_resource(data['Patient'])
@@ -73,7 +73,7 @@ class register(View):
                 print(post_req.content)
                 try:
                     instance = User.objects.get(
-                        user_identifier=data['Patient']['identifier'])
+                        identifier=data['Patient']['identifier'])
                     # instance = get_object_or_404(
                     #     User, user_identifier=patient['identifier'])
                 except User.DoesNotExist:
@@ -171,18 +171,19 @@ class search(View):
         data = {'Patient': {}, 'Encounter': []}
         patient = get_user_model()
         if request.POST:
+            print(request.POST)
             try:
                 instance = patient.objects.get(
-                user_identifier=request.POST['identifier'])
+                identifier=request.POST['identifier'])
         # instance = get_object_or_404(
         #     User, user_identifier=patient['identifier'])
-                data['Patient']['identifier'] = instance.user_identifier
+                data['Patient']['identifier'] = instance.identifier
                 data['Patient']['name'] = instance.name
                 data['Patient']['birthDate'] = instance.birthDate
                 data['Patient']['gender'] = instance.gender
                 data['Patient']['home_address'] = instance.home_address                
                 data['Patient']['work_address'] = instance.work_address
-                data['Encounter'] =  EncounterModel.objects.all().filter(user_identifier=instance.user_identifier)
+                data['Encounter'] =  EncounterModel.objects.all().filter(user_identifier=instance.identifier)
 
                 # print(encounter_instances)
                 # print(len(encounter_instances))
@@ -201,8 +202,10 @@ class search(View):
                 #                                     'start': start_date, 'end': end_date}})
             except patient.DoesNotExist:
                 data['Patient'] = dt.query_patient(request.POST['identifier'])
+                print(data['Patient'])
                 if data['Patient']:
-                    new_patient = patient.objects.create_user(**data['Patient'])
+                    print(data['Patient'])
+                    new_patient = patient.objects.create_user(**data['Patient'], email='123@gmail.com', password='123')
                     get_encounter = requests.get("http://hapi.fhir.org/baseR4/Encounter?subject.identifier=urn:trinhcongminh|" +
                                                 request.POST['identifier'], headers={'Content-type': 'application/xml'})
                     if get_encounter.status_code == 200 and 'entry' in get_encounter.content.decode('utf-8'):
@@ -234,8 +237,10 @@ class search(View):
                             reason = encounter_resource.find('d:reasonCode', ns)
                             encounter['encounter_reason'] = reason.find('d:text', ns).attrib['value']
                             encounter['encounter_submitted'] = True
-                            EncounterModel.objects.create(**encounter)
+                            EncounterModel.objects.create(**encounter, user_identifier=new_patient)
                             data['Encounter'].append(encounter)
+                else:
+                    return HttpResponse('No data found')
             if data:
                 data['encounter_type'] = 'list'
                 return render(request, 'fhir/doctor/display.html', {'message': 'Da tim thay', 'data': data, 'group_name': group_name, 'user_name': user_name})
@@ -251,10 +256,10 @@ class hanhchinh(View):
         data = {'Patient': {}, 'Encounter': {}, 'Observation': []}
         try:
             instance = patient.objects.get(
-                user_identifier=patient_identifier)
+                identifier=patient_identifier)
             # instance = get_object_or_404(
             #     User, user_identifier=patient['identifier'])
-            data['Patient']['identifier'] = instance.user_identifier
+            data['Patient']['identifier'] = instance.identifier
             data['Patient']['name'] = instance.full_name
             data['Patient']['birthDate'] = instance.birth_date
             data['Patient']['gender'] = instance.gender
@@ -284,10 +289,10 @@ class encounter(View):
         patient = get_user_model()
         data = {'Patient': {}, 'Encounter': {}, 'Observation': []}        
         instance = patient.objects.get(
-            user_identifier=patient_identifier)
+           identifier=patient_identifier)
         # instance = get_object_or_404(
         #     User, user_identifier=patient['identifier'])
-        data['Patient']['identifier'] = instance.user_identifier
+        data['Patient']['identifier'] = instance.identifier
         data['Patient']['name'] = instance.full_name
         data['Patient']['birthDate'] = instance.birth_date
         data['Patient']['gender'] = instance.gender
@@ -332,7 +337,7 @@ class dangky(View):
         data['Patient']['identifier'] = patient_identifier
         patient = get_user_model()
         instance = patient.objects.get(
-        user_identifier=patient_identifier)
+        identifier=patient_identifier)
         encounter_instance = EncounterModel.objects.get(encounter_identifier = encounter_identifier)
         form = EncounterForm(request.POST, encounter_instance)
         if form.is_valid():           

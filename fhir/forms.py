@@ -9,7 +9,7 @@ class EHRCreationForm(forms.ModelForm):
     class Meta:
         model = get_user_model()
         fields = ('name', 'gender', 'birthDate',
-                  'home_address', 'work_address', 'user_identifier', 'telecom')
+                  'home_address', 'work_address', 'identifier', 'telecom')
 
 class EncounterForm(forms.ModelForm):
     class Meta:
