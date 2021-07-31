@@ -61,6 +61,7 @@
             <li><a href={%block url1%}{%endblock%}> Thông tin hành chính </a></li>
             <li><a href={%block url2%}{%endblock%}> Thông tin đăng ký khám </a></li>
             <li><a href={%block url3%}{%endblock%}> Thông tin hỏi bệnh </a></li>
+            <li><a href={%block url4%}{%endblock%}> Thông tin khám toàn thân</a></li>
             {%block leftbar%}
             {%endblock%}
             <div class="openBtn">
@@ -75,7 +76,6 @@
                     <label for="service_category"><strong>Service Type</strong></label>
                     <select name="service_category" id="service_category">
                       <option value="item0">--select one--</option>
-                      <option value="exam">Khám</option>
                       <option value="laboratory">Xét nghiệm</option>
                       <option value="imaging">Chụp</option>
                     </select>
@@ -93,9 +93,7 @@
                 <script>$(document).ready(function () {
                   $("#service_category").change(function () {
                       var val = $(this).val();
-                      if (val == "exam") {
-                          $("#service").html("<option value='vital'>Kham toan than</option>");
-                      } else if (val == "laboratory") {
+                      if (val == "laboratory") {
                           $("#service").html("<option value='lab1'>Xét nghiệm máu</option><option value='lab2'>Xét nghiệm nước tiểu</option>");
                       } else if (val == "imaging") {
                           $("#service").html("<option value='img1'>Chụp X-Quang</option><option value='img2'>MRI</option><option value='img3'>Siêu âm</option>");

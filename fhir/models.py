@@ -105,10 +105,11 @@ class ServiceRequestModel(models.Model):
     service_category = models.CharField(max_length=10)
     service_location = models.CharField(max_length = 100)
     service_note = models.TextField(null=True)
-    service_description = models.TextField(null=True)
+    service_code = models.TextField(null=True)
 
 class ObservationModel(models.Model):
-    service_identifier = models.ForeignKey(ServiceRequestModel,on_delete=models.CASCADE)
+    encounter_identifier = models.ForeignKey(EncounterModel,on_delete=models.CASCADE)
+    service_identifier = models.CharField(max_length=100, default='')
     observation_identifier = models.CharField(max_length=100, primary_key=True)
     observation_status = models.CharField(default='registered',max_length=10)
     observation_name  = models.CharField(default='',max_length=100)

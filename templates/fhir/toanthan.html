@@ -1,0 +1,47 @@
+{%extends 'fhir/base.html'%}
+{%block url1%}'{%url 'fhir:hanhchinh' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url2%}'{%url 'fhir:dangky' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url3%}'{%url 'fhir:hoibenh' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url4%}'{%url 'fhir:toanthan' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block leftbar%}
+    {%if services%}
+        {%for service in services%}
+            {%if service.service_description%}
+            <li><a href="{%url 'fhir:ketqua' group_name user_name data.Patient.identifier data.Encounter.identifier service.service_identifier%}">{{service.service_description}}</a></li>
+            {%endif%}
+        {%endfor%}
+    {%endif%}
+{%endblock%}
+{%block function%}
+    {%if observations%}
+        {%for observation in observations%}
+            <p>{{observation.observation_name}}: {{observation.observation_valuequantity}} {{observation_valueunit}}</p>
+        {%endfor%}
+    {%else%}
+        <h1>Khám toàn thân</h1>
+        <form action="" method="POST">
+            {%csrf_token%}
+            <label for="1">Mạch</label>
+            <input type="text" name="1" id="1">
+            <p style="display: inline;">lần/ph</p>
+            <br>
+            <label for="2">Nhiệt độ</label>
+            <input type="text" name="2" id="2">
+            <p style="display: inline;">Cel</p>
+            <br>
+            <label for="3">Huyết áp</label>
+            <input type="text" name="3" id="3">
+            <p style="display: inline;">mmHg</p>
+            <br>
+            <label for="4">Nhịp thở</label>
+            <input type="text" name="4" id="4">
+            <p style="display: inline;">lần/ph</p>
+            <br>
+            <label for="5">Cân nặng</label>
+            <input type="text" name="5" id="5">
+            <p style="display: inline;">kg</p>
+            <br>
+            <button type="submit">Lưu lại</button>
+        </form>
+    {%endif%}
+{%endblock%}

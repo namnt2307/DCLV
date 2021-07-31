@@ -19,7 +19,6 @@ def identifier_type(resource, system, value, use="usual", _type=None, period=Non
         reference_type(assigner_res, assigner.reference,
                        assigner._type, assigner_res.identifier)
 
-
 def period_type(resource, start=None, end=None):
     if start:
         ET.SubElement(resource, 'start value=\"{}\"'.format(start))
@@ -161,6 +160,12 @@ def get_observation(encounter_id):
     else:
         return None
 
+def getdatetime(datetime_str):
+    get_datetime = datetime_str.split('+')[0]
+    datetime_obj = datetime.strptime(get_datetime, '%Y-%m-%dT%H:%M:%S')
+    return datetime.strftime(datetime_obj, "%H:%M:%S, %d-%m-%Y")
+
+
 def get_encounter(encounter_id):
     encounter = {}
     get_encounter =  requests.get("http://hapi.fhir.org/baseR4/Encounter/" + str(encounter_id), headers={'Content-type': 'application/xml'})
@@ -244,13 +249,14 @@ def create_patient_resource(patient):
         id = ET.SubElement(root, 'id')
         id.set('value', patient['id'])
     if patient.get('identifier'):    
-     
         identifier_resource = ET.SubElement(root, 'identifier')
         identifier_type(identifier_resource, 'urn:trinhcongminh', patient['identifier'], 'usual', [{'system': 'http://terminology.hl7.org/CodeSystem/v2-0203', 'code': 'MR'}])
-    
     if patient.get('name'):
         name = ET.SubElement(root, 'name')
         name_type(name, patient['name'])
+    if patient.get('telecom'):
+        telecom = ET.SubElement(root, 'telecom')
+        contactpoint_type(telecom, 'phone', patient['telecom'])
     if patient.get('gender'):
         gender = ET.SubElement(root, 'gender')
         if patient['gender'] == 'Nam':
@@ -362,55 +368,6 @@ def create_observation_resource(observation, patient_name, patient_id, encounter
             quantity_type(valueQuantity, observation['valueQuantity'], 'kg', 'http://unitsofmeasure.org', 'kg')
     return ET.tostring(root, encoding="us-ascii", method="xml", xml_declaration=None, default_namespace=None, short_empty_elements=True)
 
-
-def query_patient(patient_identifier):
-    patient = {}
-    get_req = requests.get("http://hapi.fhir.org/baseR4/Patient?identifier=urn:trinhcongminh|" + patient_identifier, headers={'Content-type': 'application/xml'})
-    if get_req.status_code == 200 and 'entry' in get_req.content.decode('utf-8'):
-        print(get_req.status_code)
-        get_root = ET.fromstring(get_req.content.decode('utf-8'))
-        entry = get_root.find('d:entry', ns)
-        resource = entry.find('d:resource', ns)
-        patient_resource = resource.find('d:Patient', ns)
-        id_resource = patient_resource.find('d:id', ns)
-        patient['id'] = id_resource.attrib['value']
-        name_resource = patient_resource.find('d:name', ns)
-        patient['name'] = name_resource.find('d:family', ns).attrib['value'] + ' ' + name_resource.find('d:given', ns).attrib['value']
-        gender = patient_resource.find('d:gender', ns).attrib['value']
-        if gender == 'male':
-            patient['gender'] = 'Nam'
-        elif gender == 'female':
-            patient['gender'] = 'Nữ'
-        patient['birthDate'] = patient_resource.find('d:birthDate', ns).attrib['value']
-        patient['address'] = []
-        for address in patient_resource.findall('d:address', ns):
-            addr_type = address.find('d:use', ns).attrib['value']
-            addr = address.find('d:line', ns).attrib['value'] + ', ' + address.find('d:district', ns).attrib['value'] + ', ' + address.find('d:city', ns).attrib['value']
-            patient['address'].append({'use': addr_type, 'address': addr})
-        patient['identifier'] = patient_identifier
-        return patient
-    else:
-        return None
-
-def query_encounter(encounter_identifier):
-    encounter = []
-    get_encounter = requests.get("http://hapi.fhir.org/baseR4/Encounter?identifier=urn:trinhcongminh|" + encounter_identifier, headers={'Content-type': 'application/xml'})
-    if get_encounter.status_code == 200 and 'entry' in get_encounter.content.decode('utf-8'):
-        get_root = ET.fromstring(get_encounter.content.decode('utf-8'))
-        for entry in get_root.findall('d:entry', ns):
-            resource = entry.find('d:resource', ns)
-            encounter_resource = resource.find('d:Encounter', ns)
-            encounter_id = encounter_resource.find('d:id', ns).attrib['value']
-            period = encounter_resource.find('d:period', ns)
-            start_date = period.find('d:start', ns).attrib['value']
-            encounter.append({'id': encounter_id, 'start_date': start_date})
-            print(encounter_id)
-
-def getdatetime(datetime_str):
-    get_datetime = datetime_str.split('+')[0]
-    datetime_obj = datetime.strptime(get_datetime, '%Y-%m-%dT%H:%M:%S')
-    return datetime.strftime(datetime_obj, "%H:%M:%S, %d-%m-%Y")
-
 def create_condition_resource(condition, patient_id, patient_name, encounter_id):
     root = ET.Element('Condition')
     tree = ET.ElementTree(root)
@@ -468,15 +425,16 @@ def create_service_resource(service, patient_id, patient_name, encounter_id):
     reference_type(encounter, 'Encounter/'+ encounter_id, 'Patient')
     return ET.tostring(root, encoding="us-ascii", method="xml", xml_declaration=None, default_namespace=None, short_empty_elements=True)
 
-def create_observation_resource(observation, patient_id, patient_name, encounter_id, service_id):
+def create_observation_resource(observation, patient_id, patient_name, encounter_id, service_id=None):
     root = ET.Element('Observation')
     tree = ET.ElementTree(root)
     root.set('xmlns', 'http://hl7.org/fhir')
     if observation.get('identifier'):
         identifier = ET.SubElement(root, 'identifier')
         identifier_type(identifier, 'urn:trinhcongminh', observation['identifier'], 'usual')
-    basedOn = ET.SubElement(root, 'basedOn')
-    reference_type(basedOn, 'ServiceRequest/' + service_id, 'ServiceRequest')
+    if service_id:
+        basedOn = ET.SubElement(root, 'basedOn')
+        reference_type(basedOn, 'ServiceRequest/' + service_id, 'ServiceRequest')
     if observation.get('status'):
         status = ET.SubElement(root, 'status')
         status.set('value', observation['status'])
@@ -497,3 +455,83 @@ def create_observation_resource(observation, patient_id, patient_name, encounter
         valueQuantity = ET.SubElement(root, 'valueQuantity')
         quantity_type(valueQuantity, observation['valuequantity'], observation['valueunit'])
     return ET.tostring(root, encoding="us-ascii", method="xml", xml_declaration=None, default_namespace=None, short_empty_elements=True)
+
+
+def query_patient(patient_identifier):
+    patient = {}
+    get_req = requests.get("http://hapi.fhir.org/baseR4/Patient?identifier=urn:trinhcongminh|" + patient_identifier, headers={'Content-type': 'application/xml'})
+    if get_req.status_code == 200 and 'entry' in get_req.content.decode('utf-8'):
+        print(get_req.status_code)
+        get_root = ET.fromstring(get_req.content.decode('utf-8'))
+        entry = get_root.find('d:entry', ns)
+        resource = entry.find('d:resource', ns)
+        patient_resource = resource.find('d:Patient', ns)
+        id_resource = patient_resource.find('d:id', ns)
+        patient['id'] = id_resource.attrib['value']
+        name_resource = patient_resource.find('d:name', ns)
+        patient['name'] = name_resource.find('d:family', ns).attrib['value'] + ' ' + name_resource.find('d:given', ns).attrib['value']
+        gender = patient_resource.find('d:gender', ns).attrib['value']
+        telecom = patient_resource.find('d:telecom', ns)
+        patient['telecom'] = telecom.find('d:value', ns).attrib['value']
+        if gender == 'male':
+            patient['gender'] = 'Nam'
+        elif gender == 'female':
+            patient['gender'] = 'Nữ'
+        patient['birthDate'] = patient_resource.find('d:birthDate', ns).attrib['value']
+        patient['address'] = []
+        for address in patient_resource.findall('d:address', ns):
+            addr_type = address.find('d:use', ns).attrib['value']
+            addr = address.find('d:line', ns).attrib['value'] + ', ' + address.find('d:district', ns).attrib['value'] + ', ' + address.find('d:city', ns).attrib['value']
+            patient['address'].append({'use': addr_type, 'address': addr})
+        patient['identifier'] = patient_identifier
+        return patient
+    else:
+        return None
+
+def query_encounter(encounter_identifier):
+    encounter = {}
+    encounter['identifier'] = encounter_identifier
+    get_encounter = requests.get("http://hapi.fhir.org/baseR4/Encounter?identifier=urn:trinhcongminh|" + encounter_identifier, headers={'Content-type': 'application/xml'})
+    if get_encounter.status_code == 200 and 'entry' in get_encounter.content.decode('utf-8'):
+        get_root = ET.fromstring(get_encounter.content.decode('utf-8'))
+        entry = get_root.find('d:entry', ns)
+        resource = entry.find('d:resource', ns)
+        encounter_resource = resource.find('d:Encounter', ns)
+        encounter['id'] = encounter_resource.find('d:id', ns).attrib['value']
+        encounter['status'] = encounter_resource.find('d:status', ns).attrib['value']
+        _class = encounter_resource.find('d:class', ns)
+        encounter['class'] = _class.find('d:code', ns).attrib['value']
+        _type = encounter_resource.find('d:type', ns)
+        encounter['type'] = _type.find('d:text', ns).attrib['value']
+        servicetype = encounter_resource.find('d:serviceType', ns)
+        encounter['serviceType'] = servicetype.find('d:text', ns).attrib['value']
+        priority = encounter_resource.find('d:priority', ns)
+        encounter['priority'] = priority.find('d:text', ns)
+        period = encounter_resource.find('d:period', ns)
+        encounter['start'] = period.find('d:start', ns).attrib['value']
+        end_date = None
+        if period.find('d:end', ns) != None:
+            end_date = period.find('d:end', ns).attrib['value']
+            encounter['end'] = getdatetime(end_date)
+    print(encounter)
+    return encounter
+        
+
+
+def query_service(service_identifier):
+    service = {}
+    service['identifier'] = service_identifier
+    get_encounter = requests.get("http://hapi.fhir.org/baseR4/ServiceRequest?identifier=urn:trinhcongminh|" + service_identifier, headers={'Content-type': 'application/xml'})
+    if get_encounter.status_code == 200 and 'entry' in get_encounter.content.decode('utf-8'):
+        get_root = ET.fromstring(get_encounter.content.decode('utf-8'))
+        entry = get_root.find('d:entry', ns)
+        resource = entry.find('d:resource', ns)
+        service_resource = resource.find('d:ServiceRequest', ns)
+        service['id'] = service_resource.find('d:id', ns).attrib['value']
+        service['status'] = service_resource.find('d:status', ns).attrib['value']
+        category = service_resource.find('d:category', ns)
+        service['category'] = category.find('d:text', ns).attrib['value']
+        code = service_resource.find('d:code', ns)
+        service['code'] = code.find('d:text', ns)
+    print(service)
+    return service

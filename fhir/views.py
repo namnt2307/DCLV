@@ -64,7 +64,7 @@ class register(View):
             data['Patient']['address'] = [{'address': request.POST['home_address'], 'use': 'home'},
                                           {'address': request.POST['work_address'], 'use': 'work'}]
             data['Patient']['identifier'] = request.POST['user_identifier']
-
+            data['Patient']['telecom'] = request.POST['telecom']
             # xml_data, data = handlers.register_ehr(patient, id_system)
             patient = dt.create_patient_resource(data['Patient'])
             post_req = requests.post("http://hapi.fhir.org/baseR4/Patient/", headers={
@@ -338,24 +338,6 @@ class dangky(View):
     
             
 
-
-
-# class hanhchinh(View):
-#     def get(self, request, group_name, user_name, patient_identifier, encounter_id):
-#         data = {'Patient': {}, 'Encounter': {}, 'Observation': []}
-#         data['Patient'] = dt.query_patient(patient_identifier)
-#         data['Encounter'] = dt.get_encounter(encounter_id)
-#         if data['Encounter']:
-#             data['Observation'] = dt.get_observation(encounter_id)
-#             if data['Observation']:
-#                 return render(request, 'fhir/hanhchinh.html', {'data': data, 'group_name': group_name, 'user_name': user_name})
-#             else:
-#                 return render(request, 'fhir/doctor.html', {'message': "No data found", 'group_name': group_name, 'user_name': user_name})
-#         else:
-#             return render(request, 'fhir/doctor.html', {'message': 'Something wrong', 'group_name': group_name, 'user_name': user_name})
-
-
-
 class hoibenh(View):
     def get(self, request, group_name, user_name, patient_identifier, encounter_identifier):
         data = {'Patient': {'identifier': patient_identifier},
@@ -375,14 +357,14 @@ class hoibenh(View):
         'Encounter': {'identifier': encounter_identifier}}
         print(request.POST)
         encounter_instance = EncounterModel.objects.get(encounter_identifier = encounter_identifier)
-        newcondition_identifier = patient_identifier + '_' + str(len(ConditionModel.objects.all().filter(encounter_identifier=encounter_instance))+1)
+        condition_identifier = encounter_identifier + '_' + str(len(ConditionModel.objects.all().filter(encounter_identifier=encounter_instance))+1)
         form = ConditionForm(request.POST, encounter_instance)
         if form.is_valid():           
             condition_n = form.save(commit=False)
             condition_n.encounter_identifier = encounter_instance
-            condition_n.condition_identifier = newcondition_identifier
+            condition_n.condition_identifier = condition_identifier
             form.save()
-        condition = ConditionModel.objects.get(condition_identifier = newcondition_identifier)
+        condition = ConditionModel.objects.get(condition_identifier = condition_identifier)
         return render(request, 'fhir/hoibenh.html', {'data': data, 'group_name': group_name, 'user_name': user_name,'condition': condition})
 
 
@@ -407,74 +389,68 @@ class service(View):
         pass
     
     def post(self, request, group_name, user_name, patient_identifier, encounter_identifier):
-        data = {'Patient':{'identifier': patient_identifier}, 'Encounter':{'identifier':encounter_identifier}}
+        data = {'Patient':{'identifier': patient_identifier}, 'Encounter':{'identifier':encounter_identifier}, 'Service': {}}
         encounter_instance = EncounterModel.objects.get(encounter_identifier = encounter_identifier)
         service_instances = ServiceRequestModel.objects.all().filter(encounter_identifier = encounter_instance)
-        service_identifier = patient_identifier + '_' + str(len(service_instances) + 1)
+        observation_instances = ObservationModel.objects.all().filter(encounter_identifier = encounter_identifier)
+        service_identifier = encounter_identifier + '_' + str(len(service_instances) + 1)
         print(service_identifier)
         service = ServiceRequestModel(encounter_identifier=encounter_instance, service_identifier = service_identifier, service_category=request.POST['service_category'])
-        if request.POST['service'] == 'vital':            
-            service.service_location = 'room1'
-            service.service_description = 'Khám tổng quát'
-            service.save()
-            ObservationModel.objects.create(service_identifier=service, observation_id=service_identifier + '_1', observation_name='Nhiệt độ', observation_category=request.POST['service_category'], observation_valueunit='Cel')
-            ObservationModel.objects.create(service_identifier=service, observation_id=service_identifier + '_2',observation_name='Cân nặng', observation_category=request.POST['service_category'], observation_valueunit='kg')
-            ObservationModel.objects.create(service_identifier=service, observation_id=service_identifier + '_4',observation_name='Huyết áp tâm thu', observation_category=request.POST['service_category'], observation_valueunit='mmHg')
-            ObservationModel.objects.create(service_identifier=service, observation_id=service_identifier + '_5',observation_name='Huyết áp tâm trương', observation_category=request.POST['service_category'], observation_valueunit='mmHg')
-            ObservationModel.objects.create(service_identifier=service, observation_id=service_identifier + '_3',observation_name='Nhịp thở', observation_category=request.POST['service_category'], observation_valueunit='breaths/minute')
-        elif request.POST['service'] == 'lab1':        
+        if request.POST['service'] == 'lab1':        
             service.service_location = 'room2'
-            service.service_description = 'Xét nghiệm máu'
+            service.service_code = 'Xét nghiệm máu'
             service.save()
-            ObservationModel.objects.create(service_identifier=service, observation_identifier=service_identifier + '_1', observation_name='Số lượng bạch cầu trong một thể tích máu', observation_category=request.POST['service_category'], observation_valueunit='cells/mm3')
-            ObservationModel.objects.create(service_identifier=service, observation_identifier=service_identifier + '_2', observation_name='Bạch cầu Lympho', observation_category=request.POST['service_category'], observation_valueunit='%')
-            ObservationModel.objects.create(service_identifier=service, observation_identifier=service_identifier + '_3', observation_name='Bạch cầu trung tính', observation_category=request.POST['service_category'], observation_valueunit='%')
-            ObservationModel.objects.create(service_identifier=service, observation_identifier=service_identifier + '_4', observation_name='Bạch cầu mono', observation_category=request.POST['service_category'], observation_valueunit='%')
-            ObservationModel.objects.create(service_identifier=service, observation_identifier=service_identifier + '_5', observation_name='Bạch cầu ái toan', observation_category=request.POST['service_category'], observation_valueunit='%')
-            ObservationModel.objects.create(service_identifier=service, observation_identifier=service_identifier + '_6', observation_name='bạch cầu ái kiềm', observation_category=request.POST['service_category'], observation_valueunit='%')
-            ObservationModel.objects.create(service_identifier=service, observation_identifier=service_identifier + '_7', observation_name='Số lượng hồng cầu trong một thể tích máu', observation_category=request.POST['service_category'], observation_valueunit='cells/cm3')
-            ObservationModel.objects.create(service_identifier=service, observation_identifier=service_identifier + '_8', observation_name='Lượng huyết sắc tố trong một thể tích máu', observation_category=request.POST['service_category'], observation_valueunit='g/dl')
-            ObservationModel.objects.create(service_identifier=service, observation_identifier=service_identifier + '_9', observation_name='Tỷ lệ thể tích hồng cầu trên thể tích máu toàn phần', observation_category=request.POST['service_category'], observation_valueunit='%')
-            ObservationModel.objects.create(service_identifier=service, observation_identifier=service_identifier + '_10', observation_name='Thể tích trung bình của một hồng cầu', observation_category=request.POST['service_category'], observation_valueunit='fl')
-            ObservationModel.objects.create(service_identifier=service, observation_identifier=service_identifier + '_11', observation_name='Lượng huyết sắc tố trung bình trong một hồng cầu', observation_category=request.POST['service_category'], observation_valueunit='pg')
-            ObservationModel.objects.create(service_identifier=service, observation_identifier=service_identifier + '_12', observation_name='Nồng độ trung bình của huyết sắc tố hemoglobin trong một thể tích máu', observation_category=request.POST['service_category'], observation_valueunit='%')
-            ObservationModel.objects.create(service_identifier=service, observation_identifier=service_identifier + '_13', observation_name='Độ phân bố kích thước hồng cầu', observation_category=request.POST['service_category'], observation_valueunit='%')
-            ObservationModel.objects.create(service_identifier=service, observation_identifier=service_identifier + '_14', observation_name='Số lượng tiểu cầu trong một thể tích máu', observation_category=request.POST['service_category'], observation_valueunit='cells/cm3')
-            ObservationModel.objects.create(service_identifier=service, observation_identifier=service_identifier + '_15', observation_name='Độ phân bố kích thước tiểu cầu', observation_category=request.POST['service_category'], observation_valueunit='%')
-            ObservationModel.objects.create(service_identifier=service, observation_identifier=service_identifier + '_16', observation_name='Thể tích trung bình của tiểu cầu trong một thể tích máu', observation_category=request.POST['service_category'], observation_valueunit='fL')
+            ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier + '_1', observation_name='Số lượng bạch cầu trong một thể tích máu', observation_category=request.POST['service_category'], observation_valueunit='cells/mm3')
+            ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier + '_2', observation_name='Bạch cầu Lympho', observation_category=request.POST['service_category'], observation_valueunit='%')
+            ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier + '_3', observation_name='Bạch cầu trung tính', observation_category=request.POST['service_category'], observation_valueunit='%')
+            ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier + '_4', observation_name='Bạch cầu mono', observation_category=request.POST['service_category'], observation_valueunit='%')
+            ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier + '_5', observation_name='Bạch cầu ái toan', observation_category=request.POST['service_category'], observation_valueunit='%')
+            ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier + '_6', observation_name='bạch cầu ái kiềm', observation_category=request.POST['service_category'], observation_valueunit='%')
+            ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier + '_7', observation_name='Số lượng hồng cầu trong một thể tích máu', observation_category=request.POST['service_category'], observation_valueunit='cells/cm3')
+            ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier + '_8', observation_name='Lượng huyết sắc tố trong một thể tích máu', observation_category=request.POST['service_category'], observation_valueunit='g/dl')
+            ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier + '_9', observation_name='Tỷ lệ thể tích hồng cầu trên thể tích máu toàn phần', observation_category=request.POST['service_category'], observation_valueunit='%')
+            ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier + '_10', observation_name='Thể tích trung bình của một hồng cầu', observation_category=request.POST['service_category'], observation_valueunit='fl')
+            ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier + '_11', observation_name='Lượng huyết sắc tố trung bình trong một hồng cầu', observation_category=request.POST['service_category'], observation_valueunit='pg')
+            ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier + '_12', observation_name='Nồng độ trung bình của huyết sắc tố hemoglobin trong một thể tích máu', observation_category=request.POST['service_category'], observation_valueunit='%')
+            ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier + '_13', observation_name='Độ phân bố kích thước hồng cầu', observation_category=request.POST['service_category'], observation_valueunit='%')
+            ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier + '_14', observation_name='Số lượng tiểu cầu trong một thể tích máu', observation_category=request.POST['service_category'], observation_valueunit='cells/cm3')
+            ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier + '_15', observation_name='Độ phân bố kích thước tiểu cầu', observation_category=request.POST['service_category'], observation_valueunit='%')
+            ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier + '_16', observation_name='Thể tích trung bình của tiểu cầu trong một thể tích máu', observation_category=request.POST['service_category'], observation_valueunit='fL')
         elif request.POST['service'] == 'lab2':
             service.service_location = 'room3'
-            service.service_description = 'Xét nghiệm nước tiểu'
-            ObservationModel.objects.create(service_identifier=service, observation_identifier=service_identifier + '_1', observation_name='Leukocytes', observation_category=request.POST['service_category'], observation_valueunit='LEU/UL')
-            ObservationModel.objects.create(service_identifier=service, observation_identifier=service_identifier + '_1', observation_name='Nitrate', observation_category=request.POST['service_category'], observation_valueunit='mg/dL')
-            ObservationModel.objects.create(service_identifier=service, observation_identifier=service_identifier + '_1', observation_name='Urobilinogen', observation_category=request.POST['service_category'], observation_valueunit='mmol/L')
-            ObservationModel.objects.create(service_identifier=service, observation_identifier=service_identifier + '_1', observation_name='Billirubin', observation_category=request.POST['service_category'], observation_valueunit='mmol/L')
-            ObservationModel.objects.create(service_identifier=service, observation_identifier=service_identifier + '_1', observation_name='Protein', observation_category=request.POST['service_category'], observation_valueunit='mg/dL')
-            ObservationModel.objects.create(service_identifier=service, observation_identifier=service_identifier + '_1', observation_name='Chỉ số pH', observation_category=request.POST['service_category'], observation_valueunit='')
-            ObservationModel.objects.create(service_identifier=service, observation_identifier=service_identifier + '_1', observation_name='Blood', observation_category=request.POST['service_category'], observation_valueunit='mg/dL')
-            ObservationModel.objects.create(service_identifier=service, observation_identifier=service_identifier + '_1', observation_name='Specific Gravity', observation_category=request.POST['service_category'], observation_valueunit='Cel')
-            ObservationModel.objects.create(service_identifier=service, observation_identifier=service_identifier + '_1', observation_name='Ketone', observation_category=request.POST['service_category'], observation_valueunit='mg/dL')
-            ObservationModel.objects.create(service_identifier=service, observation_identifier=service_identifier + '_1', observation_name='Glucose', observation_category=request.POST['service_category'], observation_valueunit='Cel')
+            service.service_code = 'Xét nghiệm nước tiểu'
+            ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier + '_1', observation_name='Leukocytes', observation_category=request.POST['service_category'], observation_valueunit='LEU/UL')
+            ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier + '_1', observation_name='Nitrate', observation_category=request.POST['service_category'], observation_valueunit='mg/dL')
+            ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier + '_1', observation_name='Urobilinogen', observation_category=request.POST['service_category'], observation_valueunit='mmol/L')
+            ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier + '_1', observation_name='Billirubin', observation_category=request.POST['service_category'], observation_valueunit='mmol/L')
+            ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier + '_1', observation_name='Protein', observation_category=request.POST['service_category'], observation_valueunit='mg/dL')
+            ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier + '_1', observation_name='Chỉ số pH', observation_category=request.POST['service_category'], observation_valueunit='')
+            ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier + '_1', observation_name='Blood', observation_category=request.POST['service_category'], observation_valueunit='mg/dL')
+            ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier + '_1', observation_name='Specific Gravity', observation_category=request.POST['service_category'], observation_valueunit='Cel')
+            ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier + '_1', observation_name='Ketone', observation_category=request.POST['service_category'], observation_valueunit='mg/dL')
+            ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier + '_1', observation_name='Glucose', observation_category=request.POST['service_category'], observation_valueunit='Cel')
             service.save()
         elif request.POST['service'] == 'img1':        
             service.service_location = 'room4'     
-            service.service_description = 'Chụp X-Quang'                   
+            service.service_code = 'Chụp X-Quang'                   
             service.save()
         elif request.POST['service'] == 'img2':            
             service.service_location = 'room5'     
-            service.service_description = 'Chụp MRI'                   
+            service.service_code = 'Chụp MRI'                   
             service.save()
         elif request.POST['service'] == 'img3':
             service.service_location = 'room6'     
-            service.service_description = 'Siêu âm'
+            service.service_code = 'Siêu âm'
             service.save()
+
+        data['Service']['identifier'] = service_identifier
         services = ServiceRequestModel.objects.all().filter(encounter_identifier = encounter_identifier)
         observations = ObservationModel.objects.all().filter(service_identifier = service.service_identifier)
         return render(request,'fhir/xetnghiem.html',{'group_name': group_name, 'user_name': user_name, 'data':data, 'services': services, 'observations': observations})    
 
 class ketqua(View):
-    def get(self,request, group_name, user_name, patient_identifier, encounter_identifier, service_identifier):
-        data = {'Patient':{'identifier': patient_identifier}, 'Encounter':{'identifier':encounter_identifier}}
+    def get(self, request, group_name, user_name, patient_identifier, encounter_identifier, service_identifier):
+        data = {'Patient':{'identifier': patient_identifier}, 'Encounter':{'identifier':encounter_identifier}, 'Service':{'identifier': service_identifier}}
         services = ServiceRequestModel.objects.all().filter(encounter_identifier = encounter_identifier)
         observations = ObservationModel.objects.all().filter(service_identifier = service_identifier)
         return render(request,'fhir/xetnghiem.html',{'group_name': group_name, 'user_name': user_name, 'data':data, 'services': services, 'observations': observations})    
@@ -490,7 +466,7 @@ class ketqua(View):
         service =  ServiceRequestModel.objects.get(service_identifier = service_identifier)    
         service.service_status = 'final'
         service.save()
-        data = {'Patient':{'identifier': patient_identifier}, 'Encounter':{'identifier':encounter_identifier}}
+        data = {'Patient':{'identifier': patient_identifier}, 'Encounter':{'identifier':encounter_identifier}, 'Service': {'identifier':service_identifier}}
         services = ServiceRequestModel.objects.all().filter(encounter_identifier = encounter_identifier)
         observations = ObservationModel.objects.all().filter(service_identifier = service_identifier)
         return render(request,'fhir/xetnghiem.html',{'group_name': group_name, 'user_name': user_name, 'data':data, 'services': services, 'observations': observations})          
@@ -503,7 +479,6 @@ class save(View):
         encounter_instance.encounter_status = 'finished'
         encounter_instance.encounter_end = datetime.now()
         encounter_instance.save()
-
         data['Encounter']['identifier'] = encounter_identifier
         data['Encounter']['status'] = encounter_instance.encounter_status
         data['Encounter']['period'] = {}
@@ -520,36 +495,53 @@ class save(View):
         else:
             data['Encounter']['length'] =  str(delta.days)
         post_encounter = dt.create_encounter_resource(data['Encounter'], patient['id'], patient['name'])
-        # post_req = requests.post("http://hapi.fhir.org/baseR4/Encounter/", headers={'Content-type': 'application/xml'}, data=post_encounter.decode('utf-8'))
-        # encounter = dt.query_encounter(encounter_identifier)
-        encounter = {}
-        encounter['id'] = '1'
-        print(post_encounter)
-        condition_instances = ConditionModel.objects.all().filter(encounter_identifier=encounter_identifier)
-        for condition_instance in condition_instances:
-            condition = {}
-            condition['identifier'] = condition_instance.condition_identifier
-            condition['clinicalStatus'] = condition_instance.condition_clinicalstatus
-            # condition['category'] = condition_instance.condition_category
-            condition['severity'] = condition_instance.condition_severity
-            condition['code'] = condition_instance.condition_code
-            condition['onset'] = condition_instance.condition_onset.strftime('%Y-%m-%dT%H:%M:%S+07:00')
-            post_condition = dt.create_condition_resource(condition, patient['id'], patient['name'], encounter_identifier)
-            print(post_condition)
-            # post_req = requests.post("http://hapi.fhir.org/baseR4/Encounter/", headers={'Content-type': 'application/xml'}, data=post_condition.decode('utf-8'))
-        service_instances = ServiceRequestModel.objects.all().filter(encounter_identifier=encounter_identifier)
-        for service_instance in service_instances:
-            service_instance.service_status = 'completed'
-            service_instance.save()
-            service = {}
-            service['identifier'] = service_instance.service_identifier
-            service['status'] = service_instance.service_status
-            service['category'] = service_instance.service_category
-            service['intent'] = 'order'
-            service['code'] = service_instance.service_description
-            post_service = dt.create_service_resource(service, patient['id'], patient['name'], encounter_identifier)
-            print(post_service)
-            observation_instances = ObservationModel.objects.all().filter(service_identifier=service_instance.service_identifier)
+        post_req = requests.post("http://hapi.fhir.org/baseR4/Encounter/", headers={'Content-type': 'application/xml'}, data=post_encounter.decode('utf-8'))
+        encounter = dt.query_encounter(encounter_identifier)
+        print(encounter['id'])
+        if encounter:
+            condition_instances = ConditionModel.objects.all().filter(encounter_identifier=encounter_identifier)
+            for condition_instance in condition_instances:
+                condition = {}
+                condition['identifier'] = condition_instance.condition_identifier
+                condition['clinicalStatus'] = condition_instance.condition_clinicalstatus
+                # condition['category'] = condition_instance.condition_category
+                condition['severity'] = condition_instance.condition_severity
+                condition['code'] = condition_instance.condition_code
+                condition['onset'] = condition_instance.condition_onset.strftime('%Y-%m-%dT%H:%M:%S+07:00')
+                post_condition = dt.create_condition_resource(condition, patient['id'], patient['name'], encounter['id'])
+                print(post_condition)
+                post_req = requests.post("http://hapi.fhir.org/baseR4/Condition/", headers={'Content-type': 'application/xml'}, data=post_condition.decode('utf-8'))
+            service_instances = ServiceRequestModel.objects.all().filter(encounter_identifier=encounter_identifier)
+            for service_instance in service_instances:
+                service_instance.service_status = 'completed'
+                service_instance.save()
+                service = {}
+                service['identifier'] = service_instance.service_identifier
+                service['status'] = service_instance.service_status
+                service['category'] = service_instance.service_category
+                service['intent'] = 'order'
+                service['code'] = service_instance.service_code
+                post_service = dt.create_service_resource(service, patient['id'], patient['name'], encounter['id'])
+                post_req = requests.post("http://hapi.fhir.org/baseR4/ServiceRequest/", headers={'Content-type': 'application/xml'}, data=post_service.decode('utf-8'))
+                if post_req.status_code == 201:
+                    print(post_service)
+                    service_query = dt.query_service(service_instance.service_identifier)
+                    print(service_query['id'])
+                    service_observations = ObservationModel.objects.all().filter(encounter_identifier=encounter_identifier, service_identifier=service_instance.service_identifier)
+                    for observation_instance in service_observations:
+                        observation = {}
+                        observation['identifier'] = observation_instance.observation_identifier
+                        observation['status'] = observation_instance.observation_status
+                        observation['code'] = observation_instance.observation_name
+                        observation['category'] = observation_instance.observation_category
+                        observation['effective'] = observation_instance.observation_effective.strftime('%Y-%m-%dT%H:%M:%S+07:00')
+                        observation['valuequantity'] = observation_instance.observation_valuequantity
+                        observation['valueunit'] = observation_instance.observation_valueunit
+                        post_observation = dt.create_observation_resource(observation, patient['id'], patient['name'], encounter['id'], service_query['id'])
+                        print(post_observation)
+                        post_req = requests.post("http://hapi.fhir.org/baseR4/Observation/", headers={'Content-type': 'application/xml'}, data=post_observation.decode('utf-8'))
+                else: pass
+            observation_instances = ObservationModel.objects.all().filter(encounter_identifier=encounter_instance, service_identifier='')
             for observation_instance in observation_instances:
                 observation = {}
                 observation['identifier'] = observation_instance.observation_identifier
@@ -559,7 +551,49 @@ class save(View):
                 observation['effective'] = observation_instance.observation_effective.strftime('%Y-%m-%dT%H:%M:%S+07:00')
                 observation['valuequantity'] = observation_instance.observation_valuequantity
                 observation['valueunit'] = observation_instance.observation_valueunit
-                post_observation = dt.create_observation_resource(observation, patient['id'], patient['name'], encounter_identifier, service_instance.service_identifier)
+                post_observation = dt.create_observation_resource(observation, patient['id'], patient['name'], encounter['id'])
                 print(post_observation)
+                post_req = requests.post("http://hapi.fhir.org/baseR4/Observation/", headers={'Content-type': 'application/xml'}, data=post_observation.decode('utf-8'))
+            return HttpResponse('Success')
+        else: return HttpResponse('Something Wrong')
         
+
+class toanthan(View):
+    def get(self, request, group_name, user_name, patient_identifier, encounter_identifier):
+        data = {'Patient': {'identifier': patient_identifier},
+                'Encounter': {'identifier': encounter_identifier}}
+        encounter_instance = EncounterModel.objects.get(encounter_identifier=encounter_identifier)
+        observations = ObservationModel.objects.all().filter(encounter_identifier = encounter_instance, observation_category = 'vital-signs')
+        print(observations)
+        services = ServiceRequestModel.objects.all().filter(encounter_identifier = encounter_instance)
+        return render(request, 'fhir/toanthan.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'services':services, 'observations': observations})
+
+
+    def post(self, request, group_name, user_name, patient_identifier, encounter_identifier):
+        data = {'Patient': {'identifier': patient_identifier},
+        'Encounter': {'identifier': encounter_identifier}}
+        encounter_instance = EncounterModel.objects.get(encounter_identifier=encounter_identifier)
+        count = len(ObservationModel.objects.all().filter(encounter_identifier=encounter_instance))
+        if request.POST['1']:
+            count += 1
+            ObservationModel.objects.create(encounter_identifier=encounter_instance, observation_identifier=encounter_identifier + '_' + str(count), observation_name='Mạch', observation_category='vital-signs', observation_valuequantity=request.POST['1'], observation_valueunit='lần/ph')
+        if request.POST['2']:
+            count += 1    
+            ObservationModel.objects.create(encounter_identifier=encounter_instance, observation_identifier=encounter_identifier + '_' + str(count), observation_name='Nhiệt độ', observation_category='vital-signs', observation_valuequantity=request.POST['2'], observation_valueunit='Cel')
+        if request.POST['3']:
+            count += 1                
+            ObservationModel.objects.create(encounter_identifier=encounter_instance, observation_identifier=encounter_identifier + '_' + str(count), observation_name='Huyết áp tâm thu', observation_category='vital-signs', observation_valuequantity=request.POST['3'].split('/')[0], observation_valueunit='mmHg')
+            count += 1
+            ObservationModel.objects.create(encounter_identifier=encounter_instance, observation_identifier=encounter_identifier + '_' + str(count), observation_name='Huyết áp tâm trương', observation_category='vital-signs', observation_valuequantity=request.POST['3'].split('/')[1], observation_valueunit='mmHg')
+        if request.POST['4']:
+            count += 1
+            ObservationModel.objects.create(encounter_identifier=encounter_instance, observation_identifier=encounter_identifier + '_' + str(count), observation_name='Nhịp thở', observation_category='vital-signs', observation_valuequantity=request.POST['4'], observation_valueunit='lần/ph')
+        if request.POST['5']:
+            count += 1
+            ObservationModel.objects.create(encounter_identifier=encounter_instance, observation_identifier=encounter_identifier + '_' + str(count), observation_name='Cân nặng', observation_category='vital-signs', observation_valuequantity=request.POST['5'], observation_valueunit='kg')
+        observations = ObservationModel.objects.all().filter(encounter_identifier = encounter_instance, observation_category = 'vital-signs')
+        services = ServiceRequestModel.objects.all().filter(encounter_identifier = encounter_identifier)
+        return render(request, 'fhir/toanthan.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'services':services, 'observations':observations})
+    
+
 
