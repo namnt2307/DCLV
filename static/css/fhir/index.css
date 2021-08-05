@@ -3,6 +3,7 @@
     margin: 0;
     box-sizing: border-box;
 }
+
 .header {
     display: flex;
     height: 150px;

@@ -3,8 +3,10 @@
     color: black;
     box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
     border-radius: 25px;
-    width: 1000px;
-    margin-left: 50px;
+    width: 80%;
+    padding-left: 50px;
+    padding-bottom: 30px;
+
 }
 .display-box .display-data {
     padding-top: 30px;
@@ -36,3 +38,7 @@ img {
     width: 150px;
     height: 170px;
 }
+table, th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+  }
