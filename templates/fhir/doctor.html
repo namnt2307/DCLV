@@ -46,10 +46,10 @@
 </style>
 <div class="top-menu">
     <ul class="menu">
-        <li><a href="{% url 'fhir:user_detail' user_name group_name %}"><i class="fa fa-home" aria-hidden="true"></i> </a></li>
-        <li><a href="{% url 'fhir:register' user_name group_name %}"> Tao ho so </a></li>
-        <li><a href="{% url 'fhir:upload' user_name group_name %}"> Upload Excel </a></li>
-        <li><a href="{% url 'fhir:search' user_name group_name %}"> Tim kiem ho so</a></li>
+        <li><a href="{% url 'fhir:user_detail'  group_name user_name %}"><i class="fa fa-home" aria-hidden="true"></i> </a></li>
+        <li><a href="{% url 'fhir:register'  group_name user_name %}"> Tao ho so </a></li>
+        <li><a href="{% url 'fhir:upload'  group_name user_name %}"> Upload Excel </a></li>
+        <li><a href="{% url 'fhir:search'  group_name user_name %}"> Tim kiem ho so</a></li>
     </ul>
 </div>
 

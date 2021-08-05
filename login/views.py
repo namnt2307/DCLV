@@ -22,7 +22,8 @@ class login_app(View):
                 username=user_name).group_name
             return HttpResponseRedirect(f'/user/{group_name}/{user_name}')
         else:
-            return HttpResponse('User khong ton tai')
+            message = 'Người dùng không tồn tại'
+            return render(request, 'login/login.html', {'message': message})
 
 
 class register_app(View):
@@ -32,11 +33,12 @@ class register_app(View):
 
     def post(self, request):
         if request.method == 'POST':
+            form = UserCreationForm()
             user_regis = UserCreationForm(request.POST)
             if user_regis.is_valid():
                 user_regis.save()
-                return HttpResponse('Dang ki thanh cong')
+                message = 'Đăng kí thành công'
+                return render(request, 'login/register.html', {'message': message, 'form': form})
             else:
-                return HttpResponse('Khong hop le')
-
-
+                message = 'Không hợp lệ, vui lòng thử lại'
+                return render(request, 'login/register.html', {'message': message, 'form': form})

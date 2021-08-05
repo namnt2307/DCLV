@@ -1,13 +1,43 @@
 {% extends 'fhir/doctor.html' %}
 {%block function %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/fhir/display.css'%}">
+<div class="display-box">
+    <div class="display-data">
         <h1>Thông tin bệnh nhân</h1>
-        <p>Mã y tế: {{data.Patient.identifier}}</p>
-        <p>Họ và tên: {{data.Patient.name}}</p>
-        <p>Giới tính: {{data.Patient.gender}}</p>
-        <p>Ngày sinh: {{data.Patient.birthDate}}</p>
-        <p>Địa chỉ: {{data.Patient.home_address}}</p>
-        <p>Nơi làm việc: {{data.Patient.work_address}}</p>
-        <p>Số điện thoại: {{data.Patient.telecom}}</p>
+        <div class="patient-data">
+            <div class="text-data">
+                <div class="name patient">
+                    <h4 class="title">Họ và tên:</h4>
+                    <h4 class="value">{{data.Patient.name}}</h4>
+                </div>
+                <div class="identifier patient">
+                    <h4 class="title">Giới tính:</h4>
+                    <h4 class="value">{{data.Patient.gender}}</h4>
+                </div>
+                <div class="gender patient">
+                    <h4 class="title">Mã y tế:</h4>
+                    <h4 class="value">{{data.Patient.identifier}}</h4>
+                </div>
+                <div class="birth patient">
+                    <h4 class="title">Địa chỉ:</h4>
+                    <h4 class="value">{{data.Patient.home_address}}</h4>
+                </div>
+                <div class="work patient">
+                    <h4 class="title">Nơi làm việc:</h4>
+                    <h4 class="value">{{data.Patient.work_address}}</h4>
+                </div>
+                <div class="home patient">
+                    <h4 class="title">Số điện thoại:</h4>
+                    <h4 class="value">{{data.Patient.telecom}}</h4>
+                </div>
+            </div>
+            <div class="patient-image">
+                <img src="{% static 'img/patient/' %}{{data.Patient.identifier}}.jpg" alt="">
+            </div>
+        </div>
+        <div class="encounter-data">
+        </div>
         <h1>CÁC LẦN ĐĂNG KÝ KHÁM </h1>
         <table>
             <tr>
@@ -43,6 +73,10 @@
             <td colspan="5"><button id="myButton" class="float-left submit-button" >Lần đăng ký khám mới</button></td>
         </tr>
         </table>
+    </div>
+
+</div>
+
         <script type="text/javascript">
             document.getElementById("myButton").onclick = function () {
                 location.href = "{% url 'fhir:encounter' group_name user_name data.Patient.identifier%} ";

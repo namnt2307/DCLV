@@ -9,6 +9,7 @@ urlpatterns = [
     path('<str:group_name>/<str:user_name>/create/',views.register.as_view(),name="register"),
     path('<str:group_name>/<str:user_name>/upload/',views.upload.as_view(),name="upload"),
     path('<str:group_name>/<str:user_name>/search/',views.search.as_view(),name="search"),
+    path('<str:group_name>/<str:user_name>/display-detail/<str:patient_identifier>',views.display_detail,name="display_detail"),
     path('<str:group_name>/<str:user_name>/<str:patient_identifier>/encounter/',views.encounter.as_view(), name='encounter'),
     path('<str:group_name>/<str:user_name>/encounter/<str:patient_identifier>/<str:encounter_identifier>/hanhchinh', views.hanhchinh.as_view(), name='hanhchinh'),
     path('<str:group_name>/<str:user_name>/encounter/<str:patient_identifier>/<str:encounter_identifier>/toanthan', views.toanthan.as_view(), name='toanthan'),
