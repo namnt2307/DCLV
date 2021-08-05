@@ -2,6 +2,48 @@
 {%block function %}
 {% load static %}
 <link rel="stylesheet" href="{% static 'css/fhir/display.css'%}">
+<style>
+    .servicePopup {
+        position: relative;
+        text-align: center;
+        width: 100%;
+      }
+      .formPopup {
+        display: none;
+        transform: translate(-50%, 5%);
+        border: 3px solid #999999;
+        z-index: 9;
+        text-align: center;
+        width: 60%;
+        height: 50%;
+
+      }
+      .formContainer {
+        max-width: 100%;
+        padding: 20px;
+        background-color: #fff;
+        text-align: left;
+        max-height: 100%;
+        height: 100%;
+      }
+      .formContainer .btn {
+        padding: 12px 20px;
+        border: none;
+        background-color: #8ebf42;
+        color: #fff;
+        cursor: pointer;
+        width: 100%;
+        margin-bottom: 15px;
+        opacity: 0.8;
+      }
+      .formContainer .cancel {
+        background-color: #cc0000;
+      }
+      .formContainer .btn:hover,
+      .openButton:hover {
+        opacity: 1;
+      }
+</style>
 <div class="display-box">
     <div class="display-data">
         <h1>Thông tin bệnh nhân</h1>
@@ -54,8 +96,14 @@
                         <td>{{encounter.encounter_start}}</td>
                         <td><a href="{% url 'fhir:hanhchinh' group_name user_name data.Patient.identifier encounter.encounter_identifier %}">{{encounter.encounter_identifier}}</a></td>
                         <td>{{encounter.encounter_class}}</td>
-                        <td>{{encounter.encounter_status}}</td>
+                        {% if encounter.encounter_status == 'in-progress' %}
+                        <td> Đang Khám</td>
+                        {%elif encounter.encounter_status == 'finished'%}
+                        <td>Đã Khám xong</td>
+                        {%endif%}
+                        {%if encounter.encounter_end%}
                         <td>{{encounter.encounter_end}}</td>
+                        {%endif%}
                     </tr>
                 {%endfor%}
             
@@ -70,10 +118,18 @@
             {%endif%}
         {%endif%}
         <tr>
-            <td colspan="5"><button id="myButton" class="float-left submit-button" >Lần đăng ký khám mới</button></td>
+            <td colspan="5"><button class="float-left submit-button" onclick="openForm()" >Lần đăng ký khám mới</button></td>
         </tr>
         </table>
     </div>
+    <div class="formPopup" id="popupForm">
+        <form action="{% url 'fhir:encounter' group_name user_name data.Patient.identifier%}" class="formContainer" method="POST">
+            {%csrf_token%}
+            {{form.as_p}}
+            <button type="submit" class="btn">Add</button>
+            <button type="button" class="btn cancel" onclick="closeForm()">Close</button>
+        </form>
+      </div>
 
 </div>
 
@@ -82,4 +138,16 @@
                 location.href = "{% url 'fhir:encounter' group_name user_name data.Patient.identifier%} ";
             };
         </script>
+    </script>
+</div>
+<div>
+    <script>
+    function openForm() {
+        document.getElementById("popupForm").style.display = "inline-block";
+    }
+    function closeForm() {
+        document.getElementById("popupForm").style.display = "none";
+    }
+    </script>
+</div>
 {%endblock%}

@@ -16,6 +16,46 @@ from django.shortcuts import get_object_or_404
 from datetime import datetime
 # Create your views here.
 
+CLASS_CHOICES = {
+    'IMP': 'Nội trú',
+    'AMB': 'Ambulatory',
+    'FLD': 'Khám tại địa điểm ngoài',
+    'EMER': 'Khẩn cấp',
+    'HH': 'Khám tại nhà',
+    'ACUTE': 'Nội trú khẩn cấp',
+    'NONAC': 'Nội trú không khẩn cấp',
+    'OBSENC': 'Thăm khám quan sát',
+    'SS': 'Ngoại trú',
+    'VR': 'Trực tuyến',
+    'PRENC': 'Tái khám'
+}
+TYPE_CHOICES = {
+    '1': 'Bệnh án nội khoa',
+    '2': 'Bệnh án ngoại khoa',
+    '3': 'Bệnh án phụ khoa',
+    '4': 'Bệnh án sản khoa'
+}
+PRIORITY_CHOICES = {
+    'A': 'ASAP',
+    'EL': 'Tự chọn',
+    'EM': 'Khẩn cấp',
+    'P': 'Trước',
+    'R': 'Bình thường',
+    'S': 'Star'
+}
+CLINICAL_CHOICES = {
+    'active': 'Active',
+    'inactive': 'Inactive',
+    'recurrence': 'Recurrence',
+    'relapse': 'Relapse',
+    'remission': 'Remission',
+    'resolved': 'Resolves'
+}
+SEVERITY_CHOICES = {
+    '24484000': 'Nặng',
+    '6736007': 'Vừa',
+    '255604002': 'Nhẹ'
+}
 id_system = "urn:trinhcongminh"
 
 ns = {'d': "http://hl7.org/fhir"}
@@ -49,6 +89,7 @@ def patient_view(request, group_name, user_name):
 
 def display_detail(request, group_name, user_name, patient_identifier):
     patient = get_user_model()
+    encounter_form = EncounterForm()
     data = {'Patient': {}, 'Encounter': []}
     instance = patient.objects.get(
         identifier=patient_identifier)
@@ -64,7 +105,7 @@ def display_detail(request, group_name, user_name, patient_identifier):
         data['encounter_type'] = 'list'
     img_dir = f'/static/img/patient/{patient_identifier}.jpg'
     # pass
-    return render(request, 'fhir/doctor/display.html', {'group_name': group_name, 'user_name': user_name, 'data': data, 'img_dir': img_dir})
+    return render(request, 'fhir/doctor/display.html', {'group_name': group_name, 'user_name': user_name, 'data': data, 'img_dir': img_dir, 'form': encounter_form})
 
 
 class register(View):
@@ -176,6 +217,7 @@ class search(View):
     def post(self, request, group_name, user_name):
         data = {'Patient': {}, 'Encounter': []}
         patient = get_user_model()
+        encounter_form = EncounterForm()
         if request.POST:
             try:
                 instance = patient.objects.get(
@@ -186,6 +228,7 @@ class search(View):
                 data['Patient']['gender'] = instance.gender
                 data['Patient']['home_address'] = instance.home_address
                 data['Patient']['work_address'] = instance.work_address
+                data['Patient']['telecom'] = instance.telecom
                 data['Encounter'] = EncounterModel.objects.all().filter(
                     user_identifier=instance.identifier)
             except patient.DoesNotExist:
@@ -244,15 +287,19 @@ class search(View):
                                 'd:text', ns).attrib['value']
                             encounter['encounter_submitted'] = True
                             EncounterModel.objects.create(
-                                **encounter, user_identifier=new_patient)
+                                **encounter, user_identifier=new_patient)                            
                             data['Encounter'].append(encounter)
                 else:
                     return HttpResponse('No data found')
+
             if data:
                 data['encounter_type'] = 'list'
+                # for encounter in data['Encounter']:
+                #     encounter['encounter_class'] = CLASS_CHOICES[encounter['encounter_class']]
+                #     encounter['encounter_type'] = TYPE_CHOICES[encounter['encounter_type']]
                 patient_identifier = data['Patient']['identifier']
                 # return HttpResponseRedirect(f'/user/{group_name}/{user_name}/search/{patient_identifier}')
-                return render(request, 'fhir/doctor/search.html', {'message': 'Da tim thay', 'data': data, 'group_name': group_name, 'user_name': user_name})
+                return render(request, 'fhir/doctor/search.html', {'message': 'Da tim thay', 'data': data, 'group_name': group_name, 'user_name': user_name, 'form':encounter_form})
             else:
                 return render(request, 'fhir/doctor.html', {'message': 'Patient not found in database', 'group_name': group_name, 'user_name': user_name})
         else:
@@ -467,7 +514,35 @@ class encounter(View):
             user_identifier=instance, encounter_identifier=newencounter_identifier)
         data['Encounter']['identifier'] = newencounter.encounter_identifier
         return render(request, 'fhir/hanhchinh.html', {'data': data, 'group_name': group_name, 'user_name': user_name})
-
+    
+    def post(self, request, group_name, user_name, patient_identifier):
+        patient = get_user_model()
+        data = {'Patient': {}, 'Encounter': {}, 'Observation': []}
+        instance = patient.objects.get(
+            identifier=patient_identifier)
+        # instance = get_object_or_404(
+        #     User, user_identifier=patient['identifier'])
+        data['Patient']['identifier'] = instance.identifier
+        data['Patient']['name'] = instance.name
+        data['Patient']['birthDate'] = instance.birthDate
+        data['Patient']['gender'] = instance.gender
+        data['Patient']['home_address'] = instance.home_address
+        data['Patient']['work_address'] = instance.work_address
+        encounter_instances = EncounterModel.objects.all().filter(user_identifier=instance)
+        newencounter_identifier = patient_identifier + \
+            '_' + str(len(encounter_instances)+1)
+        form = EncounterForm(request.POST)
+        if form.is_valid():
+            encounter_n = form.save(commit=False)
+            encounter_n.encounter_identifier = newencounter_identifier
+            encounter_n.user_identifier = instance
+            encounter_n.encounter_submitted = True
+            form.save()
+        data['Encounter']['identifier'] = newencounter_identifier
+        data['Encounter_Info'] = EncounterModel.objects.get(
+            encounter_identifier=newencounter_identifier)
+        data['Encounter_Info']['encounter_class'] = CLASS_CHOICES[data['Encounter_Info']['encounter_class']]
+        return render(request, 'fhir/hanhchinh.html', {'group_name': group_name, 'user_name': user_name, 'data': data})
 
 class admin(View):
     def get(self, request, group_name, user_name):

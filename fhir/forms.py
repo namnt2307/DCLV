@@ -15,14 +15,13 @@ class EncounterForm(forms.ModelForm):
     class Meta:
         model = EncounterModel
         fields = ('encounter_class', 'encounter_type',
-         'encounter_service', 'encounter_priority', 'encounter_reason', 'encounter_location')
+         'encounter_service', 'encounter_priority', 'encounter_reason')
         labels = {
             'encounter_class': 'Loại hình thăm khám',
             'encounter_type': 'Loại bệnh án',
             'encounter_service': 'Dịch vụ khám bệnh',
             'encounter_priority': 'Mức độ ưu tiên',
             'encounter_reason': 'Lý do đến khám',
-            'encounter_location': 'Khoa khám bệnh'
         }
 
 class UserForm(forms.ModelForm):

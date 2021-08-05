@@ -19,10 +19,10 @@ class EncounterModel(models.Model):
         ('PRENC', 'Tái khám')
     )
     TYPE_CHOICES = (
-        ('1', 'Bệnh án nội khoa'),
-        ('2', 'Bệnh án ngoại khoa'),
-        ('3', 'Bệnh án phụ khoa'),
-        ('4', 'Bệnh án sản khoa')
+        ('Bệnh án nội khoa', 'Bệnh án nội khoa'),
+        ('Bệnh án ngoại khoa', 'Bệnh án ngoại khoa'),
+        ('Bệnh án phụ khoa', 'Bệnh án phụ khoa'),
+        ('Bệnh án sản khoa', 'Bệnh án sản khoa')
     )
     PRIORITY_CHOICES = (
         ('A', 'ASAP'),
@@ -32,34 +32,34 @@ class EncounterModel(models.Model):
         ('R', 'Bình thường'),
         ('S', 'Star')
     )
-    LOCATION_CHOICES = (
-        ('1', 'Khoa Khám bệnh'),
-        ('2', 'Khoa Hồi sức cấp cứu'),
-        ('3', 'Khoa Nội tổng hợp'),
-        ('4', 'Khoa Nội tổng hợp'),
-        ('5', 'Khoa Nội tiêu hóa'),
-        ('6', 'Khoa Nội - tiết niệu'),
-        ('7', 'Khoa Nội tiết'),
-        ('8', 'Khoa Nội cơ - xương - khớp'),
-        ('9', 'Khoa Nội tiết'),
-        ('10', 'Khoa Dị ứng'),
-        ('11', 'Khoa Huyết học lâm sàng'),
-        ('12', 'Khoa Truyền nhiễm'),
-        ('13', 'Khoa Lao'),
-        ('14', 'Khoa Tâm thần'),
-        ('15', 'Khoa Thần kinh')
-    )
+    # LOCATION_CHOICES = (
+    #     ('1', 'Khoa Khám bệnh'),
+    #     ('2', 'Khoa Hồi sức cấp cứu'),
+    #     ('3', 'Khoa Nội tổng hợp'),
+    #     ('4', 'Khoa Nội tổng hợp'),
+    #     ('5', 'Khoa Nội tiêu hóa'),
+    #     ('6', 'Khoa Nội - tiết niệu'),
+    #     ('7', 'Khoa Nội tiết'),
+    #     ('8', 'Khoa Nội cơ - xương - khớp'),
+    #     ('9', 'Khoa Nội tiết'),
+    #     ('10', 'Khoa Dị ứng'),
+    #     ('11', 'Khoa Huyết học lâm sàng'),
+    #     ('12', 'Khoa Truyền nhiễm'),
+    #     ('13', 'Khoa Lao'),
+    #     ('14', 'Khoa Tâm thần'),
+    #     ('15', 'Khoa Thần kinh')
+    # )
     user_identifier = models.ForeignKey(myUser,on_delete=models.CASCADE)
     encounter_identifier = models.CharField(max_length=100, primary_key=True)
     encounter_start = models.DateTimeField(default=datetime.now)
     encounter_end = models.DateTimeField(null=True)
     encounter_status = models.CharField(max_length=20, default='in-progress')
-    encounter_class = models.CharField(null=True,max_length=10,choices=CLASS_CHOICES)
-    encounter_type = models.CharField(null=True,max_length=30, choices=TYPE_CHOICES)
+    encounter_class = models.CharField(default="AMB",null=True,max_length=10,choices=CLASS_CHOICES)
+    encounter_type = models.CharField(default="2",null=True,max_length=30, choices=TYPE_CHOICES)
     encounter_service = models.CharField(null=True,max_length=20)
     encounter_priority = models.CharField(null=True,max_length=10, choices=PRIORITY_CHOICES)
     encounter_reason = models.CharField(null=True,max_length=10)
-    encounter_location = models.CharField(null=True,max_length=20, choices=LOCATION_CHOICES)
+    # encounter_location = models.CharField(null=True,max_length=20, choices=LOCATION_CHOICES)
     encounter_submitted = models.BooleanField(default=False)
 
 

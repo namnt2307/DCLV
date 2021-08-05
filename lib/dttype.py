@@ -459,7 +459,7 @@ def create_observation_resource(observation, patient_id, patient_name, encounter
         effectiveDateTime.set('value', observation['effective'])
     if observation.get('valuequantity'):
         valueQuantity = ET.SubElement(root, 'valueQuantity')
-        quantity_type(valueQuantity, observation['valuequantity'], observation['valueunit'], comparator='=')
+        quantity_type(valueQuantity, observation['valuequantity'], observation['valueunit'])
     return ET.tostring(root, encoding="us-ascii", method="xml", xml_declaration=None, default_namespace=None, short_empty_elements=True)
 
 
