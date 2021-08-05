@@ -8,6 +8,7 @@
     height: 52px;
     width: 900px;
     margin-left: 100px;
+    margin-bottom: 0px;
 }
 .top-menu ul li {
     margin-left: auto;
@@ -43,27 +44,46 @@
     width: 150px;
 }
 .verticle-line {
-    width: 1px;
+    /* width: 1px; */
     background-color: rgb(209, 209, 209);
-    height: 700px;
+    /* height: 700px; */
 }
 
 .right-body {
-    padding-top: 50px;
-    margin-left: 150px;
+    padding-top: 0px;
+    margin-left: 50px;
     width: 10000px;
 }
 .right-body .search {
-    padding-left: 150px;
+    /* padding-left: 50px; */
     display: flex;
 }
 
+.right-body .search label {
+    padding-top: 5px;
+    margin-right: 10px;
+}
+.right-body .search button {
+    margin-left: 10px;
+}
 .right-body .search input {
     padding-left: 20px;
     height: 35px;
     width: 500px;
     border-radius: 8px;
     font-size: medium;
+}
+table, th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+  }
+.right-body .searchtable {
+    padding-left: 170px;
+    margin-top: 40px;
+    width: 1200px;
+}
+.right-body .searchtable thead {
+    background-color:#58a6f5;
 }
 .right-body .create {
     padding-top: 50px;

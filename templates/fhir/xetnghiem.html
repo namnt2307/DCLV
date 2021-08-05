@@ -1,0 +1,34 @@
+{%extends 'fhir/base.html'%}
+{%block url1%}'{%url 'fhir:hanhchinh' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url2%}'{%url 'fhir:dangky' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url3%}'{%url 'fhir:hoibenh' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url4%}'{%url 'fhir:toanthan' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block leftbar%}
+    {%if services%}
+        {%for service in services%}
+            {%if service.service_code%}
+            <li><a href="{%url 'fhir:ketqua' group_name user_name data.Patient.identifier data.Encounter.identifier service.service_identifier%}">{{service.service_code}}</a></li>
+            {%endif%}
+        {%endfor%}
+    {%endif%}
+{%endblock%}
+{%block function%}
+    {%if observations%}
+        <form action="{% url 'fhir:ketqua' group_name user_name data.Patient.identifier data.Encounter.identifier data.Service.identifier %}" method="POST">
+            {%csrf_token%}
+            {%for observation in observations%}
+                {%if observation.observation_valuequantity%}
+                    <p>{{observation.observation_name}}: {{observation.observation_valuequantity}} {{observation.observation_valueunit}}</p>
+                {%else%}
+                    <label for="{{observation.observation_identifier}}">{{observation.observation_name}}</label>
+                    <input type="text" name="{{observation.observation_identifier}}" id="{{observation.observation_identifier}}">
+                    <p style="display: inline;">{{observation.observation_valueunit}}</p>
+                    <br>
+                {%endif%}
+            {%endfor%}
+            <button type="submit">Update</button>
+        </form>
+    {%else%}
+    <h1>404 Not Found</h1>
+    {%endif%}
+{%endblock%}

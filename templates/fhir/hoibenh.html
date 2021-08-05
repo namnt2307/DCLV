@@ -1,0 +1,29 @@
+{%extends 'fhir/base.html'%}
+{%block url1%}'{%url 'fhir:hanhchinh' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url2%}'{%url 'fhir:dangky' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url3%}'{%url 'fhir:hoibenh' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url4%}'{%url 'fhir:toanthan' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block leftbar%}
+    {%if services%}
+        {%for service in services%}
+            {%if service.service_code%}
+            <li><a href="{%url 'fhir:ketqua' group_name user_name data.Patient.identifier data.Encounter.identifier service.service_identifier%}">{{service.service_code}}</a></li>
+            {%endif%}
+        {%endfor%}
+    {%endif%}
+{%endblock%}
+{%block function%}
+    {%if condition%}
+        <p>Vấn đề lâm sàng: {{condition.condition_code}}</p>
+        <p>Tình trạng: {{condition.condition_clinicalstatus}}</p>
+        <p>Dấu hiệu bắt đầu từ ngày: {{condition.condition_onset}}</p>
+        <p>Mức độ: {{condition.condition_severity}}</p>
+
+    {%else%}
+        <form action="" method = "POST">
+            {%csrf_token%}
+            {{form.as_p}}
+            <button type="submit">Lưu lại</button>
+        </form>
+    {%endif%}
+{%endblock%}

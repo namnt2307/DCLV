@@ -1,30 +1,85 @@
 {% extends 'fhir/doctor.html' %}
 {%block function %}
-        {{ data }}
-        {{ message }}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/fhir/display.css'%}">
+<div class="display-box">
+    <div class="display-data">
         <h1>Thông tin bệnh nhân</h1>
-        <p>Mã y tế: {{data.Patient.identifier}}</p>
-        <p>Họ và tên: {{data.Patient.name}}</p>
-        <p>Giới tính: {{data.Patient.gender}}</p>
-        <p>Ngày sinh: {{data.Patient.birthDate}}</p>
-        {%for addr in data.Patient.address %}
-            {%if addr.use == 'home'%}
-                <p>Địa chỉ: {{addr.address}}</p>
-            {%elif addr.use == 'work'%}
-                <p>Nơi làm việc: {{addr.address}}</p>
-            {%endif%}
-        {%endfor%}
+        <div class="patient-data">
+            <div class="text-data">
+                <div class="name patient">
+                    <h4 class="title">Họ và tên:</h4>
+                    <h4 class="value">{{data.Patient.name}}</h4>
+                </div>
+                <div class="identifier patient">
+                    <h4 class="title">Giới tính:</h4>
+                    <h4 class="value">{{data.Patient.gender}}</h4>
+                </div>
+                <div class="gender patient">
+                    <h4 class="title">Mã y tế:</h4>
+                    <h4 class="value">{{data.Patient.identifier}}</h4>
+                </div>
+                <div class="birth patient">
+                    <h4 class="title">Địa chỉ:</h4>
+                    <h4 class="value">{{data.Patient.home_address}}</h4>
+                </div>
+                <div class="work patient">
+                    <h4 class="title">Nơi làm việc:</h4>
+                    <h4 class="value">{{data.Patient.work_address}}</h4>
+                </div>
+                <div class="home patient">
+                    <h4 class="title">Số điện thoại:</h4>
+                    <h4 class="value">{{data.Patient.telecom}}</h4>
+                </div>
+            </div>
+            <div class="patient-image">
+                <img src="{% static 'img/patient/' %}{{data.Patient.identifier}}.jpg" alt="">
+            </div>
+        </div>
+        <div class="encounter-data">
+        </div>
+        <h1>CÁC LẦN ĐĂNG KÝ KHÁM </h1>
+        <table>
+            <tr>
+                <td>Ngày đăng ký</td>
+                <td>Mã đợt khám</td>
+                <td>Loại thăm khám</td>
+                <td>Tình trạng thăm khám</td>
+                <td>Ngày kết thúc</td>
+            </tr>
         {%if data.Encounter%}
-            {%for encounter in data.Encounter%}
-                <a href="{% url 'fhir:observation' group_name user_name encounter.id %}">Lần thăm khám ngày {{encounter.start_date}}</a>
-                <br>
-            {%endfor%}
+           {%if data.encounter_type == 'list'%}
+                {%for encounter in data.Encounter%}
+                    <tr>
+                        <td>{{encounter.encounter_start}}</td>
+                        <td><a href="{% url 'fhir:hanhchinh' group_name user_name data.Patient.identifier encounter.encounter_identifier %}">{{encounter.encounter_identifier}}</a></td>
+                        <td>{{encounter.encounter_class}}</td>
+                        <td>{{encounter.encounter_status}}</td>
+                        <td>{{encounter.encounter_end}}</td>
+                    </tr>
+                {%endfor%}
+            
+            {%elif data.encounter_type == 'dict'%}
+                <tr>
+                    <td>{{encounter.period.start}}</td>
+                    <td><a href="{% url 'fhir:hanhchinh' group_name user_name data.Patient.identifier data.encounter.identifier %}">{{encounter.identifier}}</a></td>
+                    <td>{{encounter.class}}</td>
+                    <td>{{encounter.status}}</td>
+                    <td>{{encounter.period.end}}</td>
+                </tr>
+            {%endif%}
         {%endif%}
-        <button id="myButton" class="float-left submit-button" >Home</button>
+        <tr>
+            <td colspan="5"><button id="myButton" class="float-left submit-button" >Lần đăng ký khám mới</button></td>
+        </tr>
+        </table>
+    </div>
+
+</div>
 
         <script type="text/javascript">
             document.getElementById("myButton").onclick = function () {
-                location.href = "";
+                location.href = "{% url 'fhir:encounter' group_name user_name data.Patient.identifier%} ";
             };
         </script>
 {%endblock%}

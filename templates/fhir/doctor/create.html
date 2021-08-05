@@ -6,11 +6,11 @@
 <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
 <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
     <div class="create">
-        <form class="create-form"action="{% url 'fhir:register' user_name group_name %}" method="post">
+        <form class="create-form"action="{% url 'fhir:register' group_name user_name  %}" method="post">
             {% csrf_token %}   
             <br>
             <label for="full_name">Họ và tên</label>
-            {{form.full_name}}
+            {{form.name}}
             <br>
             <br>
             <label for="gioi_tinh">Giới tính</label>
@@ -18,7 +18,7 @@
             <br>
             <br>
             <label for="ngay_sinh">Ngày sinh</label>
-            {{form.birth_date}}
+            {{form.birthDate}}
             <br>
             <br>
             <label for="dia_chi">Địa chỉ</label>
@@ -26,12 +26,15 @@
             <br>
             <br>
             <label for="user_identifier">Mã y tế </label>
-            {{form.user_identifier}}
+            {{form.identifier}}
             <br>
             <br>
             <label for="noi_lam_viec">Nơi làm việc</label>
             {{form.work_address}}
             <br>
+            <br>
+            <label for="">Số điện thoại</label>
+            {{form.telecom}}
             <br>
             <input type="submit" value="Submit">
         </form>   

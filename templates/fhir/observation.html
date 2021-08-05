@@ -1,8 +1,81 @@
 {%extends 'fhir/doctor.html' %}
 {%block function%}
 {%if data %}
-    <h1>Lần thăm khám lúc {{data.Encounter.start_date}}</h1>
-    <h3>Kết quả khám bệnh</h3>
+    <h1>Hồ sơ khám bệnh</h1>
+    <h1>Thông tin hành chính</h1>
+    <h1>Thông tin ban đầu</h1>
+    {%if default1%}
+        <p>Loại hình thăm khám: {{default1.class_select}}</p>
+        <p></p>
+    {%else%}
+        <form action="">
+            <label for="class_select">Loại hình thăm khám</label>
+            <select name="class_select" id="class_select">
+                <option value="IMP">Nội trú</option>
+                <option value="AMB">Ambulatory</option>
+                <option value="FLD">Khám tại địa điểm ngoài</option>
+                <option value="EMER">Khẩn cấp</option>
+                <option value="HH">Khám tại nhà</option>
+                <option value="ACUTE">Nội trú khẩn cấp</option>
+                <option value="NONAC">Nội trú không khẩn cấp</option>
+                <option value="OBSENC">Thăm khám quan sát</option>
+                <option value="SS">Ngoại trú</option>
+                <option value="VR">Trực tuyến</option>
+                <option value="PRENC">Tái khám</option>
+            </select>
+            <br>
+            <label for="type_select">Loại bệnh án</label>
+            <select name="type_select" id="type_select"></select>
+            <br>
+            <label for="serviceType">Dịch vụ khám bệnh</label>
+            <input type="text" id="serviceType">
+            <br>
+            <label for="priority">Mức độ ưu tiên</label>
+            <input type="text" name="" id="priority">
+            <br>
+            <label for="reasonCode">Lý do đến khám</label>
+            <input type="text" id="reasonCode">
+            <br>
+            <label for="location">Khoa khám bệnh</label>
+            <select name="location" id="location">
+                <option value="1">Khoa Khám bệnh</option>
+            </select>
+        </form>
+    {%endif%}
+    <h1>Hỏi bệnh</h1>
+        <label for="code">Vấn đề lâm sàng</label>
+        <input type="text" name="code" id="code">
+        <br>
+        <label for="clinicalStatus">Tình trạng</label>
+        <select name="clinicalStatus" id="clinicalStatus">
+            <option value="Active"></option>
+            <option value="Inactive"></option>
+            <option value="Recurrence"></option>
+            <option value="Relapse"></option>
+            <option value="Remission"></option>
+            <option value="Resolved"></option>
+        </select>
+        <br>
+        <label for="onset">Dấu hiệu bắt đầu từ ngày</label>
+        <input type="datetime" name="onset" id="onset">
+        <label for="severity">Mức độ</label>
+        <select name="severity" id="severity">
+            <option value="255604002">Nhẹ</option>
+            <option value="6736007">Vừa</option>
+            <option value="24484000">Nặng</option>
+        </select>
+        <br>
+        <label for="selfhistory">Tiền sử bệnh</label>
+        <input type="text" name="selfhistory" id="selfhistory">
+        <br>
+        <label for="allergy">Dị ứng</label>
+        <input type="text" name="allergy" id="allergy">
+        <br>
+        <label for="familyhistory">Tiền sử bệnh gia đình</label>
+        <input type="text" name="familyhistory" id="familyhistory">
+    <br>
+        
+    <h1>Kết quả </h1>
     {%for observation in data.Observation%}
         <p>{{observation.display}}: {{observation.value}}</p>
     {%endfor%}

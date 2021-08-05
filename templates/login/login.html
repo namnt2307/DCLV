@@ -41,5 +41,11 @@
         </div>
     </form>
 </div>
+{%if message%}
+    <script>
+        alert('{{message}}');
+    </script>
+{% endif %}
+
 </body>
 </html>
