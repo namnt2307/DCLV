@@ -1,9 +1,9 @@
-
+/* 
 body{
     background-color:#fff;
-    font-size:14px;
+    font-size:14px; */
     /* color:#fff; */
-}
+/* }
 .header {
     background-color: #417690;
     height: 50px;
@@ -12,8 +12,12 @@ body{
     width:300px;
     max-width:100%;
     margin:50px auto;
+    background-color: aqua;
 }
-.simple-login-container h2{
+.login-form{
+    padding: 10px;
+}
+.simple-login-container h1{
     text-align:center;
     font-size:20px;
     color: black;
@@ -27,4 +31,4 @@ body{
 .register {
     text-align:center;
     color:#417690;
-}
+} */

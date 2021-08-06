@@ -10,36 +10,126 @@
     <title>Document</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/login/login.css'%}">
+    <style>
+        body{
+            margin:0;
+            padding:0;
+            background: url("../../static/img/1.jpg");
+            background-size: cover;
+            font-family: sans-serif;
+        }
+        body:after {
+            content: "";
+            position: fixed;
+            top: 0; bottom: 0; left: 0; right: 0; 
+            background: hsla(180,0%,50%,0.25);
+            pointer-events: none;
+        }
+        label{
+            color: #000000;
+        }
+        .simple-login-container{
+            width: 320px;
+            height: 420px;
+            background: url("../../static/img/2.jpg");
+            color: #000000;
+            top: 50%;
+            left: 50%;
+            position: absolute;
+            transform: translate(-50%,-50%);
+            box-sizing: border-box;
+            padding: 70px 30px;
+            border-radius: 20px;
+        }
+        .avatar{
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            position: absolute;
+            top:-50px;
+            left: calc(50% - 50px);
+            
+        }
+        h1{
+            margin: 0;
+            padding: 0 0 20px;
+            text-align: center;
+            font-size: 22px;
+        }
+        .simple-login-container p{
+            margin: 0;
+            padding: 0;
+            font-weight: bold;
+        }
+        .simple-login-container input{
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        .simple-login-container input[type="text"],input[type="password"]{
+            border: none;
+            border-bottom: 1px solid #fff;
+            background: transparent;
+            outline: none;
+            height: 40px;
+            color: #000000;
+            font-size: 16px;
+        }
+        button{
+            border: none;
+            outline: none;
+            height: 30px;
+            background: darkgrey;
+            color: #fff;
+            font-size: 18px;
+            border-radius: 18px;
+        }
+        button:hover{
+            cursor: pointer;
+            background: #ffc107;
+            color: #000;
+        }
+        .loginbox a{
+            text-decoration: none;
+            font-size: 12px;
+            line-height: 20px;
+            color: darkgrey;
+        }
+        .loginbox a:hover{
+            color:#ffc107;
+        }
+    </style>
 </head>
 <body>
 
 <div class="simple-login-container">
     <div class="header">
-        <h2>Login</h2>
+        <h1>ĐĂNG NHẬP</h1>
     </div>
-    <form action="" method="post">
-        {% csrf_token %}
-        <div class="row">
-            <div class="col-md-12 form-group">
-                <input type="text" class="form-control" placeholder="Username" name="username" id=>
+    <br>
+    <img src="../../static/img/logo.png" class="avatar">
+        <form action="" method="post">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-md-12 form-group">
+                    <input type="text" class="form-control" placeholder="Tên đăng nhập" name="username" id=>
+                </div>
             </div>
-        </div>
-        <div class="row">
-            <div class="col-md-12 form-group">
-                <input type="password" placeholder="Enter your Password" class="form-control" name="password">
+            <div class="row">
+                <div class="col-md-12 form-group">
+                    <input type="password" placeholder="Mật khẩu" class="form-control" name="password">
+                </div>
             </div>
-        </div>
-        <div class="row">
-            <div class="col-md-12 form-group">
-                <input type="submit" class="btn btn-block btn-login" placeholder="Enter your Password" >
+            <div class="row">
+                <div class="col-md-12 form-group">
+                    <input type="submit" class="btn btn-block btn-login" >
+                </div>
             </div>
-        </div>
-        <div class="register">
-            <h4>
-                <a href="{% url 'login:register'%}" >Register</a>
-            </h4>
-        </div>
-    </form>
+            <div class="register">
+                <h4>
+                    <a href="{% url 'login:register'%}" >Register</a>
+                </h4>
+            </div>
+        </form>
 </div>
 {%if message%}
     <script>
