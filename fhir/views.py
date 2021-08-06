@@ -541,7 +541,6 @@ class encounter(View):
         data['Encounter']['identifier'] = newencounter_identifier
         data['Encounter_Info'] = EncounterModel.objects.get(
             encounter_identifier=newencounter_identifier)
-        data['Encounter_Info']['encounter_class'] = CLASS_CHOICES[data['Encounter_Info']['encounter_class']]
         return render(request, 'fhir/hanhchinh.html', {'group_name': group_name, 'user_name': user_name, 'data': data})
 
 class admin(View):
