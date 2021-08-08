@@ -149,8 +149,7 @@
         </table>
     </div>
     <div class="formPopup" id="popupForm">
-        <form action="{% url 'fhir:encounter' group_name user_name data.Patient.identifier%}" class="formContainer"
-            method="POST">
+        <form action="{% url 'fhir:encounter' group_name user_name data.Patient.identifier%}" class="formContainer"   method="POST">
             {%csrf_token%}
             {{form.as_p}}
             <button type="submit" class="btn">Add</button>
@@ -165,8 +164,7 @@
         location.href = "{% url 'fhir:encounter' group_name user_name data.Patient.identifier%} ";
     };
 </script>
-</script>
-</div>
+
 <div>
     <script>
         function openForm() {

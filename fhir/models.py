@@ -58,11 +58,11 @@ class EncounterModel(models.Model):
     encounter_class = models.CharField(
         default="AMB", null=True, max_length=10, choices=CLASS_CHOICES)
     encounter_type = models.CharField(
-        default="2", null=True, max_length=30, choices=TYPE_CHOICES)
-    encounter_service = models.CharField(null=True, max_length=20)
+        default="Bệnh án ngoại khoa", null=True, max_length=100, choices=TYPE_CHOICES)
+    encounter_service = models.CharField(null=True, max_length=100)
     encounter_priority = models.CharField(
         null=True, max_length=10, choices=PRIORITY_CHOICES)
-    encounter_reason = models.CharField(null=True, max_length=10)
+    encounter_reason = models.CharField(null=True, max_length=100)
     # encounter_location = models.CharField(null=True,max_length=20, choices=LOCATION_CHOICES)
     encounter_submitted = models.BooleanField(default=False)
 

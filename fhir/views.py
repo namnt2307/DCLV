@@ -522,6 +522,7 @@ class encounter(View):
         return render(request, 'fhir/hanhchinh.html', {'data': data, 'group_name': group_name, 'user_name': user_name})
 
     def post(self, request, group_name, user_name, patient_identifier):
+        print(patient_identifier)
         patient = get_user_model()
         data = {'Patient': {}, 'Encounter': {}, 'Observation': []}
         instance = patient.objects.get(
@@ -535,15 +536,19 @@ class encounter(View):
         data['Patient']['home_address'] = instance.home_address
         data['Patient']['work_address'] = instance.work_address
         encounter_instances = EncounterModel.objects.all().filter(user_identifier=instance)
-        newencounter_identifier = patient_identifier + \
-            '_' + str(len(encounter_instances)+1)
+        print(encounter_instances)
+        newencounter_identifier = patient_identifier + '_' + str(len(encounter_instances)+1)
+        print(newencounter_identifier)
         form = EncounterForm(request.POST)
+        print(request.POST)
         if form.is_valid():
             encounter_n = form.save(commit=False)
             encounter_n.encounter_identifier = newencounter_identifier
             encounter_n.user_identifier = instance
             encounter_n.encounter_submitted = True
             form.save()
+        else:
+            print('form is not valid')
         data['Encounter']['identifier'] = newencounter_identifier
         data['Encounter_Info'] = EncounterModel.objects.get(
             encounter_identifier=newencounter_identifier)
@@ -785,6 +790,8 @@ class ketqua(View):
 class save(View):
     def get(self, request, group_name, user_name, patient_identifier, encounter_identifier):
         data = {'Patient': {}, 'Encounter': {}, 'Condition': []}
+        img_dir = f'/static/img/patient/{patient_identifier}.jpg'
+        encounter_form = EncounterForm()
         patient = dt.query_patient(patient_identifier)
         encounter_instance = EncounterModel.objects.get(
             encounter_identifier=encounter_identifier)
@@ -888,7 +895,22 @@ class save(View):
                 print(post_observation)
                 post_req = requests.post("http://hapi.fhir.org/baseR4/Observation/", headers={
                                          'Content-type': 'application/xml'}, data=post_observation.decode('utf-8'))
-            return HttpResponse('Success')
+            patient = get_user_model()
+            data = {'Patient': {}, 'Encounter': []}
+            instance = patient.objects.get(
+                identifier=patient_identifier)
+            data['Patient']['identifier'] = instance.identifier
+            data['Patient']['name'] = instance.name
+            data['Patient']['birthDate'] = instance.birthDate
+            data['Patient']['gender'] = instance.gender
+            data['Patient']['home_address'] = instance.home_address
+            data['Patient']['work_address'] = instance.work_address
+            data['Patient']['telecom'] = instance.telecom
+            data['Encounter'] = EncounterModel.objects.all().filter(
+                user_identifier=patient_identifier)
+            if data['Encounter']:
+                data['encounter_type'] = 'list'
+            return render(request, 'fhir/doctor/display.html', {'group_name': group_name, 'user_name': user_name, 'data': data, 'img_dir': img_dir, 'form': encounter_form, 'class': CLASS_CHOICES})
         else:
             return HttpResponse('Something Wrong')
 
