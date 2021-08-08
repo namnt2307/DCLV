@@ -23,6 +23,22 @@
     {%else%}
         <form action="" method = "POST">
             {%csrf_token%}
+                    <div class="name patient">
+                        <label for="id_condition_code"><h4 class="title">Vấn đề lâm sàng:</h4></label>
+                        <h4 class="value">{{form.condition_code}}</h4>
+                    </div>
+                    <div class="gender patient">
+                        <label for="id_condition_clinicalstatus"><h4 class="title">Tình trạng:</h4></label>
+                        <h4 class="value">{{form.condition_clinicalstatus}}</h4>
+                    </div>
+                    <div class="birth patient">
+                        <label for="id_condition_onset"><h4 class="title">Dấu hiệu bắt đầu từ ngày:</h4></label>
+                        <h4 class="value">{{form.condition_onset}}</h4>                
+                    </div>
+                    <div class="home patient">
+                        <label for="id_severity"><h4 class="title">Mức độ:</h4></label>
+                        <h4 class="value">{{form.severity}}</h4>
+                    </div>
             {{form.as_p}}
             <button type="submit">Lưu lại</button>
         </form>

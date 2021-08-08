@@ -56,6 +56,26 @@
     {%else%}
     <form action="{% url 'fhir:dangky' group_name user_name data.Patient.identifier data.Encounter.identifier %}" method="POST">
         {%csrf_token%}
+        <div class="name patient">
+            <label for="id_condition_code"><h4 class="title">Loại hình thăm khám:</h4></label>
+            <h4 class="value">{{form.encounter_class}}</h4>
+        </div>
+        <div class="gender patient">
+            <label for="id_condition_clinicalstatus"><h4 class="title">Loại bệnh án:</h4></label>
+            <h4 class="value">{{form.encounter_type}}</h4>
+        </div>
+        <div class="birth patient">
+            <label for="id_condition_onset"><h4 class="title">Dịch vụ khám bệnh:</h4></label>
+            <h4 class="value">{{form.encounter_sẻvice}}</h4>                
+        </div>
+        <div class="home patient">
+            <label for="id_severity"><h4 class="title">Mức độ ưu tiên:</h4></label>
+            <h4 class="value">{{form.encounter_priority}}</h4>
+        </div
+        <div class="home patient">
+            <label for="id_severity"><h4 class="title">Lý do đến khám:</h4></label>
+            <h4 class="value">{{form.encounter_reason}}</h4>
+        </div        
         {{form.as_p}}
         <input type="submit" value="Submit">
     </form>

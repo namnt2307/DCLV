@@ -15,15 +15,40 @@
 {%block function%}
     {%if observations%}
         {%for observation in observations%}
-            <p>{{observation.observation_name}}: {{observation.observation_valuequantity}} {{observation.observation_valueunit}}</p>
+        <div>
+            <h4 class='title'>{{observation.observation_name}}:</h4>
+            <h4 class='value'> {{observation.observation_valuequantity}} {{observation.observation_valueunit}}</h4>
+        </div>
         {%endfor%}
     {%else%}
         <h1>Thông tin khám toàn thân</h1>
         <form action="" method="POST">
             {%csrf_token%}
-            <label for="1">Mạch</label>
-            <input type="text" name="1" id="1">
-            <p style="display: inline;">lần/ph</p>
+        <div>
+            <label for="1"><h4 class='title'>Mạch:</h4></label>
+            <h4 class='value'><input type="text" name="1" id="1"></h4>
+            <h4 style="display: inline;">lần/ph</h4>
+        </div>
+        <div>
+            <label for="2"><h4 class='title'>Nhiệt độ:</h4></label>
+            <h4 class='value'><input type="text" name="2" id="2"></h4>
+            <h4 style="display: inline;">Cel</h4>
+        </div>
+        <div>
+            <label for="3"><h4 class='title'>Huyết áp:</h4></label>
+            <h4 class='value'><input type="text" name="3" id="3"></h4>
+            <h4 style="display: inline;">mmHg</h4>
+        </div>
+        <div>
+            <label for="4"><h4 class='title'>Nhịp thở</h4></label>
+            <h4 class='value'><input type="text" name="4" id="4"></h4>
+            <h4 style="display: inline;">lần/ph</h4>
+        </div>
+        <div>
+            <label for="5"><h4 class='title'>Cân nặng</h4></label>
+            <h4 class='value'><input type="text" name="5" id="5"></h4>
+            <h4 style="display: inline;">kg</h4>
+        </div>                                
             <br>
             <label for="2">Nhiệt độ</label>
             <input type="text" name="2" id="2">
