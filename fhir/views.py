@@ -695,7 +695,7 @@ class service(View):
             ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier +
                                             '_5', observation_name='Bạch cầu ái toan', observation_category=request.POST['service_category'], observation_valueunit='%')
             ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier +
-                                            '_6', observation_name='bạch cầu ái kiềm', observation_category=request.POST['service_category'], observation_valueunit='%')
+                                            '_6', observation_name='Bạch cầu ái kiềm', observation_category=request.POST['service_category'], observation_valueunit='%')
             ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier +
                                             '_7', observation_name='Số lượng hồng cầu trong một thể tích máu', observation_category=request.POST['service_category'], observation_valueunit='cells/cm3')
             ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier +
