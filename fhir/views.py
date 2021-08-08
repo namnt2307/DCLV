@@ -121,6 +121,7 @@ class register(View):
 
     def post(self, request, group_name, user_name):
         User = get_user_model()
+        encounter_form = EncounterForm()
         if request.POST:
             data = {'Patient': {}}
             data['Patient']['name'] = request.POST['name']
@@ -148,7 +149,7 @@ class register(View):
                         user_n.group_name = 'patient'
                         user_n.save()
                         form.save()
-                return render(request, 'fhir/doctor/display.html', {'group_name': group_name, 'user_name': user_name, 'data': data})
+                return render(request, 'fhir/doctor/display.html', {'group_name': group_name, 'user_name': user_name, 'data': data, 'form':encounter_form})
             else:
                 return HttpResponse("Something wrong when trying to register patient")
         else:
@@ -275,7 +276,7 @@ class search(View):
                                 'd:priority', ns)
                             priority_coding = priority.find('d:coding', ns)
                             encounter['encounter_priority'] = priority_coding.find(
-                                'd:value', ns)
+                                'd:code', ns).attrib['value']
                             period = encounter_resource.find('d:period', ns)
                             encounter['encounter_start'] = dt.getdatetime(
                                 period.find('d:start', ns).attrib['value'])
@@ -293,6 +294,7 @@ class search(View):
                             EncounterModel.objects.create(
                                 **encounter, user_identifier=new_patient)
                             data['Encounter'].append(encounter)
+                            print(encounter)
                 else:
                     return HttpResponse('No data found')
 
@@ -545,8 +547,6 @@ class encounter(View):
         data['Encounter']['identifier'] = newencounter_identifier
         data['Encounter_Info'] = EncounterModel.objects.get(
             encounter_identifier=newencounter_identifier)
-        data['Encounter_Info']['encounter_class'] = CLASS_CHOICES[data['Encounter_Info']
-                                                                  ['encounter_class']]
         return render(request, 'fhir/hanhchinh.html', {'group_name': group_name, 'user_name': user_name, 'data': data})
 
 
