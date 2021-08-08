@@ -7,19 +7,52 @@
     {%if services%}
         {%for service in services%}
             {%if service.service_code%}
-            <li><a href="{%url 'fhir:ketqua' group_name user_name data.Patient.identifier data.Encounter.identifier service.service_identifier%}">{{service.service_code}}</a></li>
+            <li>
+            <a href="{%url 'fhir:ketqua' group_name user_name data.Patient.identifier data.Encounter.identifier service.service_identifier%}">{{service.service_code}}</a>
+            </li>
             {%endif%}
         {%endfor%}
     {%endif%}
 {%endblock%}
 {%block function%}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/fhir/display.css' %}">
+    {% comment %} <h1>Thông tin đăng kí khám</h1> {% endcomment %}
     {{data.Encounter.Info}}
     {%if data.Encounter_Info.encounter_submitted%}
-        <p>Loại hình thăm khám: {{class|get_value:data.Encounter_Info.encounter_class}}</p>
-        <p>Loại bệnh án: {{data.Encounter_Info.encounter_type}}</p>
-        <p>Dịch vụ khám bệnh: {{data.Encounter_Info.encounter_service}}</p>
-        <p>Mức độ ưu tiên: {{priority|get_value:data.Encounter_Info.encounter_priority}}</p>
-        <p>Lý do đến khám: {{data.Encounter_Info.encounter_reason}}</p>
+        {% comment %} <h4>Loại hình thăm khám: {{class|get_value:data.Encounter_Info.encounter_class}}</h4>
+        <h4>Loại bệnh án: {{data.Encounter_Info.encounter_type}}</h4>
+        <h4>Dịch vụ khám bệnh: {{data.Encounter_Info.encounter_service}}</h4>
+        <h4>Mức độ ưu tiên: {{priority|get_value:data.Encounter_Info.encounter_priority}}</h4>
+        <h4>Lý do đến khám: {{data.Encounter_Info.encounter_reason}}</h4> {% endcomment %}
+<div class="display-box">
+    <div class="display-data">
+        <h1>Thông tin đăng kí khám</h1>
+        <div class="patient-data">
+            <div class="text-data">
+                <div class="name patient">
+                    <h4 class="title">Loại hình thăm khám:</h4>
+                    <h4 class="value">{{class|get_value:data.Encounter_Info.encounter_class}}</h4>
+                </div>
+                <div class="identifier patient">
+                    <h4 class="title">Loại bệnh án:</h4>
+                    <h4 class="value">{{data.Encounter_Info.encounter_type}}</h4>
+                </div>
+                <div class="gender patient">
+                    <h4 class="title">Dịch vụ khám bệnh:</h4>
+                    <h4 class="value">{{data.Encounter_Info.encounter_service}}</h4>
+                </div>
+                <div class="birth patient">
+                    <h4 class="title">Mức độ ưu tiên:</h4>
+                    <h4 class="value">{{priority|get_value:data.Encounter_Info.encounter_priority}}</h4>
+                </div>
+                <div class="work patient">
+                    <h4 class="title">Lý do đến khám:</h4>
+                    <h4 class="value">{{data.Encounter_Info.encounter_reason}}</h4>
+                </div>
+            </div>
+        </div>
+    </div>
     {%else%}
     <form action="{% url 'fhir:dangky' group_name user_name data.Patient.identifier data.Encounter.identifier %}" method="POST">
         {%csrf_token%}

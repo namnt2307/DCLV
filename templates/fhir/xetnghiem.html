@@ -13,20 +13,31 @@
     {%endif%}
 {%endblock%}
 {%block function%}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/fhir/xetnghiem.css' %}">
     {%if observations%}
         <form action="{% url 'fhir:ketqua' group_name user_name data.Patient.identifier data.Encounter.identifier data.Service.identifier %}" method="POST">
             {%csrf_token%}
-            {%for observation in observations%}
-                {%if observation.observation_valuequantity%}
-                    <p>{{observation.observation_name}}: {{observation.observation_valuequantity}} {{observation.observation_valueunit}}</p>
-                {%else%}
-                    <label for="{{observation.observation_identifier}}">{{observation.observation_name}}</label>
-                    <input type="text" name="{{observation.observation_identifier}}" id="{{observation.observation_identifier}}">
-                    <p style="display: inline;">{{observation.observation_valueunit}}</p>
-                    <br>
-                {%endif%}
-            {%endfor%}
-            <button type="submit">Update</button>
+            <div class="display-box">
+                <div class="display-data">
+                    <div class="text-data">           
+                        {%for observation in observations%}
+                            {%if observation.observation_valuequantity%}
+                                <div class="patient">
+                                    <h4 class="title">{{observation.observation_name}}:</h4>
+                                    <h4 class="value">{{observation.observation_valuequantity}} {{observation.observation_valueunit}}</h4>
+                                </div>
+                            {%else%}
+                                <label for="{{observation.observation_identifier}}">{{observation.observation_name}}</label>
+                                <input type="text" name="{{observation.observation_identifier}}" id="{{observation.observation_identifier}}">
+                                <p style="display: inline;">{{observation.observation_valueunit}}</p>
+                                <br>
+                            {%endif%}
+                        {%endfor%}
+                        <button type="submit" class="btn btn-success">Cập nhật</button>
+                    </div>
+                </div>
+            </div>
         </form>
     {%else%}
     <h1>404 Not Found</h1>

@@ -66,8 +66,7 @@
                 <a href="{% url 'fhir:register' user_name group_name %}"> Quản lí hồ sơ </a>
                 <div class="dropdown-content">
                     <a href="{% url 'fhir:register' user_name group_name %}">Tạo hồ sơ</a>
-                    <a href="">Tạo bệnh án</a>
-                    <a href="{% url 'fhir:upload' user_name group_name %}">Chuyển đổi excel</a>
+                    {% comment %} <a href="{% url 'fhir:upload' user_name group_name %}">Chuyển đổi excel</a> {% endcomment %}
                     <a href="{% url 'fhir:search' user_name group_name %}">Tìm kiếm hồ sơ</a>
                 </div>
                 <!-- #328be4; -->
@@ -97,22 +96,7 @@
 <div class="body">
     <div class="left-body">
       {%block leftbody%}
-      {%endblock%}
-        {% comment %} <ul>
-            <li><a href={%block url1%}{%endblock%}> Thông tin hành chính </a></li>
-            <li><a href={%block url2%}{%endblock%}> Thông tin đăng ký khám </a></li>
-            <li><a href={%block url3%}{%endblock%}> Thông tin hỏi bệnh </a></li>
-            {%block leftbar%}
-            {%endblock%}
-      
-            <!-- <button id="myButton" class="float-left submit-button" >Add a service</button>
-            <script type="text/javascript">
-                document.getElementById("myButton").onclick = function () {
-                    location.href = " ";
-                };
-            </script> -->
-        </ul> {% endcomment %}
-    
+      {%endblock%}    
     </div>
     <div class="verticle-line"></div>
     <div class="right-body">

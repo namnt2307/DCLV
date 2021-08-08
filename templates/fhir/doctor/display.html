@@ -1,9 +1,15 @@
 {% extends 'fhir/doctor.html' %}
 {%block leftbody%}
     <ul>
-        <li><a href={%block url1%}{%endblock%}> Thông tin hành chính </a></li>
-        <li><a href={%block url2%}{%endblock%}> Thông tin đăng ký khám </a></li>
-        <li><a href={%block url3%}{%endblock%}> Thông tin hỏi bệnh </a></li>
+        <li>
+            <h4><a href={%block url1%}{%endblock%}> Thông tin hành chính </a></h4>
+        </li>
+        <li>
+            <h4><a href={%block url2%}{%endblock%}> Thông tin đăng ký khám </a></h4>
+        </li>
+        <li>
+            <h4><a href={%block url3%}{%endblock%}> Thông tin hỏi bệnh </a></h4>
+        </li>
         {%block leftbar%}
         {%endblock%}
     

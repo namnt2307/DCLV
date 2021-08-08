@@ -16,9 +16,13 @@ from django.shortcuts import get_object_or_404
 from datetime import datetime
 # Create your views here.
 from django.template.defaulttags import register
+
+
 @register.filter
 def get_value(dictionary, key):
     return dictionary.get(key)
+
+
 CLASS_CHOICES = {
     'IMP': 'Nội trú',
     'AMB': 'Ambulatory',
@@ -149,7 +153,7 @@ class register(View):
                         user_n.group_name = 'patient'
                         user_n.save()
                         form.save()
-                return render(request, 'fhir/doctor/display.html', {'group_name': group_name, 'user_name': user_name, 'data': data, 'form':encounter_form})
+                return render(request, 'fhir/doctor/display.html', {'group_name': group_name, 'user_name': user_name, 'data': data, 'form': encounter_form})
             else:
                 return HttpResponse("Something wrong when trying to register patient")
         else:
@@ -326,6 +330,7 @@ class hanhchinh(View):
         data['Patient']['gender'] = instance.gender
         data['Patient']['home_address'] = instance.home_address
         data['Patient']['work_address'] = instance.work_address
+        data['Patient']['telecom'] = instance.telecom
         # except patient.DoesNotExist:
         #     data['Patient'] = dt.query_patient(patient_identifier)
         #     data['Encounter'] = dt.get_encounter(encounter_identifier)
@@ -537,7 +542,8 @@ class encounter(View):
         data['Patient']['work_address'] = instance.work_address
         encounter_instances = EncounterModel.objects.all().filter(user_identifier=instance)
         print(encounter_instances)
-        newencounter_identifier = patient_identifier + '_' + str(len(encounter_instances)+1)
+        newencounter_identifier = patient_identifier + \
+            '_' + str(len(encounter_instances)+1)
         print(newencounter_identifier)
         form = EncounterForm(request.POST)
         print(request.POST)
@@ -580,7 +586,7 @@ class dangky(View):
         data['Encounter']['identifier'] = encounter_identifier
         services = ServiceRequestModel.objects.all().filter(
             encounter_identifier=data['Encounter_Info'])
-        return render(request, 'fhir/dangky.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'form': encounter_form, 'services': services, 'class': CLASS_CHOICES, 'type':TYPE_CHOICES, 'priority':PRIORITY_CHOICES})
+        return render(request, 'fhir/dangky.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'form': encounter_form, 'services': services, 'class': CLASS_CHOICES, 'type': TYPE_CHOICES, 'priority': PRIORITY_CHOICES})
 
     def post(self, request, group_name, user_name, patient_identifier, encounter_identifier):
         data = {'Patient': {}, 'Encounter': {}, 'Encounter_Info': {}}
@@ -600,7 +606,7 @@ class dangky(View):
         data['Encounter']['identifier'] = encounter_identifier
         data['Encounter_Info'] = EncounterModel.objects.get(
             encounter_identifier=encounter_identifier)
-        return render(request, 'fhir/dangky.html', {'group_name': group_name, 'user_name': user_name, 'data': data, 'class': CLASS_CHOICES, 'type':TYPE_CHOICES, 'priority':PRIORITY_CHOICES})
+        return render(request, 'fhir/dangky.html', {'group_name': group_name, 'user_name': user_name, 'data': data, 'class': CLASS_CHOICES, 'type': TYPE_CHOICES, 'priority': PRIORITY_CHOICES})
 
 
 class hoibenh(View):

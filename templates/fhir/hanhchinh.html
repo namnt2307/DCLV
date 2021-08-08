@@ -13,14 +13,41 @@
     {%endif%}
 {%endblock%}
 {%block function%}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/fhir/display.css' %}">
     {%if data%}
-    <h1>Thông tin bệnh nhân</h1>
-    <p>Mã y tế: {{data.Patient.identifier}}</p>
-    <p>Họ và tên: {{data.Patient.name}}</p>
-    <p>Giới tính: {{data.Patient.gender}}</p>
-    <p>Ngày sinh: {{data.Patient.birthDate}}</p>
-    <p>Địa chỉ: {{data.Patient.home_address}}</p>
-    <p>Nơi làm việc: {{data.Patient.work_address}}</p>
+<div class="display-box">
+    <div class="display-data">
+        <h1>Thông tin bệnh nhân</h1>
+        <div class="patient-data">
+            <div class="text-data">
+                <div class="name patient">
+                    <h4 class="title">Họ và tên:</h4>
+                    <h4 class="value">{{data.Patient.name}}</h4>
+                </div>
+                <div class="identifier patient">
+                    <h4 class="title">Giới tính:</h4>
+                    <h4 class="value">{{data.Patient.gender}}</h4>
+                </div>
+                <div class="gender patient">
+                    <h4 class="title">Mã y tế:</h4>
+                    <h4 class="value">{{data.Patient.identifier}}</h4>
+                </div>
+                <div class="birth patient">
+                    <h4 class="title">Địa chỉ:</h4>
+                    <h4 class="value">{{data.Patient.home_address}}</h4>
+                </div>
+                <div class="work patient">
+                    <h4 class="title">Nơi làm việc:</h4>
+                    <h4 class="value">{{data.Patient.work_address}}</h4>
+                </div>
+                <div class="home patient">
+                    <h4 class="title">Số điện thoại:</h4>
+                    <h4 class="value">{{data.Patient.telecom}}</h4>
+                </div>
+            </div>
+        </div>
+    </div>
     {%else%}
     <h1>404 Not Found</h1>
     {%endif%}
