@@ -2,3 +2,4 @@ djongo
 django
 django-restframework
 openpyxl
+requests

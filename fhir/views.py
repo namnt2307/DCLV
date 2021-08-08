@@ -99,6 +99,7 @@ def display_detail(request, group_name, user_name, patient_identifier):
     data['Patient']['gender'] = instance.gender
     data['Patient']['home_address'] = instance.home_address
     data['Patient']['work_address'] = instance.work_address
+    data['Patient']['telecom'] = instance.telecom
     data['Encounter'] = EncounterModel.objects.all().filter(
         user_identifier=patient_identifier)
     if data['Encounter']:
@@ -287,7 +288,7 @@ class search(View):
                                 'd:text', ns).attrib['value']
                             encounter['encounter_submitted'] = True
                             EncounterModel.objects.create(
-                                **encounter, user_identifier=new_patient)                            
+                                **encounter, user_identifier=new_patient)
                             data['Encounter'].append(encounter)
                 else:
                     return HttpResponse('No data found')
@@ -299,7 +300,7 @@ class search(View):
                 #     encounter['encounter_type'] = TYPE_CHOICES[encounter['encounter_type']]
                 patient_identifier = data['Patient']['identifier']
                 # return HttpResponseRedirect(f'/user/{group_name}/{user_name}/search/{patient_identifier}')
-                return render(request, 'fhir/doctor/search.html', {'message': 'Da tim thay', 'data': data, 'group_name': group_name, 'user_name': user_name, 'form':encounter_form})
+                return render(request, 'fhir/doctor/search.html', {'message': 'Da tim thay', 'data': data, 'group_name': group_name, 'user_name': user_name, 'form': encounter_form})
             else:
                 return render(request, 'fhir/doctor.html', {'message': 'Patient not found in database', 'group_name': group_name, 'user_name': user_name})
         else:
@@ -514,7 +515,7 @@ class encounter(View):
             user_identifier=instance, encounter_identifier=newencounter_identifier)
         data['Encounter']['identifier'] = newencounter.encounter_identifier
         return render(request, 'fhir/hanhchinh.html', {'data': data, 'group_name': group_name, 'user_name': user_name})
-    
+
     def post(self, request, group_name, user_name, patient_identifier):
         patient = get_user_model()
         data = {'Patient': {}, 'Encounter': {}, 'Observation': []}
@@ -541,8 +542,10 @@ class encounter(View):
         data['Encounter']['identifier'] = newencounter_identifier
         data['Encounter_Info'] = EncounterModel.objects.get(
             encounter_identifier=newencounter_identifier)
-        data['Encounter_Info']['encounter_class'] = CLASS_CHOICES[data['Encounter_Info']['encounter_class']]
+        data['Encounter_Info']['encounter_class'] = CLASS_CHOICES[data['Encounter_Info']
+                                                                  ['encounter_class']]
         return render(request, 'fhir/hanhchinh.html', {'group_name': group_name, 'user_name': user_name, 'data': data})
+
 
 class admin(View):
     def get(self, request, group_name, user_name):
