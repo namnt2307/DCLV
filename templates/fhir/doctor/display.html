@@ -118,7 +118,7 @@
                 <td><a
                         href="{% url 'fhir:hanhchinh' group_name user_name data.Patient.identifier encounter.encounter_identifier %}">{{encounter.encounter_identifier}}</a>
                 </td>
-                <td>{{encounter.encounter_class}}</td>
+                <td>{{class|get_value:encounter.encounter_class}}</td>
                 {% if encounter.encounter_status == 'in-progress' %}
                 <td> Đang Khám</td>
                 {%elif encounter.encounter_status == 'finished'%}

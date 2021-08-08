@@ -15,7 +15,10 @@ from .forms import EncounterForm, ConditionForm, ObservationForm
 from django.shortcuts import get_object_or_404
 from datetime import datetime
 # Create your views here.
-
+from django.template.defaulttags import register
+@register.filter
+def get_value(dictionary, key):
+    return dictionary.get(key)
 CLASS_CHOICES = {
     'IMP': 'Nội trú',
     'AMB': 'Ambulatory',
@@ -106,7 +109,7 @@ def display_detail(request, group_name, user_name, patient_identifier):
         data['encounter_type'] = 'list'
     img_dir = f'/static/img/patient/{patient_identifier}.jpg'
     # pass
-    return render(request, 'fhir/doctor/display.html', {'group_name': group_name, 'user_name': user_name, 'data': data, 'img_dir': img_dir, 'form': encounter_form})
+    return render(request, 'fhir/doctor/display.html', {'group_name': group_name, 'user_name': user_name, 'data': data, 'img_dir': img_dir, 'form': encounter_form, 'class': CLASS_CHOICES})
 
 
 class register(View):
@@ -572,7 +575,7 @@ class dangky(View):
         data['Encounter']['identifier'] = encounter_identifier
         services = ServiceRequestModel.objects.all().filter(
             encounter_identifier=data['Encounter_Info'])
-        return render(request, 'fhir/dangky.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'form': encounter_form, 'services': services})
+        return render(request, 'fhir/dangky.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'form': encounter_form, 'services': services, 'class': CLASS_CHOICES, 'type':TYPE_CHOICES, 'priority':PRIORITY_CHOICES})
 
     def post(self, request, group_name, user_name, patient_identifier, encounter_identifier):
         data = {'Patient': {}, 'Encounter': {}, 'Encounter_Info': {}}
@@ -592,7 +595,7 @@ class dangky(View):
         data['Encounter']['identifier'] = encounter_identifier
         data['Encounter_Info'] = EncounterModel.objects.get(
             encounter_identifier=encounter_identifier)
-        return render(request, 'fhir/dangky.html', {'group_name': group_name, 'user_name': user_name, 'data': data})
+        return render(request, 'fhir/dangky.html', {'group_name': group_name, 'user_name': user_name, 'data': data, 'class': CLASS_CHOICES, 'type':TYPE_CHOICES, 'priority':PRIORITY_CHOICES})
 
 
 class hoibenh(View):
@@ -610,7 +613,7 @@ class hoibenh(View):
             pass
         services = ServiceRequestModel.objects.all().filter(
             encounter_identifier=encounter_identifier)
-        return render(request, 'fhir/hoibenh.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'services': services, 'form': condition_form, 'condition': condition})
+        return render(request, 'fhir/hoibenh.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'services': services, 'form': condition_form, 'condition': condition, 'severity': SEVERITY_CHOICES})
 
     def post(self, request, group_name, user_name, patient_identifier, encounter_identifier):
         data = {'Patient': {'identifier': patient_identifier},
@@ -629,7 +632,7 @@ class hoibenh(View):
             form.save()
         condition = ConditionModel.objects.get(
             condition_identifier=condition_identifier)
-        return render(request, 'fhir/hoibenh.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'condition': condition})
+        return render(request, 'fhir/hoibenh.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'condition': condition, 'severity': SEVERITY_CHOICES})
 
 
 class xetnghiem(View):
