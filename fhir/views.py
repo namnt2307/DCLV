@@ -14,7 +14,13 @@ from .models import EncounterModel, ServiceRequestModel, UserModel, ConditionMod
 from .forms import EncounterForm, ConditionForm, ObservationForm
 from django.shortcuts import get_object_or_404
 from datetime import datetime
+from django.template.defaulttags import register
 # Create your views here.
+
+@register.filter
+def get_item(dictionary, key):
+    return dictionary.get(key)
+
 
 CLASS_CHOICES = {
     'IMP': 'Nội trú',
@@ -96,6 +102,7 @@ def display_detail(request, group_name, user_name, patient_identifier):
     data['Patient']['identifier'] = instance.identifier
     data['Patient']['name'] = instance.name
     data['Patient']['birthDate'] = instance.birthDate
+    print(data['Patient']['birthDate'])
     data['Patient']['gender'] = instance.gender
     data['Patient']['home_address'] = instance.home_address
     data['Patient']['work_address'] = instance.work_address
@@ -127,28 +134,54 @@ class register(View):
             data['Patient']['identifier'] = request.POST['identifier']
             data['Patient']['telecom'] = request.POST['telecom']
             # xml_data, data = handlers.register_ehr(patient, id_system)
+            get_patient = requests.get("http://hapi.fhir.org/baseR4/Patient?identifier=urn:trinhcongminh|" +
+                                                data['Patient']['identifier'], headers={'Content-type': 'application/xml'})
+            if get_patient.status_code == 200 and 'entry' in get_patient.content.decode('utf-8'):
+                data['Patient']['id'] = dt.query_patient(data['Patient']['identifier'])['id']
             patient = dt.create_patient_resource(data['Patient'])
-            post_req = requests.post("http://hapi.fhir.org/baseR4/Patient/", headers={
-                'Content-type': 'application/xml'}, data=patient.decode('utf-8'))
-            if post_req.status_code == 201:
-                print(post_req.content)
-                try:
+            print(patient)
+            if data['Patient'].get('id'):
+                print("http://hapi.fhir.org/baseR4/Patient/" + data['Patient']['id'])
+                put_patient = requests.put("http://hapi.fhir.org/baseR4/Patient/" + data['Patient']['id'], headers={'Content-type': 'application/xml'}, data=patient.decode('utf-8'))
+                print(put_patient.status_code)
+                if put_patient.status_code == 200:
                     instance = User.objects.get(
                         identifier=data['Patient']['identifier'])
-                except User.DoesNotExist:
-                    form = EHRCreationForm(request.POST or None)
-                    if form.is_valid():
-                        user_n = form.save(commit=False)
-                        user_n.username = data['Patient']['identifier']
-                        user_n.set_password('nam12345')
-                        user_n.group_name = 'patient'
-                        user_n.save()
-                        form.save()
-                return render(request, 'fhir/doctor/display.html', {'group_name': group_name, 'user_name': user_name, 'data': data})
+                    instance.name = data['Patient']['name']
+                    instance.gender = data['Patient']['gender']
+                    instance.birthDate = data['Patient']['birthDate']
+                    instance.home_address = data['Patient']['home_address']
+                    instance.work_addresss = data['Patient']['work_address']
+                    instance.telecom = data['Patient']['telecom']           
+                    instance.save()    
+                    print("save success")
+                    return render(request, 'fhir/doctor/display.html', {'group_name': group_name, 'user_name': user_name, 'data': data})
+                else:
+                    return HttpResponse("Something wrong when trying to register patient")
             else:
-                return HttpResponse("Something wrong when trying to register patient")
+                print('create new ressource')
+                post_req = requests.post("http://hapi.fhir.org/baseR4/Patient/", headers={
+                    'Content-type': 'application/xml'}, data=patient.decode('utf-8'))
+                if post_req.status_code == 201:
+                    print(post_req.content)
+                    try:
+                        instance = User.objects.get(
+                            identifier=data['Patient']['identifier'])
+                    except User.DoesNotExist:
+                        form = EHRCreationForm(request.POST or None)
+                        if form.is_valid():
+                            user_n = form.save(commit=False)
+                            user_n.username = data['Patient']['identifier']
+                            user_n.set_password('nam12345')
+                            user_n.group_name = 'patient'
+                            user_n.save()
+                            form.save()
+                        return render(request, 'fhir/doctor/display.html', {'group_name': group_name, 'user_name': user_name, 'data': data})
+                    else:
+                        return HttpResponse("Something wrong when trying to register patient")
         else:
             return HttpResponse("Please enter your information")
+
 
 
 class upload(View):
@@ -224,7 +257,8 @@ class search(View):
                     identifier=request.POST['identifier'])
                 data['Patient']['identifier'] = instance.identifier
                 data['Patient']['name'] = instance.name
-                data['Patient']['birthDate'] = instance.birthDate
+                data['Patient']['birthDate'] = datetime.strftime(instance.birthDate, "%d-%m-%Y")
+                print(data['Patient']['birthDate'])
                 data['Patient']['gender'] = instance.gender
                 data['Patient']['home_address'] = instance.home_address
                 data['Patient']['work_address'] = instance.work_address
@@ -568,7 +602,7 @@ class dangky(View):
         data['Encounter']['identifier'] = encounter_identifier
         services = ServiceRequestModel.objects.all().filter(
             encounter_identifier=data['Encounter_Info'])
-        return render(request, 'fhir/dangky.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'form': encounter_form, 'services': services})
+        return render(request, 'fhir/dangky.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'form': encounter_form, 'services': services, 'class': CLASS_CHOICES, 'priority': PRIORITY_CHOICES})
 
     def post(self, request, group_name, user_name, patient_identifier, encounter_identifier):
         data = {'Patient': {}, 'Encounter': {}, 'Encounter_Info': {}}
@@ -602,11 +636,14 @@ class hoibenh(View):
         try:
             condition = ConditionModel.objects.get(
                 encounter_identifier=encounter)
+            print(condition.condition_onset)
         except:
+            print('somethingwrong')
             pass
         services = ServiceRequestModel.objects.all().filter(
             encounter_identifier=encounter_identifier)
-        return render(request, 'fhir/hoibenh.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'services': services, 'form': condition_form, 'condition': condition})
+        
+        return render(request, 'fhir/hoibenh.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'services': services, 'form': condition_form, 'condition': condition, 'clinical': CLINICAL_CHOICES, 'severity': SEVERITY_CHOICES})
 
     def post(self, request, group_name, user_name, patient_identifier, encounter_identifier):
         data = {'Patient': {'identifier': patient_identifier},
@@ -625,7 +662,7 @@ class hoibenh(View):
             form.save()
         condition = ConditionModel.objects.get(
             condition_identifier=condition_identifier)
-        return render(request, 'fhir/hoibenh.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'condition': condition})
+        return render(request, 'fhir/hoibenh.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'condition': condition, 'clinical': CLINICAL_CHOICES, 'severity': SEVERITY_CHOICES})
 
 
 class xetnghiem(View):

@@ -15,9 +15,9 @@
 {%block function%}
     {%if condition%}
         <p>Vấn đề lâm sàng: {{condition.condition_code}}</p>
-        <p>Tình trạng: {{condition.condition_clinicalstatus}}</p>
-        <p>Dấu hiệu bắt đầu từ ngày: {{condition.condition_onset}}</p>
-        <p>Mức độ: {{condition.condition_severity}}</p>
+        <p>Tình trạng: {{clinical|get_item:condition.condition_clinicalstatus}}</p>
+        <p>Dấu hiệu bắt đầu từ ngày: {{condition.condition_onset|date:"d-M-Y"}}</p>
+        <p>Mức độ: {{severity|get_item:condition.condition_severity}}</p>
 
     {%else%}
         <form action="" method = "POST">

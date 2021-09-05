@@ -167,6 +167,7 @@ def getdatetime(datetime_str):
     return datetime.strftime(datetime_obj, "%Y-%m-%d %H:%M:%S")
 
 
+
 def get_encounter(encounter_id):
     encounter = {}
     get_encounter =  requests.get("http://hapi.fhir.org/baseR4/Encounter/" + str(encounter_id), headers={'Content-type': 'application/xml'})

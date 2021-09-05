@@ -6,6 +6,7 @@ from lib.tools import generate_password
 from .models import EncounterModel, ServiceRequestModel, ProcedureModel, AllergyModel, UserModel, ConditionModel, ObservationModel
 
 class EHRCreationForm(forms.ModelForm):
+    birthDate = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}))
     class Meta:
         model = get_user_model()
         fields = ('name', 'gender', 'birthDate',
@@ -30,6 +31,7 @@ class UserForm(forms.ModelForm):
         fields = ('identifier', 'name', 'gender', 'birthDate', 'home_address', 'work_address', 'telecom')
 
 class ConditionForm(forms.ModelForm):
+    condition_onset=forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}))
     class Meta:
         model = ConditionModel
         fields = ('condition_code','condition_clinicalstatus','condition_onset','condition_severity')
