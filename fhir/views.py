@@ -10,19 +10,20 @@ from lib import dttype as dt
 from login.forms import UserCreationForm
 from handlers import handlers
 from fhir.forms import EHRCreationForm
-from .models import EncounterModel, ServiceRequestModel, UserModel, ConditionModel, ObservationModel
-from .forms import EncounterForm, ConditionForm, ObservationForm
+from .models import EncounterModel, ServiceRequestModel, UserModel, ConditionModel, ObservationModel, ProcedureModel
+from .forms import EncounterForm, ConditionForm, ObservationForm, ProcedureForm, ProcedureDetailForm
 from django.shortcuts import get_object_or_404
 from datetime import datetime
 from django.template.defaulttags import register
 # Create your views here.
+
 
 @register.filter
 def get_item(dictionary, key):
     return dictionary.get(key)
 
 
-CLASS_CHOICES = {
+ENCOUNTER_CLASS_CHOICES = {
     'IMP': 'Nội trú',
     'AMB': 'Ambulatory',
     'FLD': 'Khám tại địa điểm ngoài',
@@ -35,13 +36,13 @@ CLASS_CHOICES = {
     'VR': 'Trực tuyến',
     'PRENC': 'Tái khám'
 }
-TYPE_CHOICES = {
+ENCOUNTER_TYPE_CHOICES = {
     '1': 'Bệnh án nội khoa',
     '2': 'Bệnh án ngoại khoa',
     '3': 'Bệnh án phụ khoa',
     '4': 'Bệnh án sản khoa'
 }
-PRIORITY_CHOICES = {
+ENCOUNTER_PRIORITY_CHOICES = {
     'A': 'ASAP',
     'EL': 'Tự chọn',
     'EM': 'Khẩn cấp',
@@ -49,7 +50,7 @@ PRIORITY_CHOICES = {
     'R': 'Bình thường',
     'S': 'Star'
 }
-CLINICAL_CHOICES = {
+CONDITION_CLINICAL_CHOICES = {
     'active': 'Active',
     'inactive': 'Inactive',
     'recurrence': 'Recurrence',
@@ -57,11 +58,22 @@ CLINICAL_CHOICES = {
     'remission': 'Remission',
     'resolved': 'Resolves'
 }
-SEVERITY_CHOICES = {
+CONDITION_SEVERITY_CHOICES = {
     '24484000': 'Nặng',
     '6736007': 'Vừa',
     '255604002': 'Nhẹ'
 }
+
+PROCEDURE_CATEGORY_CHOICES = {
+    '22642003': 'Phương pháp hoặc dịch vụ tâm thần',
+    '409063005': 'Tư vấn',
+    '409073007': 'Giáo dục',
+    '387713003': 'Phẫu thuật',
+    '103693007': 'Chuẩn đoán',
+    '46947000': 'Phương pháp chỉnh hình',
+    '410606002': 'Phương pháp dịch vụ xã hội'
+}
+
 id_system = "urn:trinhcongminh"
 
 ns = {'d': "http://hl7.org/fhir"}
@@ -135,14 +147,17 @@ class register(View):
             data['Patient']['telecom'] = request.POST['telecom']
             # xml_data, data = handlers.register_ehr(patient, id_system)
             get_patient = requests.get("http://hapi.fhir.org/baseR4/Patient?identifier=urn:trinhcongminh|" +
-                                                data['Patient']['identifier'], headers={'Content-type': 'application/xml'})
+                                       data['Patient']['identifier'], headers={'Content-type': 'application/xml'})
             if get_patient.status_code == 200 and 'entry' in get_patient.content.decode('utf-8'):
-                data['Patient']['id'] = dt.query_patient(data['Patient']['identifier'])['id']
+                data['Patient']['id'] = dt.query_patient(
+                    data['Patient']['identifier'])['id']
             patient = dt.create_patient_resource(data['Patient'])
             print(patient)
             if data['Patient'].get('id'):
-                print("http://hapi.fhir.org/baseR4/Patient/" + data['Patient']['id'])
-                put_patient = requests.put("http://hapi.fhir.org/baseR4/Patient/" + data['Patient']['id'], headers={'Content-type': 'application/xml'}, data=patient.decode('utf-8'))
+                print("http://hapi.fhir.org/baseR4/Patient/" +
+                      data['Patient']['id'])
+                put_patient = requests.put("http://hapi.fhir.org/baseR4/Patient/" + data['Patient']['id'], headers={
+                                           'Content-type': 'application/xml'}, data=patient.decode('utf-8'))
                 print(put_patient.status_code)
                 if put_patient.status_code == 200:
                     instance = User.objects.get(
@@ -152,8 +167,8 @@ class register(View):
                     instance.birthDate = data['Patient']['birthDate']
                     instance.home_address = data['Patient']['home_address']
                     instance.work_addresss = data['Patient']['work_address']
-                    instance.telecom = data['Patient']['telecom']           
-                    instance.save()    
+                    instance.telecom = data['Patient']['telecom']
+                    instance.save()
                     print("save success")
                     return render(request, 'fhir/doctor/display.html', {'group_name': group_name, 'user_name': user_name, 'data': data})
                 else:
@@ -181,7 +196,6 @@ class register(View):
                         return HttpResponse("Something wrong when trying to register patient")
         else:
             return HttpResponse("Please enter your information")
-
 
 
 class upload(View):
@@ -257,7 +271,8 @@ class search(View):
                     identifier=request.POST['identifier'])
                 data['Patient']['identifier'] = instance.identifier
                 data['Patient']['name'] = instance.name
-                data['Patient']['birthDate'] = datetime.strftime(instance.birthDate, "%d-%m-%Y")
+                data['Patient']['birthDate'] = datetime.strftime(
+                    instance.birthDate, "%d-%m-%Y")
                 print(data['Patient']['birthDate'])
                 data['Patient']['gender'] = instance.gender
                 data['Patient']['home_address'] = instance.home_address
@@ -321,7 +336,7 @@ class search(View):
                                 'd:text', ns).attrib['value']
                             encounter['encounter_submitted'] = True
                             EncounterModel.objects.create(
-                                **encounter, user_identifier=new_patient)                            
+                                **encounter, user_identifier=new_patient)
                             data['Encounter'].append(encounter)
                 else:
                     return HttpResponse('No data found')
@@ -333,7 +348,7 @@ class search(View):
                 #     encounter['encounter_type'] = TYPE_CHOICES[encounter['encounter_type']]
                 patient_identifier = data['Patient']['identifier']
                 # return HttpResponseRedirect(f'/user/{group_name}/{user_name}/search/{patient_identifier}')
-                return render(request, 'fhir/doctor/search.html', {'message': 'Da tim thay', 'data': data, 'group_name': group_name, 'user_name': user_name, 'form':encounter_form})
+                return render(request, 'fhir/doctor/search.html', {'message': 'Da tim thay', 'data': data, 'group_name': group_name, 'user_name': user_name, 'form': encounter_form})
             else:
                 return render(request, 'fhir/doctor.html', {'message': 'Patient not found in database', 'group_name': group_name, 'user_name': user_name})
         else:
@@ -546,7 +561,7 @@ class encounter(View):
             user_identifier=instance, encounter_identifier=newencounter_identifier)
         data['Encounter']['identifier'] = newencounter.encounter_identifier
         return render(request, 'fhir/hanhchinh.html', {'data': data, 'group_name': group_name, 'user_name': user_name})
-    
+
     def post(self, request, group_name, user_name, patient_identifier):
         patient = get_user_model()
         data = {'Patient': {}, 'Encounter': {}, 'Observation': []}
@@ -575,6 +590,7 @@ class encounter(View):
             encounter_identifier=newencounter_identifier)
         return render(request, 'fhir/hanhchinh.html', {'group_name': group_name, 'user_name': user_name, 'data': data})
 
+
 class admin(View):
     def get(self, request, group_name, user_name):
         data = {
@@ -600,7 +616,7 @@ class dangky(View):
         data['Encounter']['identifier'] = encounter_identifier
         services = ServiceRequestModel.objects.all().filter(
             encounter_identifier=data['Encounter_Info'])
-        return render(request, 'fhir/dangky.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'form': encounter_form, 'services': services, 'class': CLASS_CHOICES, 'priority': PRIORITY_CHOICES})
+        return render(request, 'fhir/dangky.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'form': encounter_form, 'services': services, 'class': ENCOUNTER_CLASS_CHOICES, 'priority': ENCOUNTER_PRIORITY_CHOICES})
 
     def post(self, request, group_name, user_name, patient_identifier, encounter_identifier):
         data = {'Patient': {}, 'Encounter': {}, 'Encounter_Info': {}}
@@ -640,8 +656,8 @@ class hoibenh(View):
             pass
         services = ServiceRequestModel.objects.all().filter(
             encounter_identifier=encounter_identifier)
-        
-        return render(request, 'fhir/hoibenh.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'services': services, 'form': condition_form, 'condition': condition, 'clinical': CLINICAL_CHOICES, 'severity': SEVERITY_CHOICES})
+
+        return render(request, 'fhir/hoibenh.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'services': services, 'form': condition_form, 'condition': condition, 'clinical': CONDITION_CLINICAL_CHOICES, 'severity': CONDITION_SEVERITY_CHOICES})
 
     def post(self, request, group_name, user_name, patient_identifier, encounter_identifier):
         data = {'Patient': {'identifier': patient_identifier},
@@ -660,7 +676,7 @@ class hoibenh(View):
             form.save()
         condition = ConditionModel.objects.get(
             condition_identifier=condition_identifier)
-        return render(request, 'fhir/hoibenh.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'condition': condition, 'clinical': CLINICAL_CHOICES, 'severity': SEVERITY_CHOICES})
+        return render(request, 'fhir/hoibenh.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'condition': condition, 'clinical': CONDITION_CLINICAL_CHOICES, 'severity': CONDITION_SEVERITY_CHOICES})
 
 
 class xetnghiem(View):
@@ -969,3 +985,53 @@ class toanthan(View):
         services = ServiceRequestModel.objects.all().filter(
             encounter_identifier=encounter_identifier)
         return render(request, 'fhir/toanthan.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'services': services, 'observations': observations})
+
+
+class thuthuat(View):
+    def get(self, request, group_name, user_name, patient_identifier, encounter_identifier):
+        data = {'Patient': {'identifier': patient_identifier},
+                'Encounter': {'identifier': encounter_identifier}}
+        encounter_instance = EncounterModel.objects.get(
+            encounter_identifier=encounter_identifier)
+        services = ServiceRequestModel.objects.all().filter(
+            encounter_identifier=encounter_instance)
+        procedures = ProcedureModel.objects.all().filter(
+            encounter_identifier=encounter_instance)
+        procedure_form = ProcedureForm()
+        return render(request, 'fhir/thuthuat.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'services': services, 'form': procedure_form, 'procedures': procedures, 'procedure_category': PROCEDURE_CATEGORY_CHOICES})
+
+    def post(self, request, group_name, user_name, patient_identifier, encounter_identifier):
+        data = {'Patient': {'identifier': patient_identifier},
+                'Encounter': {'identifier': encounter_identifier}}
+        encounter_instance = EncounterModel.objects.get(
+            encounter_identifier=encounter_identifier)
+        services = ServiceRequestModel.objects.all().filter(
+            encounter_identifier=encounter_instance)
+        form = ProcedureForm(request.POST)
+        if form.is_valid():
+            procedure = form.save(commit=False)
+            procedure.encounter_identifier = encounter_instance
+            procedure.procedure_identifier = encounter_instance.encounter_identifier + \
+                '_' + str(len(ProcedureModel.objects.all().filter(
+                    encounter_identifier=encounter_instance)) + 1)
+            print(encounter_instance.encounter_identifier + \
+                '_' + str(len(ProcedureModel.objects.all().filter(
+                    encounter_identifier=encounter_instance)) + 1))
+            procedure.procedure_status = 'preparation'
+            form.save()
+        procedures = ProcedureModel.objects.all().filter(encounter_identifier=encounter_instance)
+        procedure_form = ProcedureForm()
+        return render(request, 'fhir/thuthuat.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'services': services, 'form': procedure_form, 'procedures': procedures, 'procedure_category': PROCEDURE_CATEGORY_CHOICES})
+
+
+class chitietthuthuat(View):
+    def get(self, request, group_name, user_name, patient_identifier, encounter_identifier, procedure_identifier):
+        data = {'Patient': {'identifier': patient_identifier},
+                'Encounter': {'identifier': encounter_identifier}}
+        encounter_instance = EncounterModel.objects.get(
+            encounter_identifier=encounter_identifier)
+        services = ServiceRequestModel.objects.all().filter(encounter_identifier=encounter_instance)
+        form = ProcedureDetailForm()
+        procedure = ProcedureModel.objects.get(
+            procedure_identifier=procedure_identifier)
+        return render(request, 'fhir/chitietthuthuat.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'services': services, 'procedure': procedure, 'form': form})

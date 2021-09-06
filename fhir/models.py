@@ -135,27 +135,50 @@ class ObservationModel(models.Model):
 
 
 class ProcedureModel(models.Model):
+    PROCEDURE_CATEGORY_CHOICES = (
+        ('22642003', 'Phương pháp hoặc dịch vụ tâm thần'),
+        ('409063005', 'Tư vấn'),
+        ('409073007', 'Giáo dục'),
+        ('387713003', 'Phẫu thuật'),
+        ('103693007', 'Chuẩn đoán'),
+        ('46947000', 'Phương pháp chỉnh hình'),
+        ('410606002', 'Phương pháp dịch vụ xã hội')
+    )
     encounter_identifier = models.ForeignKey(
         EncounterModel, on_delete=models.CASCADE)
+    procedure_identifier = models.CharField(max_length=100, default='')
     procedure_status = models.CharField(max_length=100)
-    procedure_category = models.CharField(max_length=100)
+    procedure_category = models.CharField(
+        max_length=100, choices=PROCEDURE_CATEGORY_CHOICES)
     procedure_code = models.CharField(max_length=100)
-    procedure_location = models.CharField(max_length=100)
-    procedure_outcome = models.CharField(max_length=100)
+    procedure_performedDateTime = models.DateTimeField(null=True)
+    procedure_asserter = models.CharField(max_length=100, null=True)
+    procedure_performder = models.CharField(max_length=100, null=True)
+    procedure_location = models.CharField(max_length=100, null=True)
+    procedure_reasonCode = models.CharField(max_length=100, null = True)
+    procedure_outcome = models.CharField(max_length=100, null=True)
+    procedure_complication = models.CharField(max_length=100, null=True)
+    procedure_followUp = models.CharField(max_length=100, null=True)
+    procedure_focalDevice = models.CharField(max_length=100, null=True)
+    procedure_note = models.CharField(max_length=100, null=True)
 
 
 class AllergyModel(models.Model):
-    patient_id = models.ForeignKey(myUser, on_delete=models.CASCADE)
-    allergy_status = models.CharField(max_length=100)
+    patient_identifier = models.ForeignKey(myUser, on_delete=models.CASCADE)
+    allergy_clinical_status = models.CharField(max_length=100)
     allergy_type = models.CharField(max_length=100)
     allergy_category = models.CharField(max_length=100)
     allergy_code = models.CharField(max_length=100)
     allergy_criticality = models.CharField(max_length=100)
+    allergy_onset = models.DateField(null=True)
+    allergy_last_occurrence = models.DateField(null=True)
+    allergy_reaction = models.CharField(max_length=100, null=True)
 
 
-class MedicineModel(models.Model):
+class MedicationModel(models.Model):
     encounter_identifier = models.ForeignKey(
         EncounterModel, on_delete=models.CASCADE)
-    medication = models.CharField(max_length=100)
-    effective = models.CharField(max_length=100)
-    dosage = models.CharField(max_length=100)
+    medication_medication = models.CharField(max_length=100)
+    medication_reasonCode = models.CharField(max_length=100)
+    medication_effective = models.CharField(max_length=100)
+    medication_dosage = models.CharField(max_length=100)

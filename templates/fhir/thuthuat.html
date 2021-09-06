@@ -1,0 +1,114 @@
+{%extends 'fhir/base.html'%}
+{%block url1%}'{%url 'fhir:hanhchinh' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url2%}'{%url 'fhir:dangky' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url3%}'{%url 'fhir:hoibenh' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url4%}'{%url 'fhir:toanthan' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url5%}'{%url 'fhir:thuthuat' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block leftbar%}
+    {%if services%}
+        {%for service in services%}
+            {%if service.service_code%}
+            <li><a href="{%url 'fhir:ketqua' group_name user_name data.Patient.identifier data.Encounter.identifier service.service_identifier%}">{{service.service_code}}</a></li>
+            {%endif%}
+        {%endfor%}
+    {%endif%}
+{%endblock%}
+{%block function%}
+<style>
+
+    .formPopup {
+        display: none;
+        transform: translate(-50%, 5%);
+        border: 3px solid #999999;
+        z-index: 9;
+        text-align: center;
+        width: 60%;
+        height: 50%;
+
+    }
+
+    .formContainer {
+        max-width: 100%;
+        padding: 20px;
+        background-color: #fff;
+        text-align: left;
+        max-height: 100%;
+        height: 100%;
+    }
+
+    .formContainer .btn {
+        padding: 12px 20px;
+        border: none;
+        background-color: #8ebf42;
+        color: #fff;
+        cursor: pointer;
+        width: 100%;
+        margin-bottom: 15px;
+        opacity: 0.8;
+    }
+
+    .formContainer .cancel {
+        background-color: #cc0000;
+    }
+
+    .formContainer .btn:hover,
+    .openButton:hover {
+        opacity: 1;
+    }
+</style>
+<h1>CÁC THỦ THUẬT ĐƯỢC THỰC HIỆN </h1>
+<table>
+    <tr>
+        <td>Mã thủ thuật, dịch vụ</td>
+        <td>Phân loại thủ thuật</td>
+        <td>Phương pháp thực hiện</td>
+        <td>Người yêu cầu</td>
+        <td>Người thực hiện</td>
+        <td>Tình trạng thủ thuật</td>
+    </tr>
+    {% if procedures %}
+        {% for procedure in procedures %}
+        <tr>
+            <td><a href="{%url 'fhir:chitietthuthuat' group_name user_name data.Patient.identifier data.Encounter.identifier procedure.procedure_identifier%}">{{procedure.procedure_identifier}}</a></td>
+            <td>{{procedure.procedure_category}}</td>
+            <td>{{procedure.procedure_code}}</td>
+            <td>{{procedure.procedure_asserter}}</td>
+            <td>{{procedure.procedure_performer}}</td>
+            <td>{{procedure.procedure_status}}</td>
+        </tr>
+        {% endfor %}
+    {% endif %}
+    <tr>
+        <td colspan="6"><button class="float-left submit-button" onclick="openForm()">Thêm thủ thuật</button></td>
+    </tr>
+</table>
+<div class="formPopup" id="procPopupForm">
+    <form action="{% url 'fhir:thuthuat' group_name user_name data.Patient.identifier data.Encounter.identifier%}" class="formContainer"
+        method="POST">
+        {%csrf_token%}
+        {{form.as_p}}
+        <button type="submit" class="btn">Add</button>
+        <button type="button" class="btn cancel" onclick="closeForm()">Close</button>
+    </form>
+</div>
+
+
+
+<script type="text/javascript">
+document.getElementById("myButton").onclick = function () {
+    location.href = "{% url 'fhir:encounter' group_name user_name data.Patient.identifier%} ";
+};
+</script>
+
+</div>
+<div>
+<script>
+    function openForm() {
+        document.getElementById("procPopupForm").style.display = "inline-block";
+    }
+    function closeForm() {
+        document.getElementById("procPopupForm").style.display = "none";
+    }
+</script>
+</div>
+{%endblock%}
