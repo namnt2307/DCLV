@@ -365,11 +365,9 @@ class hanhchinh(View):
         if encounter_instance.encounter_status == 'finished':
             conditions = ConditionModel.objects.all().filter(
                 encounter_identifier=encounter_instance)
-            print(conditions)
             if len(conditions) == 0:
                 get_condition = requests.get("http://hapi.fhir.org/baseR4/Condition?encounter.identifier=urn:trinhcongminh|" +
                                              encounter_identifier, headers={'Content-type': 'application/xml'})
-                print(get_condition.content)
                 if get_condition.status_code == 200 and 'entry' in get_condition.content.decode('utf-8'):
                     get_root = ET.fromstring(
                         get_condition.content.decode('utf-8'))
