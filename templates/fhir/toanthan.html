@@ -2,24 +2,19 @@
 {%block url1%}'{%url 'fhir:hanhchinh' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
 {%block url2%}'{%url 'fhir:dangky' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
 {%block url3%}'{%url 'fhir:hoibenh' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url5%}'{%url 'fhir:xetnghiem' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
 {%block url4%}'{%url 'fhir:toanthan' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%block url5%}'{%url 'fhir:thuthuat' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%block leftbar%}
-    {%if services%}
-        {%for service in services%}
-            {%if service.service_code%}
-            <li><a href="{%url 'fhir:ketqua' group_name user_name data.Patient.identifier data.Encounter.identifier service.service_identifier%}">{{service.service_code}}</a></li>
-            {%endif%}
-        {%endfor%}
-    {%endif%}
-{%endblock%}
+{%block url6%}'{%url 'fhir:thuthuat' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url7%}'{%url 'fhir:thuoc' group_name user_name data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
+
 {%block function%}
+<h1>THÔNG TIN KHÁM TOÀN THÂN</h1>
     {%if observations%}
         {%for observation in observations%}
-            <p>{{observation.observation_name}}: {{observation.observation_valuequantity}} {{observation.observation_valueunit}}</p>
+            <p>{{observation.observation_code}}: {{observation.observation_valuequantity}} {{observation.observation_valueunit}}</p>
         {%endfor%}
     {%else%}
-        <h1>Khám toàn thân</h1>
+        
         <form action="" method="POST">
             {%csrf_token%}
             <label for="1">Mạch</label>

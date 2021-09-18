@@ -21,4 +21,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('user/', include('fhir.urls',namespace='fhir')),
     path('login/',include('login.urls',namespace='login')),
+    # path('administration/',include('administration.urls',namespace='administration'))
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

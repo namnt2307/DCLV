@@ -1,0 +1,170 @@
+{%extends 'fhir/base.html'%}
+{%block url1%}'{%url 'fhir:hanhchinh' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url2%}'{%url 'fhir:dangky' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url3%}'{%url 'fhir:hoibenh' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url5%}'{%url 'fhir:xetnghiem' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url4%}'{%url 'fhir:toanthan' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url6%}'{%url 'fhir:thuthuat' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url7%}'{%url 'fhir:thuoc' group_name user_name data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
+{% load widget_tweaks %}
+{%block function%}
+<style>
+    .servicePopup {
+        position: relative;
+        text-align: center;
+        width: 100%;
+      }
+      .formPopup {
+        display: none;
+        position: fixed;
+        left: 45%;
+        top: 5%;
+        transform: translate(-50%, 5%);
+        border: 3px solid #999999;
+        z-index: 9;
+      }
+      .formContainer {
+        max-width: 300px;
+        padding: 20px;
+        background-color: #fff;
+      }
+      .formContainer .btn {
+        padding: 12px 20px;
+        border: none;
+        background-color: #8ebf42;
+        color: #fff;
+        cursor: pointer;
+        width: 100%;
+        margin-bottom: 15px;
+        opacity: 0.8;
+      }
+      .formContainer .cancel {
+        background-color: #cc0000;
+      }
+      .formContainer .btn:hover,
+      .openButton:hover {
+        opacity: 1;
+      }
+</style>
+<h1>THUỐC</h1>
+<table>
+    <tr>
+        <td>Thuốc</td>
+        <td>Lý do dùng thuốc</td>
+        <td>Bắt đầu dùng thuốc từ</td>
+        <td>Tần suất dùng thuốc</td>
+        <td>Liều dùng</td>
+        <td>Thời gian sử dụng</td>
+        <td>Đường dùng</td>
+        <td>Ngày chỉ định</td>
+    </tr>
+    {% if medications %}
+        {% for medication in medications %}
+        <tr>
+            <td>{{medication.medication_medication}}</td>
+            <td>{{medication.medication_reasonCode}}</td>
+            <td>{{medication.medication_effective|date:"d-m-Y"}}</td>
+            <td>{{medication.dosage_frequency}}</td>
+            <td>{{medication.dosage_quantity}}</td>
+            <td>{{medication.dosage_duration}}</td>
+            <td>{{medication.dosage_route}}</td>
+            <td>{{medication.medication_dateAsserted|date:"d-m-Y"}}</td>
+        </tr>
+        <tr>
+            <td colspan="8">
+                <p>Hướng dẫn sử dụng: Dùng thuốc {{medication.dosage_when}} {%if medication.dosage_offset != '0'%}{{medication.dosage_offset}} phút {%endif%}, {{medication.dosage_additional_instruction}}</p>
+                <p>Hướng dẫn đặc biệt: {{medication.dosage_patient_instruction}}</p>
+            </td>
+        </tr>
+        <div class="formPopup" id="{{medication.medication_identifier}}" style="display: none;">
+            <form action="" method="POST" class="formContainer">
+                {%csrf_token%}
+            {%with 'value:'|add:medication.medication_identifier as code%}
+            {{form.medication_identifier|attr:code|attr:'type:hidden'}}
+            {%endwith%}
+            {%with 'value:'|add:medication.medication_medication as code%}
+            <label for="id_medication_medication">Thuốc chỉ định:</label>
+            {{form.medication_medication|attr:code}}
+            {%endwith%}
+            <br>
+            {%with 'value:'|add:medication.medication_reasonCode as code%}
+            <label for="id_medication_reasonCode">Lý do dùng thuốc:</label>
+            {{form.medication_reasonCode|attr:code}}
+            {%endwith%}
+            <br>
+            {%with medication.medication_effective|date:'Y-m-d' as effective_date%}
+            {%with 'value:'|add:effective_date as code%}
+           
+            <label for="id_medication_effective">Ngày bắt đầu dùng thuốc:</label>
+            {{form.medication_effective|attr:code}}
+            {%endwith%}
+            {%endwith%}
+            <br>
+            {%with 'value:'|add:medication.dosage_frequency as code%}
+            <label for="id_dosage_frequency">Tần suất dùng thuốc:</label>
+            {{form.dosage_frequency|attr:code}}
+            {%endwith%}
+            <br>
+            {%with 'value:'|add:medication.dosage_period as code%}
+            <label for="id_dosage_period">Chu kì dùng thuốc:</label>
+            {{form.dosage_period|attr:code}}
+            {%endwith%}
+            <br>
+            {%with 'value:'|add:medication.dosage_duration as code%}
+            <label for="id_dosage_duration">Khoảng thời gian dùng thuốc:</label>
+            {{form.dosage_duration|attr:code}}
+            {%endwith%}
+            <br>
+            {%with 'value:'|add:medication.dosage_route as code%}
+            <label for="id_dosage_route">Đường dùng thuốc:</label>
+            {{form.dosage_route|attr:code}}
+            {%endwith%}
+            <br>
+            {%with 'value:'|add:medication.dosage_quantity as code%}
+            <label for="id_dosage_quantity">Số lượng mỗi lần dùng:</label>
+            {{form.dosage_quantity|attr:code}}
+            {%endwith%}
+            <br>
+            {%with 'value:'|add:medication.dosage_when as code%}
+            <label for="id_dosage_when">Thời điểm dùng thuốc (thời điểm):</label>
+            {{form.dosage_when|attr:code}}
+            {%endwith%}
+            <br>
+            {%with 'value:'|add:medication.dosage_offset as code%}
+            <label for="id_dosage_offset">Thời điểm dùng thuốc (số phút từ/đến thời điểm dùng thuốc):</label>
+            {{form.dosage_offset|attr:code}}
+            {%endwith%}
+            <br>
+            {%with 'value:'|add:medication.dosage_additional_instruction as code%}
+            <label for="id_dosage_additional_instruction">Hướng dẫn thêm:</label>
+            {{form.dosage_additional_instruction|attr:code}}
+            {%endwith%}
+            <br>
+            {%with 'value:'|add:medication.dosage_patient_instruction as code%}
+            <label for="id_dosage_patient_instruction">Hướng dẫn đặc biệt:</label>
+            {{form.dosage_patient_instruction|attr:code}}
+            {%endwith%}
+            <br>
+            <button type="submit">Lưu lại</button>
+            <button type="button" class="btn cancel" onclick="closeForm('{{medication.medication_identifier}}')">Close</button>
+        </form>
+        </div>
+        <td><button class="submit-button" onclick="openForm('{{medication.medication_identifier}}')">Chỉnh sửa</button></td>
+        {% endfor %}
+    {% endif %}
+
+    <div>
+        <div class="formPopup" id="thuocForm">
+        <form action="" method="POST">
+            {%csrf_token%}
+            {{form.as_p}}
+            <button type="submit" class="btn">Add</button>
+            <button type="button" class="btn cancel" onclick="closeForm('thuocForm')">Close</button>
+        </form>
+    </div>
+    </div>
+    <tr>
+        <td colspan="8"><button class="float-left submit-button" onclick="openForm('thuocForm')">Thêm thuốc</button></td>
+    </tr>
+</table>
+{%endblock%}

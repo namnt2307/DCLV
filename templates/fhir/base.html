@@ -1,60 +1,53 @@
-{% extends 'fhir/index.html' %}
+{% extends 'fhir/doctor.html' %}
 {% block doctor %}
 {% load static %}
+{% load widget_tweaks %}
 <link rel="stylesheet" href="{% static 'css/fhir/doctor.css'%}">
 <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
 <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-<style>
-    .servicePopup {
-        position: relative;
-        text-align: center;
-        width: 100%;
-      }
-      .formPopup {
-        display: none;
-        position: fixed;
-        left: 45%;
-        top: 5%;
-        transform: translate(-50%, 5%);
-        border: 3px solid #999999;
-        z-index: 9;
-      }
-      .formContainer {
-        max-width: 300px;
-        padding: 20px;
-        background-color: #fff;
-      }
-      .formContainer .btn {
-        padding: 12px 20px;
-        border: none;
-        background-color: #8ebf42;
-        color: #fff;
-        cursor: pointer;
-        width: 100%;
-        margin-bottom: 15px;
-        opacity: 0.8;
-      }
-      .formContainer .cancel {
-        background-color: #cc0000;
-      }
-      .formContainer .btn:hover,
-      .openButton:hover {
-        opacity: 1;
-      }
-</style>
+
 <div class="top-menu">
-    <ul class="menu">
-        <li><a href="{% url 'fhir:user_detail'  group_name user_name %}"><i class="fa fa-home" aria-hidden="true"></i> </a></li>
-        <li><a href="{% url 'fhir:register'  group_name user_name %}"> Tao ho so </a></li>
-        <li><a href="{% url 'fhir:upload'  group_name user_name %}"> Upload Excel </a></li>
-        <li><a href="{% url 'fhir:search'  group_name user_name %}"> Tim kiem ho so</a></li>
-    </ul>
+  <ul class="menu">
+      <li>
+          <div class="dropdown">
+              <a href="{% url 'fhir:user_detail' user_name group_name %}"><i class="fa fa-home"
+                      aria-hidden="true"></i></a>
+          </div>
+      </li>
+      <li>
+          <div class="dropdown">
+              <a href="{% url 'fhir:register' user_name group_name %}"> Quản lí hồ sơ </a>
+              <div class="dropdown-content">
+                  <a href="{% url 'fhir:register' user_name group_name %}">Tạo hồ sơ</a>
+                  <a href="">Tạo bệnh án</a>
+                  <a href="{% url 'fhir:upload' user_name group_name %}">Chuyển đổi excel</a>
+                  <a href="{% url 'fhir:search' user_name group_name %}">Tìm kiếm hồ sơ</a>
+              </div>
+              <!-- #328be4; -->
+          </div>
+      </li>
+      <li>
+          <div class="dropdown">
+              <a href="{% url 'fhir:upload' user_name group_name %}"> Quản lí lịch khám </a>
+              <div class="dropdown-content">
+                  <a href="">TEXT</a>
+                  <a href="">TEXT2</a>
+              </div>
+          </div>
+      </li>
+      <li>
+          <div class="dropdown">
+              <a href="{% url 'fhir:search' user_name group_name %}"> Tim kiem ho so</a>
+              <div class="dropdown-content">
+                  <a href="">TEXT</a>
+                  <a href="">TEXT2</a>
+              </div>
+          </div>
+      </li>
+  </ul>
 </div>
-
-
-
 <div class="body">
     <div class="left-body">
         <ul>
@@ -62,11 +55,13 @@
             <li><a href={%block url2%}{%endblock%}> Thông tin đăng ký khám </a></li>
             <li><a href={%block url3%}{%endblock%}> Thông tin hỏi bệnh </a></li>
             <li><a href={%block url4%}{%endblock%}> Thông tin khám toàn thân</a></li>
-            <li><a href={%block url5%}{%endblock%}> Các thủ thuật, phẫu thuật</a></li>
+            <li><a href={%block url5%}{%endblock%}> Các xét nghiệm</a></li>
+            <li><a href={%block url6%}{%endblock%}> Các thủ thuật, phẫu thuật</a></li>
+            <li><a href={%block url7%}{%endblock%}> Thuốc</a></li>
             {%block leftbar%}
             {%endblock%}
-            <div class="openBtn">
-                <button class="openButton" onclick="openForm()"><strong>Add a service</strong></button>
+            <!-- <div class="openBtn">
+                <button class="openButton" onclick="openForm('popupForm')"><strong>Add a service</strong></button>
             </div>
             
             <div class="servicePopup">
@@ -88,7 +83,7 @@
                         <option value="">--select service type--</option>
                     </select>
                     <button type="submit" class="btn">Add</button>
-                    <button type="button" class="btn cancel" onclick="closeForm()">Close</button>
+                    <button type="button" class="btn cancel" onclick="closeForm('popupForm')">Close</button>
                   </form>
                 </div>
                 <script>$(document).ready(function () {
@@ -104,13 +99,13 @@
                   });
               });
             </script>
-              </div>
+              </div> -->
               <script>
-                function openForm() {
-                  document.getElementById("popupForm").style.display = "block";
+                function openForm(element_id) {
+                  document.getElementById(element_id).style.display = "block";
                 }
-                function closeForm() {
-                  document.getElementById("popupForm").style.display = "none";
+                function closeForm(element_id) {
+                  document.getElementById(element_id).style.display = "none";
                 }
             </script>
             <button class="btn"  id="myButton">Save</button>

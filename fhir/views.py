@@ -10,8 +10,8 @@ from lib import dttype as dt
 from login.forms import UserCreationForm
 from handlers import handlers
 from fhir.forms import EHRCreationForm
-from .models import EncounterModel, ServiceRequestModel, UserModel, ConditionModel, ObservationModel, ProcedureModel
-from .forms import EncounterForm, ConditionForm, ObservationForm, ProcedureForm, ProcedureDetailForm
+from .models import EncounterModel, MedicationModel, ServiceRequestModel, UserModel, ConditionModel, ObservationModel, ProcedureModel
+from .forms import EncounterForm, ConditionForm, ObservationForm, ProcedureForm, ProcedureDetailForm, MedicationForm, ServiceRequestForm
 from django.shortcuts import get_object_or_404
 from datetime import datetime
 from django.template.defaulttags import register
@@ -136,6 +136,7 @@ class register(View):
 
     def post(self, request, group_name, user_name):
         User = get_user_model()
+        encounter_form = EncounterForm()
         if request.POST:
             data = {'Patient': {}}
             data['Patient']['name'] = request.POST['name']
@@ -174,9 +175,10 @@ class register(View):
                 else:
                     return HttpResponse("Something wrong when trying to register patient")
             else:
-                print('create new ressource')
+                print('create new resource')
                 post_req = requests.post("http://hapi.fhir.org/baseR4/Patient/", headers={
                     'Content-type': 'application/xml'}, data=patient.decode('utf-8'))
+                print(post_req.status_code)
                 if post_req.status_code == 201:
                     print(post_req.content)
                     try:
@@ -191,7 +193,7 @@ class register(View):
                             user_n.group_name = 'patient'
                             user_n.save()
                             form.save()
-                        return render(request, 'fhir/doctor/display.html', {'group_name': group_name, 'user_name': user_name, 'data': data})
+                        return render(request, 'fhir/doctor/display.html', {'group_name': group_name, 'user_name': user_name, 'data': data, 'form': encounter_form})
                     else:
                         return HttpResponse("Something wrong when trying to register patient")
         else:
@@ -441,6 +443,11 @@ class hanhchinh(View):
                         code = service_resource.find('d:code', ns)
                         service['service_code'] = code.find(
                             'd:text', ns).attrib['value']
+                        service['service_occurrence'] = service_resource.find('d:occurrenceDateTime', ns).attrib['value']
+                        service['service_authored'] = service_resource.find('d:authoredOn', ns).attrib['value']
+                        note = service_resource.find('d:note', ns)
+                        if note:
+                            service['service_note'] = note.find('d:text', ns).attrib['value']
                         ServiceRequestModel.objects.create(
                             **service, encounter_identifier=encounter_instance)
                         service_observations = requests.get("http://hapi.fhir.org/baseR4/Observation?based-on.identifier=urn:trinhcongminh|" +
@@ -465,7 +472,7 @@ class hanhchinh(View):
                                 observation['observation_category'] = category.find(
                                     'd:text', ns).attrib['value']
                                 code = observation_resource.find('d:code', ns)
-                                observation['observation_name'] = code.find(
+                                observation['observation_code'] = code.find(
                                     'd:text', ns).attrib['value']
                                 effective = observation_resource.find(
                                     'd:effectiveDateTime', ns).attrib['value']
@@ -509,7 +516,7 @@ class hanhchinh(View):
                         observation['observation_category'] = category.find(
                             'd:text', ns).attrib['value']
                         code = observation_resource.find('d:code', ns)
-                        observation['observation_name'] = code.find(
+                        observation['observation_code'] = code.find(
                             'd:text', ns).attrib['value']
                         effective = observation_resource.find(
                             'd:effectiveDateTime', ns).attrib['value']
@@ -530,6 +537,108 @@ class hanhchinh(View):
                     pass
             else:
                 pass
+            procedures = ProcedureModel.objects.all().filter(
+                encounter_identifier=encounter_instance)
+            if len(procedures) == 0:
+                get_procedures = requests.get("http://hapi.fhir.org/baseR4/Procedure?encounter.identifier=urn:trinhcongminh|" +
+                                             encounter_identifier, headers={'Content-type': 'application/xml'})
+                if get_procedures.status_code == 200 and 'entry' in get_procedures.content.decode('utf-8'):
+                    get_root = ET.fromstring(
+                        get_procedures.content.decode('utf-8'))
+                    data['Procedure'] = []    
+                    for entry in get_root.findall('d:entry', ns):
+                        procedure = {}
+                        resource = entry.find('d:resource', ns)
+                        procedure_resource = resource.find(
+                            'd:Procedure', ns)
+                        procedure_identifier = procedure_resource.find(
+                            'd:identifier', ns)
+                        procedure['procedure_identifier'] = procedure_identifier.find(
+                            'd:value', ns).attrib['value']
+                        procedure['procedure_status'] = procedure_resource.find(
+                            'd:status', ns).attrib['value']
+                        category = procedure_resource.find('d:category', ns)
+                        procedure['procedure_category'] = category.find(
+                            'd:text', ns).attrib['value']
+                        code = procedure_resource.find('d:code', ns)
+                        procedure['procedure_code'] = code.find(
+                            'd:text', ns).attrib['value']
+                        performedDateTime = procedure_resource.find('d:performedDateTime', ns)
+                        procedure['procedure_performedDateTime'] = dt.getdatetime(performedDateTime.attrib['value'])
+                        reasonCode = procedure_resource.find('d:reasonCode', ns)
+                        procedure['procedure_reasonCode'] = reasonCode.find('d:text', ns).attrib['value']
+                        outcome = procedure_resource.find('d:outcome', ns)
+                        procedure['procedure_outcome'] = outcome.find('d:text', ns).attrib['value']
+                        complication = procedure_resource.find('d:complication', ns)
+                        procedure['procedure_complication'] = complication.find('d:text', ns).attrib['value']
+                        followUp = procedure_resource.find('d:followUp', ns)
+                        procedure['procedure_followUp'] = followUp.find('d:text', ns).attrib['value']
+                        note = procedure_resource.find('d:note', ns)
+                        procedure['procedure_note'] = note.find('d:text', ns).attrib['value']
+                        ProcedureModel.objects.create(
+                            **procedure, encounter_identifier=encounter_instance)
+            medication_statements = MedicationModel.objects.all().filter(encounter_identifier=encounter_instance)              
+            if len(medication_statements) == 0:
+                get_medication_statements = requests.get("http://hapi.fhir.org/baseR4/MedicationStatement?context.identifier=urn:trinhcongminh|" +
+                                             encounter_identifier, headers={'Content-type': 'application/xml'})
+                if get_medication_statements.status_code == 200 and 'entry' in get_medication_statements.content.decode('utf-8'):
+                    get_root = ET.fromstring(
+                        get_medication_statements.content.decode('utf-8'))
+                    data['Medication'] = []
+                    for entry in get_root.findall('d:entry', ns):
+                        medication_statement = {}
+                        resource = entry.find('d:resource', ns)
+                        medication_resource = resource.find(
+                            'd:MedicationStatement', ns)
+                        medication_identifier = medication_resource.find(
+                            'd:identifier', ns)
+                        medication_statement['medication_identifier'] = medication_identifier.find(
+                            'd:value', ns).attrib['value']
+                        
+                        medication = medication_resource.find(
+                            'd:medicationCodeableConcept', ns)
+                        medication_statement['medication_medication'] = medication.find('d:text', ns).attrib['value']
+                        
+                        medication_statement['medication_effective'] = medication_resource.find('d:effectiveDateTime', ns).attrib['value']
+                        medication_statement['medication_dateAsserted'] = medication_resource.find('d:dateAsserted', ns).attrib['value']
+                        reasonCode = medication_resource.find('d:reasonCode', ns)
+                        medication_statement['medication_reasonCode'] = reasonCode.find('d:text', ns).attrib['value']
+                        dosage = medication_resource.find('d:dosage', ns)
+                        additional_instruction = dosage.find('d:additionalInstruction', ns)
+                        if additional_instruction:
+                            medication_statement['dosage_additional_instruction'] = additional_instruction.find('d:text', ns).attrib['value']
+                        patient_instruction = dosage.find('d:patientInstruction', ns)
+                        if patient_instruction:
+                            medication_statement['dosage_patient_instruction'] = patient_instruction.find('d:text', ns).attrib['value']
+                        timing = dosage.find('d:timing', ns)
+                        repeat = timing.find('d:repeat', ns)
+                        duration = repeat.find('d:duration', ns).attrib['value']
+                        durationMax = repeat.find('d:durationMax', ns)
+                        if durationMax:
+                            duration = duration + '-' + durationMax.attrib['value']
+                        durationUnit = repeat.find('d:durationUnit', ns).attrib['value']
+                        duration = duration + ' ' + durationUnit
+                        medication_statement['dosage_duration'] = duration
+                        frequency = repeat.find('d:frequency', ns)
+                        medication_statement['dosage_frequency'] = frequency.attrib['value']
+                        period = repeat.find('d:period', ns).attrib['value']
+                        periodMax = repeat.find('d:periodMax', ns)
+                        if periodMax:
+                            period = period + '-' + periodMax.attrib['value']
+                        periodUnit = repeat.find('d:periodUnit', ns)
+                        period = period + ' ' + periodUnit.attrib['value']
+                        medication_statement['dosage_period'] = period
+                        medication_statement['dosage_when'] = repeat.find('d:when', ns).attrib['value']
+                        medication_statement['dosage_offset'] = repeat.find('d:offset', ns).attrib['value']
+                        route = dosage.find('d:route', ns)
+                        medication_statement['dosage_route'] = route.find('d:text', ns).attrib['value']
+                        doseAndRate = dosage.find('d:doseAndRate', ns)
+                        doseQuantity = doseAndRate.find('d:doseQuantity', ns)
+                        quantity = doseQuantity.find('d:value', ns).attrib['value']
+                        unit = doseQuantity.find('d:unit', ns).attrib['value']
+                        medication_statement['dosage_quantity'] = quantity + ' ' + unit
+                        MedicationModel.objects.create(
+                            **medication_statement, encounter_identifier=encounter_instance)
         services = ServiceRequestModel.objects.all().filter(
             encounter_identifier=encounter_instance)
         if data:
@@ -591,19 +700,19 @@ class encounter(View):
         return render(request, 'fhir/hanhchinh.html', {'group_name': group_name, 'user_name': user_name, 'data': data})
 
 
-class admin(View):
-    def get(self, request, group_name, user_name):
-        data = {
-            'employees': {},
-            'buildings': {},
-            'rooms': {},
-            'beds': {},
-            'facilities': {}
-        }
-        return render(request, 'admin/admin.html', {'group_name': group_name, 'user_name': user_name, 'data': data})
+# class admin(View):
+#     def get(self, request, group_name, user_name):
+#         data = {
+#             'employees': {},
+#             'buildings': {},
+#             'rooms': {},
+#             'beds': {},
+#             'facilities': {}
+#         }
+#         return render(request, 'admin/admin.html', {'group_name': group_name, 'user_name': user_name, 'data': data})
 
-    def post(self, request, group_name, user_name):
-        pass
+#     def post(self, request, group_name, user_name):
+#         pass
 
 
 class dangky(View):
@@ -626,17 +735,17 @@ class dangky(View):
             identifier=patient_identifier)
         encounter_instance = EncounterModel.objects.get(
             encounter_identifier=encounter_identifier)
-        form = EncounterForm(request.POST, encounter_instance)
+        form = EncounterForm(request.POST, instance=encounter_instance)
         if form.is_valid():
             encounter_n = form.save(commit=False)
-            encounter_n.encounter_identifier = encounter_identifier
-            encounter_n.user_identifier = instance
+            # encounter_n.encounter_identifier = encounter_identifier
+            # encounter_n.user_identifier = instance
             encounter_n.encounter_submitted = True
             form.save()
         data['Encounter']['identifier'] = encounter_identifier
         data['Encounter_Info'] = EncounterModel.objects.get(
             encounter_identifier=encounter_identifier)
-        return render(request, 'fhir/dangky.html', {'group_name': group_name, 'user_name': user_name, 'data': data})
+        return render(request, 'fhir/dangky.html', {'group_name': group_name, 'user_name': user_name, 'data': data, 'class': ENCOUNTER_CLASS_CHOICES, 'priority': ENCOUNTER_PRIORITY_CHOICES})
 
 
 class hoibenh(View):
@@ -665,34 +774,75 @@ class hoibenh(View):
         print(request.POST)
         encounter_instance = EncounterModel.objects.get(
             encounter_identifier=encounter_identifier)
-        condition_identifier = encounter_identifier + '_' + \
-            str(len(ConditionModel.objects.all().filter(
-                encounter_identifier=encounter_instance))+1)
-        form = ConditionForm(request.POST, encounter_instance)
-        if form.is_valid():
-            condition_n = form.save(commit=False)
-            condition_n.encounter_identifier = encounter_instance
-            condition_n.condition_identifier = condition_identifier
-            form.save()
+        if request.POST.get('condition_identifier'):
+            condition_identifier = request.POST['condition_identifier']
+            condition_instance = ConditionModel.objects.get(condition_identifier = condition_identifier)
+            condition_instance.condition_code = request.POST['condition_code']
+            condition_instance.condition_clinicalstatus = request.POST['condition_clinicalstatus']
+            condition_instance.condition_onset = request.POST['condition_onset']
+            condition_instance.condition_severity = request.POST['condition_severity']
+            condition_instance.save()
+        else:
+            condition_identifier = encounter_identifier + '_' + \
+                str(len(ConditionModel.objects.all().filter(
+                    encounter_identifier=encounter_instance))+1)
+            form = ConditionForm(request.POST)
+            if form.is_valid():
+                condition_n = form.save(commit=False)
+                condition_n.encounter_identifier = encounter_instance
+                condition_n.condition_identifier = condition_identifier
+                form.save()
         condition = ConditionModel.objects.get(
             condition_identifier=condition_identifier)
-        return render(request, 'fhir/hoibenh.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'condition': condition, 'clinical': CONDITION_CLINICAL_CHOICES, 'severity': CONDITION_SEVERITY_CHOICES})
+        condition_form = ConditionForm()
+        return render(request, 'fhir/hoibenh.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'condition': condition, 'clinical': CONDITION_CLINICAL_CHOICES, 'severity': CONDITION_SEVERITY_CHOICES, 'form': condition_form})
 
 
 class xetnghiem(View):
-    def get(self, request, group_name, user_name, encounter_identifier):
-        pass
+    def get(self, request, group_name, user_name, patient_identifier, encounter_identifier):
+        data = {'Patient': {'identifier': patient_identifier},
+                'Encounter': {'identifier': encounter_identifier}}
+        encounter_instance = EncounterModel.objects.get(
+            encounter_identifier=encounter_identifier)
+        services = ServiceRequestModel.objects.all().filter(
+            encounter_identifier=encounter_instance, service_category='laboratory')
+        service_form = ServiceRequestForm()
+        return render(request, 'fhir/xetnghiem.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'services': services, 'form': service_form})
 
-    def post(self, request, group_name, user_name, encounter_identifier):
-        pass
+    def post(self, request, group_name, user_name, patient_identifier, encounter_identifier):
+        data = {'Patient': {'identifier': patient_identifier},
+                'Encounter': {'identifier': encounter_identifier}}
+        encounter_instance = EncounterModel.objects.get(
+            encounter_identifier=encounter_identifier)
+        form = ServiceRequestForm(request.POST)
+        if form.is_valid():
+            service = form.save(commit=False)
+            service.encounter_identifier = encounter_instance
+            service.service_identifier = encounter_instance.encounter_identifier + "_" + \
+                str(len(ServiceRequestModel.objects.all().filter(
+                    encounter_identifier=encounter_instance)))
+            service.service_authored = datetime.now().date()
+            service.service_category = 'laboratory'
+            service.service_requester = user_name
+            form.save()
+            print(service)
+            print(service.service_code)
+            createobservations(
+                encounter_instance, service.service_identifier, service.service_code)
+            print("save success")
+
+        services = ServiceRequestModel.objects.all().filter(
+            encounter_identifier=encounter_instance, service_category='laboratory')
+        service_form = ServiceRequestForm()
+        return render(request, 'fhir/xetnghiem.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'services': services, 'form': service_form})
 
 
-class sieuam(View):
-    def get(self, request, group_name, user_name, encounter_id):
-        pass
+# class sieuam(View):
+#     def get(self, request, group_name, user_name, encounter_id):
+#         pass
 
-    def post(self, request, group_name, user_name, encounter_id):
-        pass
+#     def post(self, request, group_name, user_name, encounter_id):
+#         pass
 
 
 class service(View):
@@ -830,6 +980,8 @@ class save(View):
     def get(self, request, group_name, user_name, patient_identifier, encounter_identifier):
         data = {'Patient': {}, 'Encounter': {}, 'Condition': []}
         patient = dt.query_patient(patient_identifier)
+        get_encounter = dt.query_encounter(encounter_identifier)  
+        print(get_encounter)   
         encounter_instance = EncounterModel.objects.get(
             encounter_identifier=encounter_identifier)
         encounter_instance.encounter_status = 'finished'
@@ -853,16 +1005,24 @@ class save(View):
             data['Encounter']['length'] = '1'
         else:
             data['Encounter']['length'] = str(delta.days)
-        post_encounter = dt.create_encounter_resource(
+        if get_encounter:
+            data['Encounter']['id'] = get_encounter['id']
+        encounter_data = dt.create_encounter_resource(
             data['Encounter'], patient['id'], patient['name'])
-        post_req = requests.post("http://hapi.fhir.org/baseR4/Encounter/", headers={
-                                 'Content-type': 'application/xml'}, data=post_encounter.decode('utf-8'))
+        if get_encounter:
+            put_encounter = requests.put("http://hapi.fhir.org/baseR4/Encounter/" + get_encounter['id'], headers={
+                'Content-type': 'application/xml'}, data=encounter_data.decode('utf-8'))
+        else:
+            post_encounter = requests.post("http://hapi.fhir.org/baseR4/Encounter/", headers={
+                'Content-type': 'application/xml'}, data=encounter_data.decode('utf-8'))
+            print(post_encounter.status_code)
         encounter = dt.query_encounter(encounter_identifier)
-        print(encounter['id'])
         if encounter:
             condition_instances = ConditionModel.objects.all().filter(
                 encounter_identifier=encounter_identifier)
             for condition_instance in condition_instances:
+                put_condition = None
+                post_condition = None
                 condition = {}
                 condition['identifier'] = condition_instance.condition_identifier
                 condition['clinicalStatus'] = condition_instance.condition_clinicalstatus
@@ -871,14 +1031,23 @@ class save(View):
                 condition['code'] = condition_instance.condition_code
                 condition['onset'] = condition_instance.condition_onset.strftime(
                     '%Y-%m-%dT%H:%M:%S+07:00')
-                post_condition = dt.create_condition_resource(
-                    condition, patient['id'], patient['name'], encounter['id'])
-                print(post_condition)
-                post_req = requests.post("http://hapi.fhir.org/baseR4/Condition/", headers={
-                                         'Content-type': 'application/xml'}, data=post_condition.decode('utf-8'))
+                
+                get_condition = dt.query_condition(condition['identifier'])
+                if get_condition:
+                    condition['id'] = get_condition['id']
+                condition_data = dt.create_condition_resource(
+                    condition, patient['id'], patient['name'], encounter['id'])    
+                if get_condition:
+                    put_condition = requests.put("http://hapi.fhir.org/baseR4/Condition/"+get_condition['id'],headers={
+                    'Content-type': 'application/xml'}, data=condition_data.decode('utf-8'))
+                else:
+                    post_condition = requests.post("http://hapi.fhir.org/baseR4/Condition/", headers={
+                    'Content-type': 'application/xml'}, data=condition_data.decode('utf-8'))
             service_instances = ServiceRequestModel.objects.all().filter(
                 encounter_identifier=encounter_identifier)
             for service_instance in service_instances:
+                put_service = None
+                post_service = None
                 service_instance.service_status = 'completed'
                 service_instance.save()
                 service = {}
@@ -887,51 +1056,139 @@ class save(View):
                 service['category'] = service_instance.service_category
                 service['intent'] = 'order'
                 service['code'] = service_instance.service_code
-                post_service = dt.create_service_resource(
+                service['occurrence'] = service_instance.service_occurrence.strftime('%Y-%m-%d')
+                service['authoredOn'] = service_instance.service_authored.strftime('%Y-%m-%d')
+                get_service = dt.query_service(service['identifier'])
+                if get_service:
+                    service['id'] = get_service['id']
+                service_data = dt.create_service_resource(
                     service, patient['id'], patient['name'], encounter['id'])
-                post_req = requests.post("http://hapi.fhir.org/baseR4/ServiceRequest/", headers={
-                                         'Content-type': 'application/xml'}, data=post_service.decode('utf-8'))
-                if post_req.status_code == 201:
+                if get_service:
+                    put_service = requests.put("http://hapi.fhir.org/baseR4/ServiceRequest/" + get_service['id'], headers={
+                    'Content-type': 'application/xml'}, data=service_data.decode('utf-8'))
+                else:
+                    post_service = requests.post("http://hapi.fhir.org/baseR4/ServiceRequest/", headers={
+                        'Content-type': 'application/xml'}, data=service_data.decode('utf-8'))
+                if (put_service and put_service.status_code == 200) or (post_service and post_service.status_code == 201):
                     print(post_service)
                     service_query = dt.query_service(
                         service_instance.service_identifier)
-                    print(service_query['id'])
+                    print(service_query.get('id'))
                     service_observations = ObservationModel.objects.all().filter(
                         encounter_identifier=encounter_identifier, service_identifier=service_instance.service_identifier)
                     for observation_instance in service_observations:
+                        put_observation = None
+                        post_observation = None
                         observation = {}
                         observation['identifier'] = observation_instance.observation_identifier
                         observation['status'] = observation_instance.observation_status
-                        observation['code'] = observation_instance.observation_name
+                        observation['code'] = observation_instance.observation_code
                         observation['category'] = observation_instance.observation_category
                         observation['effective'] = observation_instance.observation_effective.strftime(
                             '%Y-%m-%dT%H:%M:%S+07:00')
                         observation['valuequantity'] = observation_instance.observation_valuequantity
                         observation['valueunit'] = observation_instance.observation_valueunit
-                        post_observation = dt.create_observation_resource(
+                        get_observation = dt.query_observation(observation['identifier'])
+                        if get_observation:
+                            observation['id'] = get_observation['id']
+                        observation_data = dt.create_observation_resource(
                             observation, patient['id'], patient['name'], encounter['id'], service_query['id'])
-                        print(post_observation)
-                        post_req = requests.post("http://hapi.fhir.org/baseR4/Observation/", headers={
-                                                 'Content-type': 'application/xml'}, data=post_observation.decode('utf-8'))
+                        if get_observation:
+                            put_observation = requests.put("http://hapi.fhir.org/baseR4/Observation/" + get_observation['id'], headers={
+                            'Content-type': 'application/xml'}, data=observation_data.decode('utf-8'))
+                        else:
+                            post_observation = requests.post("http://hapi.fhir.org/baseR4/Observation/", headers={
+                                'Content-type': 'application/xml'}, data=observation_data.decode('utf-8'))
                 else:
                     pass
             observation_instances = ObservationModel.objects.all().filter(
                 encounter_identifier=encounter_instance, service_identifier='')
             for observation_instance in observation_instances:
+                put_observation = None
+                post_observation = None
                 observation = {}
                 observation['identifier'] = observation_instance.observation_identifier
                 observation['status'] = observation_instance.observation_status
-                observation['code'] = observation_instance.observation_name
+                observation['code'] = observation_instance.observation_code
                 observation['category'] = observation_instance.observation_category
                 observation['effective'] = observation_instance.observation_effective.strftime(
                     '%Y-%m-%dT%H:%M:%S+07:00')
                 observation['valuequantity'] = observation_instance.observation_valuequantity
                 observation['valueunit'] = observation_instance.observation_valueunit
-                post_observation = dt.create_observation_resource(
+                get_observation = dt.query_observation(observation['identifier'])
+                if get_observation:
+                    observation['id'] = get_observation['id']
+                observation_data = dt.create_observation_resource(
                     observation, patient['id'], patient['name'], encounter['id'])
-                print(post_observation)
-                post_req = requests.post("http://hapi.fhir.org/baseR4/Observation/", headers={
-                                         'Content-type': 'application/xml'}, data=post_observation.decode('utf-8'))
+                if get_observation:
+                    put_observation = requests.put("http://hapi.fhir.org/baseR4/Observation/" + get_observation['id'], headers={
+                    'Content-type': 'application/xml'}, data=observation_data.decode('utf-8'))
+                else:
+                    post_observation = requests.post("http://hapi.fhir.org/baseR4/Observation/", headers={
+                        'Content-type': 'application/xml'}, data=observation_data.decode('utf-8'))
+            procedure_instances = ProcedureModel.objects.all().filter(
+                encounter_identifier=encounter_instance)
+            for procedure_instance in procedure_instances:
+                put_procedure = None
+                post_procedure = None
+                procedure = {}
+                procedure['identifier'] = procedure_instance.procedure_identifier
+                procedure['status'] = procedure_instance.procedure_status
+                procedure['category'] = procedure_instance.procedure_category
+                procedure['code'] = procedure_instance.procedure_code
+                procedure['performedDateTime'] = procedure_instance.procedure_performedDateTime.strftime(
+                    '%Y-%m-%dT%H:%M:%S+07:00')
+                procedure['reasonCode'] = procedure_instance.procedure_reasonCode
+                procedure['outcome'] = procedure_instance.procedure_outcome
+                procedure['complication'] = procedure_instance.procedure_complication
+                procedure['followUp'] = procedure_instance.procedure_followUp
+                procedure['note'] = procedure_instance.procedure_note
+                get_procedure = dt.query_procedure(procedure['identifier'])
+                if get_procedure:
+                    procedure['id'] = get_procedure['id']
+                procedure_data = dt.create_procedure_resource(
+                    procedure, patient['id'], patient['name'], encounter['id'])
+                if get_procedure:
+                    put_procedure = requests.put("http://hapi.fhir.org/baseR4/Procedure/" + get_procedure['id'], headers={
+                    'Content-type': 'application/xml'}, data=procedure_data.decode('utf-8'))
+                else:
+                    post_req = requests.post("http://hapi.fhir.org/baseR4/Procedure/", headers={
+                        'Content-type': 'application/xml'}, data=procedure_data.decode('utf-8'))
+                
+            medication_instances = MedicationModel.objects.all().filter(
+                encounter_identifier=encounter_instance)
+            for medication_instance in medication_instances:
+                put_medication = None
+                post_medication = None
+                medication = {}
+                medication['identifier'] = medication_instance.medication_identifier
+                medication['status'] = 'unknown'
+                medication['medication'] = medication_instance.medication_medication
+                medication['effective'] = medication_instance.medication_effective.strftime(
+                    '%Y-%m-%d')
+                medication['dateAsserted'] = medication_instance.medication_dateAsserted.strftime(
+                    '%Y-%m-%d')
+                medication['reasonCode'] = medication_instance.medication_reasonCode
+                medication['additionalInstruction'] = medication_instance.dosage_additional_instruction
+                medication['patientInstruction'] = medication_instance.dosage_patient_instruction
+                medication['frequency'] = medication_instance.dosage_frequency
+                medication['period'] = medication_instance.dosage_period
+                medication['duration'] = medication_instance.dosage_duration
+                medication['when'] = medication_instance.dosage_when
+                medication['offset'] = medication_instance.dosage_offset
+                medication['route'] = medication_instance.dosage_route
+                medication['quantity'] = medication_instance.dosage_quantity
+                get_medication = dt.query_medication(medication['identifier'])
+                if get_medication:
+                    medication['id'] = get_medication['id']
+                medication_data = dt.create_medication_resource(
+                    medication, patient['id'], patient['name'], encounter['id'])
+                if get_medication:
+                    put_medication = requests.put("http://hapi.fhir.org/baseR4/MedicationStatement/" + get_medication['id'], headers={
+                    'Content-type': 'application/xml'}, data=medication_data.decode('utf-8'))
+                else:
+                    post_medication = requests.post("http://hapi.fhir.org/baseR4/MedicationStatement/", headers={
+                        'Content-type': 'application/xml'}, data=medication_data.decode('utf-8'))
             return HttpResponse('Success')
         else:
             return HttpResponse('Something Wrong')
@@ -946,9 +1203,8 @@ class toanthan(View):
         observations = ObservationModel.objects.all().filter(
             encounter_identifier=encounter_instance, observation_category='vital-signs')
         print(observations)
-        services = ServiceRequestModel.objects.all().filter(
-            encounter_identifier=encounter_instance)
-        return render(request, 'fhir/toanthan.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'services': services, 'observations': observations})
+
+        return render(request, 'fhir/toanthan.html', {'data': data, 'group_name': group_name, 'user_name': user_name,  'observations': observations})
 
     def post(self, request, group_name, user_name, patient_identifier, encounter_identifier):
         data = {'Patient': {'identifier': patient_identifier},
@@ -960,31 +1216,30 @@ class toanthan(View):
         if request.POST['1']:
             count += 1
             ObservationModel.objects.create(encounter_identifier=encounter_instance, observation_identifier=encounter_identifier + '_' + str(
-                count), observation_name='Mạch', observation_category='vital-signs', observation_valuequantity=request.POST['1'], observation_valueunit='lần/ph')
+                count), observation_status='final', observation_code='Mạch', observation_category='vital-signs', observation_valuequantity=request.POST['1'], observation_valueunit='lần/ph')
         if request.POST['2']:
             count += 1
             ObservationModel.objects.create(encounter_identifier=encounter_instance, observation_identifier=encounter_identifier + '_' + str(
-                count), observation_name='Nhiệt độ', observation_category='vital-signs', observation_valuequantity=request.POST['2'], observation_valueunit='Cel')
+                count), observation_status='final', observation_code='Nhiệt độ', observation_category='vital-signs', observation_valuequantity=request.POST['2'], observation_valueunit='Cel')
         if request.POST['3']:
             count += 1
             ObservationModel.objects.create(encounter_identifier=encounter_instance, observation_identifier=encounter_identifier + '_' + str(
-                count), observation_name='Huyết áp tâm thu', observation_category='vital-signs', observation_valuequantity=request.POST['3'].split('/')[0], observation_valueunit='mmHg')
+                count), observation_status='final', observation_code='Huyết áp tâm thu', observation_category='vital-signs', observation_valuequantity=request.POST['3'].split('/')[0], observation_valueunit='mmHg')
             count += 1
             ObservationModel.objects.create(encounter_identifier=encounter_instance, observation_identifier=encounter_identifier + '_' + str(
-                count), observation_name='Huyết áp tâm trương', observation_category='vital-signs', observation_valuequantity=request.POST['3'].split('/')[1], observation_valueunit='mmHg')
+                count), observation_status='final', observation_code='Huyết áp tâm trương', observation_category='vital-signs', observation_valuequantity=request.POST['3'].split('/')[1], observation_valueunit='mmHg')
         if request.POST['4']:
             count += 1
             ObservationModel.objects.create(encounter_identifier=encounter_instance, observation_identifier=encounter_identifier + '_' + str(
-                count), observation_name='Nhịp thở', observation_category='vital-signs', observation_valuequantity=request.POST['4'], observation_valueunit='lần/ph')
+                count), observation_status='final', observation_code='Nhịp thở', observation_category='vital-signs', observation_valuequantity=request.POST['4'], observation_valueunit='lần/ph')
         if request.POST['5']:
             count += 1
             ObservationModel.objects.create(encounter_identifier=encounter_instance, observation_identifier=encounter_identifier + '_' + str(
-                count), observation_name='Cân nặng', observation_category='vital-signs', observation_valuequantity=request.POST['5'], observation_valueunit='kg')
+                count), observation_status='final', observation_code='Cân nặng', observation_category='vital-signs', observation_valuequantity=request.POST['5'], observation_valueunit='kg')
         observations = ObservationModel.objects.all().filter(
             encounter_identifier=encounter_instance, observation_category='vital-signs')
-        services = ServiceRequestModel.objects.all().filter(
-            encounter_identifier=encounter_identifier)
-        return render(request, 'fhir/toanthan.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'services': services, 'observations': observations})
+
+        return render(request, 'fhir/toanthan.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'observations': observations})
 
 
 class thuthuat(View):
@@ -1005,8 +1260,6 @@ class thuthuat(View):
                 'Encounter': {'identifier': encounter_identifier}}
         encounter_instance = EncounterModel.objects.get(
             encounter_identifier=encounter_identifier)
-        services = ServiceRequestModel.objects.all().filter(
-            encounter_identifier=encounter_instance)
         form = ProcedureForm(request.POST)
         if form.is_valid():
             procedure = form.save(commit=False)
@@ -1014,14 +1267,15 @@ class thuthuat(View):
             procedure.procedure_identifier = encounter_instance.encounter_identifier + \
                 '_' + str(len(ProcedureModel.objects.all().filter(
                     encounter_identifier=encounter_instance)) + 1)
-            print(encounter_instance.encounter_identifier + \
-                '_' + str(len(ProcedureModel.objects.all().filter(
-                    encounter_identifier=encounter_instance)) + 1))
+            print(encounter_instance.encounter_identifier +
+                  '_' + str(len(ProcedureModel.objects.all().filter(
+                      encounter_identifier=encounter_instance)) + 1))
             procedure.procedure_status = 'preparation'
             form.save()
-        procedures = ProcedureModel.objects.all().filter(encounter_identifier=encounter_instance)
+        procedures = ProcedureModel.objects.all().filter(
+            encounter_identifier=encounter_instance)
         procedure_form = ProcedureForm()
-        return render(request, 'fhir/thuthuat.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'services': services, 'form': procedure_form, 'procedures': procedures, 'procedure_category': PROCEDURE_CATEGORY_CHOICES})
+        return render(request, 'fhir/thuthuat.html', {'data': data, 'group_name': group_name, 'user_name': user_name,  'form': procedure_form, 'procedures': procedures, 'procedure_category': PROCEDURE_CATEGORY_CHOICES})
 
 
 class chitietthuthuat(View):
@@ -1030,8 +1284,157 @@ class chitietthuthuat(View):
                 'Encounter': {'identifier': encounter_identifier}}
         encounter_instance = EncounterModel.objects.get(
             encounter_identifier=encounter_identifier)
-        services = ServiceRequestModel.objects.all().filter(encounter_identifier=encounter_instance)
+        services = ServiceRequestModel.objects.all().filter(
+            encounter_identifier=encounter_instance)
         form = ProcedureDetailForm()
         procedure = ProcedureModel.objects.get(
             procedure_identifier=procedure_identifier)
         return render(request, 'fhir/chitietthuthuat.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'services': services, 'procedure': procedure, 'form': form})
+
+    def post(self, request, group_name, user_name, patient_identifier, encounter_identifier, procedure_identifier):
+        data = {'Patient': {'identifier': patient_identifier},
+                'Encounter': {'identifier': encounter_identifier}}
+        encounter_instance = EncounterModel.objects.get(
+            encounter_identifier=encounter_identifier)
+        services = ServiceRequestModel.objects.all().filter(
+            encounter_identifier=encounter_instance)
+        procedure_instance = ProcedureModel.objects.get(
+            procedure_identifier=procedure_identifier)
+        form = ProcedureDetailForm(request.POST, instance=procedure_instance)
+        if form.is_valid():
+            procedure = form.save(commit=False)
+            procedure.procedure_status = 'completed'
+            procedure.procedure_performedDateTime = datetime.now()
+            form.save()
+            print('save success')
+        return render(request, 'fhir/chitietthuthuat.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'services': services, 'procedure': procedure_instance, 'form': form})
+
+
+class thuoc(View):
+    def get(self, request, group_name, user_name, patient_identifier, encounter_identifier):
+        data = {'Patient': {'identifier': patient_identifier},
+                'Encounter': {'identifier': encounter_identifier}}
+        encounter_instance = EncounterModel.objects.get(
+            encounter_identifier=encounter_identifier)
+        medications = MedicationModel.objects.all().filter(
+            encounter_identifier=encounter_instance)
+        medication_form = MedicationForm()
+        return render(request, 'fhir/thuoc.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'medications': medications, 'form': medication_form})
+
+    def post(self, request, group_name, user_name, patient_identifier, encounter_identifier):
+        data = {'Patient': {'identifier': patient_identifier},
+                'Encounter': {'identifier': encounter_identifier}}
+        encounter_instance = EncounterModel.objects.get(
+            encounter_identifier=encounter_identifier)
+        form = MedicationForm(request.POST)
+        print(form)
+        if form.is_valid():
+            medication = form.save(commit=False)
+            medication.encounter_identifier = encounter_instance
+            medication.medication_identifier = encounter_instance.encounter_identifier + '_' + \
+                str(len(MedicationModel.objects.all().filter(
+                    encounter_identifier=encounter_instance)) + 1)
+            medication.medication_dateAsserted = datetime.now().date()
+            form.save()
+            print('save success')
+        medications = MedicationModel.objects.all().filter(
+            encounter_identifier=encounter_instance)
+        medication_form = MedicationForm()
+        return render(request, 'fhir/thuoc.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'medications': medications, 'form': medication_form})
+
+
+class chitietxetnghiem(View):
+    def get(self, request, group_name, user_name, patient_identifier, encounter_identifier, service_identifier):
+        data = {'Patient': {'identifier': patient_identifier},
+                'Encounter': {'identifier': encounter_identifier}}
+        print(service_identifier)
+        encounter_instance = EncounterModel.objects.get(
+            encounter_identifier=encounter_identifier)
+        service_instance = ServiceRequestModel.objects.get(
+            service_identifier=service_identifier)
+        observation_instances = ObservationModel.objects.all().filter(
+            service_identifier=service_identifier)
+        print(observation_instances)
+        return render(request, 'fhir/chitietxetnghiem.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'service': service_instance, 'observations': observation_instances})
+
+    def post(self, request, group_name, user_name, patient_identifier, encounter_identifier, service_identifier):
+        data = {'Patient': {'identifier': patient_identifier},
+                'Encounter': {'identifier': encounter_identifier}}
+        print(service_identifier)
+        encounter_instance = EncounterModel.objects.get(
+            encounter_identifier=encounter_identifier)
+        service_instance = ServiceRequestModel.objects.get(
+            service_identifier=service_identifier)
+        observation_list = list(request.POST)
+        print(observation_list)
+        for i in range(1, len(observation_list)):
+            observation = ObservationModel.objects.get(
+                observation_identifier=observation_list[i])
+            observation.observation_valuequantity = request.POST[observation_list[i]]
+            observation.observation_performer = user_name
+            observation.observation_status = 'final'
+            observation.save()
+        observation_instances = ObservationModel.objects.all().filter(
+            service_identifier=service_identifier)
+        service_instance.service_status = 'completed'
+        service_instance.save()
+        return render(request, 'fhir/chitietxetnghiem.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'service': service_instance, 'observations': observation_instances})
+
+
+service_dict = {
+    'Full Blood Count': {
+        'WBC': {'unit': '/L'},
+        'RBC': {'unit': '/L'},
+        'HAEMOGLOBIN': {'unit': 'g/dl'},
+        'PCV': {'unit': '%'},
+        'MCV': {'unit': 'fl'},
+        'MCH': {'unit': 'pg'},
+        'MCHC': {'unit': 'g/dl'},
+        'PLATELET COUNT': {'unit': '/L'},
+        'NEUTROPHIL': {'unit': '%'},
+        'LYMPHOCYTE': {'unit': '%'},
+        'MONOCYTE': {'unit': '%'},
+        'EOSINOPHIL': {'unit': '%'},
+        'BASOPHIL': {'unit': '%'},
+        'RDW-SD': {'unit': 'fl'},
+        'RDW-CV': {'unit': '%'},
+        'PWD': {'unit': 'fl'},
+        'MPV': {'unit': 'fl'},
+        'P-LCR': {'unit': '%'},
+        'PCT': {'unit': '%'}
+    },
+    'Full Blood Picture': {
+
+    },
+    'PT': {
+        'PTT': {'unit': 's'},
+        'INR': {'unit': ''}
+    },
+    'APTT': {
+        'aPTT': {'unit': 's'}
+    },
+    'ESR': {},
+    'G6PD Screening': {},
+    'G6PD Assay': {},
+    'Osmotic Fragility Test (OFT)': {},
+    'Haemoglobinopathy Analysis': {},
+    'Haemoglobin Electrophoresis': {},
+    'NAP Score': {},
+    'Bone Marrow Staining': {},
+    'Thalassemia Screening': {},
+    'Thalassemia Confirmation': {}
+
+}
+
+
+def createobservations(encounter_instance, service_identifier, service_name):
+    request_observations = service_dict.get(service_name, None)
+    i = 1
+    print(request_observations)
+    if request_observations:
+        for key, value in request_observations.items():
+            ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier +
+                                            '_' + str(i), observation_code=key, observation_category='laboratory', observation_valueunit=value['unit'])
+            i += 1
+    else:
+        print('no valid data')

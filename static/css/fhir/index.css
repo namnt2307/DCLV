@@ -9,6 +9,7 @@
     height: 150px;
     width: 100%;
     background-image: linear-gradient(to right , #3092f4 , #00a9f7 , #00bae0 , #00c5b7 , #28cc88);
+    justify-content: space-between;
 }
 .header .left-header {
     width: 500px;
@@ -23,5 +24,9 @@
 .header .left-header h3 {
     padding-left: 20px;
     padding-top: 30px;
+}
+
+.header .right-header{
+    padding: 10px 16px 0 0;
 }
 

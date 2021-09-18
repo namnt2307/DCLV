@@ -1,0 +1,101 @@
+{%extends 'fhir/base.html'%}
+{%block url1%}'{%url 'fhir:hanhchinh' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url2%}'{%url 'fhir:dangky' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url3%}'{%url 'fhir:hoibenh' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url5%}'{%url 'fhir:xetnghiem' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url4%}'{%url 'fhir:toanthan' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url6%}'{%url 'fhir:thuthuat' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url7%}'{%url 'fhir:thuoc' group_name user_name data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
+
+{%block function%}
+    {% if service %}
+        <h1>KẾT QUẢ XÉT NGHIỆM</h1>
+        <table>
+            <tr>
+                <td>Tên xét nghiệm</td>
+                <td>Kết quả</td>
+            </tr>
+            <tr>
+                <td colspan="2"><b>{{service.service_code}}</b></td>
+            </tr>
+            {% if service.service_status == 'active'%}
+                <form action="" method="POST">
+                {%csrf_token%}
+                {%for observation in observations%}
+                <tr>
+                    <td>{{observation.observation_code}}</td>
+                    <td><input type="text" name="{{observation.observation_identifier}}"><p style="display:inline">{{observation.observation_valueunit}}</p></td>
+                </tr>
+                {%endfor%}
+                <tr>
+                    <td colspan="2"><button type="submit">Lưu lại</button></td>
+                </tr>
+            </form>
+            {%else%}
+                <tbody id='data'>
+                {%for observation in observations%}
+                <tr>
+                    <td>{{observation.observation_code}}</td>
+                    <td>{{observation.observation_valuequantity}}{{observation.observation_valueunit}}</td>
+                </tr>
+                {%endfor%}
+                </tbody>
+                
+                <tbody id='form' style="display: none;">
+                    <form action="" method="POST">
+                        {%csrf_token%}
+                        {%for observation in observations%}
+                        <tr>
+                            <td>{{observation.observation_code}}</td>
+                            <td><input type="text" name="{{observation.observation_identifier}}" value="{{observation.observation_valuequantity}}"><p style="display:inline">{{observation.observation_valueunit}}</p></td>
+                        </tr>
+                        {%endfor%}
+                        <tr>
+                            <td colspan="2"><button type="submit">Lưu lại</button></td>
+                        </tr>
+                    </form>
+                </tbody>
+
+            {%endif%}
+        </table>
+        <div class="button">
+            <button id="clickButton" onclick="changeDisplay()">Chỉnh sửa</button>
+        </div>
+        <script>
+            function changeDisplay(){
+                button = document.getElementById('clickButton');
+                data = document.getElementById('data');
+                form = document.getElementById('form');
+                if (button.textContent == "Chỉnh sửa"){
+                    data.style.display = "none";
+                    form.style.display = "block";
+                    button.textContent = "Hủy bỏ"
+                }
+                else{
+                    data.style.display = "block";
+                    form.style.display = "none";
+                    button.textContent = "Chỉnh sửa"
+                }
+            }
+        </script>
+    {%endif%}
+    <!-- {%if test%} -->
+        <!-- {% if service.service_status == 'active'%}
+        <form action="" method="POST">
+        {%csrf_token%}
+            {%for observation in observations%}
+                <input type="text">
+            {%endfor%}  
+        <button type="submit">Lưu lại</button>
+        </form>
+       
+        {%elif procedure.procedure_status == 'completed'%}
+        <p>Ngày thực hiện: {{procedure.procedure_performedDateTime}}</p>
+        <p>Kết quả thủ thuật, phẫu thuật: {{procedure.procedure_outcome}}</p>
+        <p>Các biến chứng sau thủ thuật, phẫu thuật: {{procedure.procedure_complication}}</p>
+        <p>Các hướng dẫn bệnh nhân sau thủ thuật, phẫu thuật: {{procedure.procedure_followUp}}</p>
+        <p>Thiết bị thực hiện thủ thuật, phẫu thuật: {{procedure.procedure_focalDevice}}</p>
+        <p>Ghi chú của bác sĩ: {{procedure.procedure_note}}</p>
+        {%endif%}
+    {% endif %} -->
+{%endblock%}

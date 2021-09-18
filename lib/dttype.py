@@ -142,6 +142,61 @@ def duration_type(resource, value, unit, system, code):
     ET.SubElement(resource, 'system value=\"{}\"'.format(system))
     ET.SubElement(resource, 'code value=\"{}\"'.format(code))
 
+def annotation_type(resource, text, author=None, time=None):
+    if author:
+        ET.SubElement(resource, 'author')
+    if time:
+        ET.SubElement(resource, 'time')
+        time.set('value', time)
+    textobject = ET.SubElement(resource, 'text')
+    textobject.set('value', text)
+
+def timing_type(resource, duration_value, frequency_value, period_value, when_value, offset_value=None, event_value=None):
+    if event_value:
+        event = ET.SubElement(resource, 'event')
+        event.set('value', event_value)
+    repeat = ET.SubElement(resource, 'repeat')
+    print(duration_value)
+    print(frequency_value)
+    print(period_value)
+    print(when_value)
+
+    get_duration = duration_value.split(' ')
+    duration = ET.SubElement(repeat, 'duration')
+    if '-' in get_duration[0]:
+        duration.set('value', get_duration[0].split('-')[0])
+        durationMax = ET.SubElement(repeat, 'durationMax')
+        durationMax.set('value', get_duration[0].split('-')[1])
+    else:
+        duration.set('value', get_duration[0])
+    durationUnit = ET.SubElement(repeat, 'durationUnit')
+    durationUnit.set('value', get_duration[1])
+    get_frequency = frequency_value.split(' ')
+    frequency = ET.SubElement(repeat, 'frequency')
+    if '-' in get_frequency[0]:
+        frequency.set('value', get_frequency[0].split('-')[0])
+        frequencyMax = ET.SubElement(repeat, 'frequencyMax')
+        frequencyMax.set('value', get_frequency[0].split('-')[1])
+    else:
+        frequency.set('value', get_frequency[0])
+    get_period = period_value.split(' ')
+    print(get_period)
+    period = ET.SubElement(repeat, 'period')
+    if '-' in get_period[0]:
+        period.set('value', get_period[0].split('-')[0])
+        periodMax = ET.SubElement(repeat, 'periodMax')
+        periodMax.set('value', get_period[0].split('-')[1])
+    else:
+        period.set('value', get_period[0])
+    periodUnit = ET.SubElement(repeat, 'periodUnit')
+    periodUnit.set('value', get_period[1])
+    when = ET.SubElement(repeat, 'when')
+    when.set('value', when_value)
+    if offset_value:
+        offset = ET.SubElement(repeat, 'offset')
+        offset.set('value', offset_value)
+
+        
 
 def get_observation(encounter_id):
     get_observation = requests.get("http://hapi.fhir.org/baseR4/Observation?encounter=" + str(encounter_id), headers={'Content-type': 'application/xml'})
@@ -379,6 +434,9 @@ def create_condition_resource(condition, patient_id, patient_name, encounter_id)
     root = ET.Element('Condition')
     tree = ET.ElementTree(root)
     root.set('xmlns', 'http://hl7.org/fhir')
+    if condition.get('id'):
+        id_ = ET.SubElement(root, 'id')
+        id_.set('value', condition['id'])
     if condition.get('identifier'):
         identifier = ET.SubElement(root, 'identifier')
         identifier_type(identifier, 'urn:trinhcongminh', condition['identifier'], 'usual')
@@ -411,6 +469,9 @@ def create_service_resource(service, patient_id, patient_name, encounter_id):
     root = ET.Element('ServiceRequest')
     tree = ET.ElementTree(root)
     root.set('xmlns', 'http://hl7.org/fhir')
+    if service.get('id'):
+        id_ = ET.SubElement(root, 'id')
+        id_.set('value', service['id'])
     if service.get('identifier'):
         identifier = ET.SubElement(root, 'identifier')
         identifier_type(identifier, 'urn:trinhcongminh', service['identifier'], 'usual')
@@ -430,6 +491,15 @@ def create_service_resource(service, patient_id, patient_name, encounter_id):
     reference_type(subject, 'Patient/'+ patient_id, 'Patient', display=patient_name)
     encounter = ET.SubElement(root, 'encounter')
     reference_type(encounter, 'Encounter/'+ encounter_id, 'Encounter')
+    if service.get('occurrence'):
+        occurrence = ET.SubElement(root, 'occurrenceDateTime')
+        occurrence.set('value', service['occurrence'])
+    if service.get('authoredOn'):
+        authoredOn = ET.SubElement(root, 'authoredOn')
+        authoredOn.set('value', service['authoredOn'])
+    if service.get('note'):
+        note = ET.SubElement(root, 'note')
+        annotation_type(note, text=service['note'])
     return ET.tostring(root, encoding="us-ascii", method="xml", xml_declaration=None, default_namespace=None, short_empty_elements=True)
 
 def create_observation_resource(observation, patient_id, patient_name, encounter_id, service_id=None):
@@ -463,6 +533,105 @@ def create_observation_resource(observation, patient_id, patient_name, encounter
         quantity_type(valueQuantity, observation['valuequantity'], observation['valueunit'])
     return ET.tostring(root, encoding="us-ascii", method="xml", xml_declaration=None, default_namespace=None, short_empty_elements=True)
 
+def create_procedure_resource(procedure, patient_id, patient_name, encounter_id, practitioner_id=None, service_id=None):
+    root = ET.Element('Procedure')
+    tree = ET.ElementTree(root)
+    root.set('xmlns', 'http://hl7.org/fhir')
+    if procedure.get('identifier'):
+        identifier = ET.SubElement(root, 'identifier')
+        identifier_type(identifier, 'urn:trinhcongminh', procedure['identifier'], 'usual')
+    if service_id:
+        basedOn = ET.SubElement(root, 'basedOn')
+        reference_type(basedOn, 'ServiceRequest/' + service_id, 'ServiceRequest')
+    if procedure.get('status'):
+        status = ET.SubElement(root, 'status')
+        status.set('value', procedure['status'])
+    if procedure.get('category'):
+        category = ET.SubElement(root, 'category')
+        codeable_concept(category, text=procedure['category'])
+    if procedure.get('code'):
+        code = ET.SubElement(root, 'code')
+        codeable_concept(code, text=procedure['code'])
+    subject = ET.SubElement(root, 'subject')
+    reference_type(subject, 'Patient/' + patient_id, 'Patient', display=patient_name)
+    encounter = ET.SubElement(root, 'encounter')
+    reference_type(encounter, 'Encounter/' + encounter_id, 'Encounter')
+    if procedure.get('performedDateTime'):
+        performeddateTime = ET.SubElement(root, 'performedDateTime')
+        performeddateTime.set('value', procedure['performedDateTime'])
+        print(procedure['performedDateTime'])
+    if procedure.get('asserter'):
+        asserter = ET.SubElement(root, 'asserter')
+        reference_type(asserter, 'Practitioner/' + practitioner_id, 'Practitioner')
+    if procedure.get('performer'):
+        performer = ET.SubElement(root, 'performer')
+        reference_type(performer, 'Practitioner/' + practitioner_id, 'Practitioner')
+    if procedure.get('reasonCode'):
+        reasonCode = ET.SubElement(root, 'reasonCode')
+        codeable_concept(reasonCode, text=procedure['reasonCode'])
+    if procedure.get('outcome'):
+        outcome = ET.SubElement(root, 'outcome')
+        codeable_concept(outcome, text=procedure['outcome'])
+    if procedure.get('complication'):
+        complication = ET.SubElement(root, 'complication')
+        codeable_concept(complication, text=procedure['complication'])
+    if procedure.get('followUp'):
+        followUp = ET.SubElement(root, 'followUp')
+        codeable_concept(followUp, text=procedure['followUp'])
+    if procedure.get('note'):
+        note = ET.SubElement(root, 'note')
+        annotation_type(note, text=procedure['note'])
+    return ET.tostring(root, encoding="us-ascii", method="xml", xml_declaration=None, default_namespace=None, short_empty_elements=True)
+    
+def create_medication_resource(medication, patient_id, patient_name, encounter_id):
+    root = ET.Element('MedicationStatement')
+    tree = ET.ElementTree(root)
+    root.set('xmlns', 'http://hl7.org/fhir')
+    if medication.get('identifier'):
+        identifier = ET.SubElement(root, 'identifier')
+        identifier_type(identifier, 'urn:trinhcongminh', medication['identifier'], 'usual')
+    if medication.get('status'):
+        status = ET.SubElement(root, 'status')
+        status.set('value', medication['status'])
+    if medication.get('medication'):
+        medicationobject = ET.SubElement(root, 'medicationCodeableConcept')
+        codeable_concept(medicationobject, text=medication['medication'])
+    subject = ET.SubElement(root, 'subject')
+    reference_type(subject, 'Patient/' + patient_id, 'Patient', display=patient_name)
+    context = ET.SubElement(root, 'context')
+    reference_type(context, 'Encounter/' + encounter_id, 'Encounter')    
+    if medication.get('effective'):
+        effective = ET.SubElement(root, 'effectiveDateTime')
+        effective.set('value', medication['effective'])
+        print(medication['effective'])
+    if medication.get('dateAsserted'):
+        dateAsserted = ET.SubElement(root, 'dateAsserted')
+        dateAsserted.set('value', medication['dateAsserted'])
+        print(medication['dateAsserted'])
+    if medication.get('reasonCode'):
+        reasonCode = ET.SubElement(root, 'reasonCode')
+        codeable_concept(reasonCode, text=medication['reasonCode'])
+    dosage = ET.SubElement(root, 'dosage')
+    if medication.get('additionalInstruction'):
+        additionalInstruction = ET.SubElement(dosage, 'additionalInstruction')
+        codeable_concept(additionalInstruction, text=medication['additionalInstruction'])
+    if medication.get('patientInstruction'):
+        patientInstruction = ET.SubElement(dosage, 'patientInstruction')
+        patientInstruction.set('value', medication['patientInstruction']) 
+    timing = ET.SubElement(dosage, 'timing')
+    if medication.get('frequency') and medication.get('period') and medication.get('duration') and medication.get('when'):
+        timing_type(timing, medication['duration'], medication['frequency'], medication['period'], medication['when'], medication.get('offset'))
+    if medication.get('route'):
+        route = ET.SubElement(dosage, 'route')
+        codeable_concept(route, text=medication['route'])
+    if medication.get('quantity'):
+        doseAndRate = ET.SubElement(dosage, 'doseAndRate')
+        doseQuantity = ET.SubElement(doseAndRate, 'doseQuantity')
+        dose_value = medication['quantity'].split(' ')[0]
+        dose_unit = medication['quantity'].split(' ')[1]
+        quantity_type(doseQuantity, dose_value, dose_unit)
+    return ET.tostring(root, encoding="us-ascii", method="xml", xml_declaration=None, default_namespace=None, short_empty_elements=True)
+    
 
 def query_patient(patient_identifier):
     patient = {}
@@ -498,7 +667,7 @@ def query_patient(patient_identifier):
 
 def query_encounter(encounter_identifier):
     encounter = {}
-    encounter['identifier'] = encounter_identifier
+    
     get_encounter = requests.get("http://hapi.fhir.org/baseR4/Encounter?identifier=urn:trinhcongminh|" + encounter_identifier, headers={'Content-type': 'application/xml'})
     if get_encounter.status_code == 200 and 'entry' in get_encounter.content.decode('utf-8'):
         get_root = ET.fromstring(get_encounter.content.decode('utf-8'))
@@ -506,6 +675,7 @@ def query_encounter(encounter_identifier):
         resource = entry.find('d:resource', ns)
         encounter_resource = resource.find('d:Encounter', ns)
         encounter['id'] = encounter_resource.find('d:id', ns).attrib['value']
+        encounter['identifier'] = encounter_identifier
         encounter['status'] = encounter_resource.find('d:status', ns).attrib['value']
         _class = encounter_resource.find('d:class', ns)
         encounter['class'] = _class.find('d:code', ns).attrib['value']
@@ -528,18 +698,143 @@ def query_encounter(encounter_identifier):
 
 def query_service(service_identifier):
     service = {}
-    service['identifier'] = service_identifier
-    get_encounter = requests.get("http://hapi.fhir.org/baseR4/ServiceRequest?identifier=urn:trinhcongminh|" + service_identifier, headers={'Content-type': 'application/xml'})
-    if get_encounter.status_code == 200 and 'entry' in get_encounter.content.decode('utf-8'):
-        get_root = ET.fromstring(get_encounter.content.decode('utf-8'))
+    get_service = requests.get("http://hapi.fhir.org/baseR4/ServiceRequest?identifier=urn:trinhcongminh|" + service_identifier, headers={'Content-type': 'application/xml'})
+    if get_service.status_code == 200 and 'entry' in get_service.content.decode('utf-8'):
+        get_root = ET.fromstring(get_service.content.decode('utf-8'))
         entry = get_root.find('d:entry', ns)
         resource = entry.find('d:resource', ns)
         service_resource = resource.find('d:ServiceRequest', ns)
         service['id'] = service_resource.find('d:id', ns).attrib['value']
-        service['status'] = service_resource.find('d:status', ns).attrib['value']
+        service['identifier'] = service_identifier
+        service['service_status'] = service_resource.find('d:status', ns).attrib['value']
         category = service_resource.find('d:category', ns)
-        service['category'] = category.find('d:text', ns).attrib['value']
+        service['service_category'] = category.find('d:text', ns).attrib['value']
         code = service_resource.find('d:code', ns)
-        service['code'] = code.find('d:text', ns)
+        service['service_code'] = code.find('d:text', ns).attrib['value']
     print(service)
     return service
+
+def query_condition(condition_identifier):
+    condition = {}
+    get_condition = requests.get("http://hapi.fhir.org/baseR4/Condition?identifier=urn:trinhcongminh|" + condition_identifier, headers={'Content-type': 'application/xml'})
+    if get_condition.status_code == 200 and 'entry' in get_condition.content.decode('utf-8'):
+        get_root = ET.fromstring(get_condition.content.decode('utf-8'))
+        entry = get_root.find('d:entry', ns)
+        resource = entry.find('d:resource', ns)
+        condition_resource = resource.find('d:Condition', ns)
+        condition['id'] = condition_resource.find('d:id', ns).attrib['value']
+        condition['identifier'] = condition_identifier
+        clinical_status = condition_resource.find('d:clinicalStatus', ns)
+        condition['condition_clinicalstatus'] = clinical_status.find('d:text', ns).attrib['value']
+        severity = condition_resource.find('d:severity', ns)
+        condition['condition_severiy'] = severity.find('d:text', ns).attrib['value']
+        code = condition_resource.find('d:code', ns)
+        condition['condition_code'] = code.find('d:text', ns).attrib['value']
+        condition['condition_onset'] = getdatetime(condition_resource.find('d:onsetDateTime', ns).attrib['value'])
+    print(condition)
+    return(condition)
+
+        
+def query_observation(observation_identifier):
+    observation = {}
+    get_observation = requests.get("http://hapi.fhir.org/baseR4/Observation?identifier=urn:trinhcongminh|" + observation_identifier, headers={'Content-type': 'application/xml'})
+    if get_observation.status_code == 200 and 'entry' in get_observation.content.decode('utf-8'):
+        get_root = ET.fromstring(get_observation.content.decode('utf-8'))
+        entry = get_root.find('d:entry', ns)
+        resource = entry.find('d:resource', ns)
+        observation_resource = resource.find('d:Observation', ns)
+        observation['id'] = observation_resource.find('d:id', ns).attrib['value']
+        observation['identifier'] = observation_identifier
+        observation['observation_status'] = observation_resource.find('d:status', ns).attrib['value']
+        category = observation_resource.find('d:category', ns)
+        observation['observation_category'] = category.find('d:text', ns).attrib['value']
+        code = observation_resource.find('d:code', ns)
+        observation['observation_code'] = code.find('d:text', ns).attrib['value']
+        observation['observation_effective'] = getdatetime(observation_resource.find('d:effectiveDateTime', ns).attrib['value'])
+        value_quantity = observation_resource.find('d:valueQuantity', ns)
+        observation['observation_valuequantity'] = value_quantity.find('d:value', ns).attrib['value']
+        observation['observation_valueunit'] = value_quantity.find('d:unit', ns).attrib['value']
+    return observation
+
+
+def query_procedure(procedure_identifier):
+    procedure = {}
+    get_procedure = requests.get("http://hapi.fhir.org/baseR4/Procedure?identifier=urn:trinhcongminh|" + procedure_identifier, headers={'Content-type': 'application/xml'})
+    print(get_procedure.content.decode('utf-8'))
+    if get_procedure.status_code == 200 and 'entry' in get_procedure.content.decode('utf-8'):
+        get_root = ET.fromstring(get_procedure.content.decode('utf-8'))
+        entry = get_root.find('d:entry', ns)
+        resource = entry.find('d:resource', ns)
+        procedure_resource = resource.find('d:Procedure', ns)
+        procedure['id'] = procedure_resource.find('d:id', ns).attrib['value']
+        procedure['procedure_identifier'] = procedure_identifier
+        procedure['procedure_status'] = procedure_resource.find('d:status', ns).attrib['value']
+        category = procedure_resource.find('d:category', ns)
+        procedure['procedure_category'] = category.find('d:text', ns).attrib['value']
+        code = procedure_resource.find('d:code', ns)
+        procedure['procedure_code'] = code.find('d:text', ns).attrib['value']
+        procedure['procedure_performedDateTime'] = getdatetime(procedure_resource.find('d:performedDateTime', ns).attrib['value'])
+        reason_code = procedure_resource.find('d:reasonCode', ns)
+        procedure['procedure_reasonCode'] = reason_code.find('d:text', ns).attrib['value']
+        outcome = procedure_resource.find('d:outcome', ns)
+        procedure['procedure_outcome'] = outcome.find('d:text', ns).attrib['value']
+        complication = procedure_resource.find('d:complication', ns)
+        procedure['procedure_complication'] = complication.find('d:text', ns).attrib['value']
+        follow_up = procedure_resource.find('d:followUp', ns)
+        procedure['procedure_followUp'] = follow_up.find('d:text', ns).attrib['value']
+        note = procedure_resource.find('d:note', ns)
+        procedure['procedure_note'] = note.find('d:text', ns).attrib['value']
+    return procedure
+
+def query_medication(medication_identifier):
+    medication_statement = {}
+    get_medication = requests.get("http://hapi.fhir.org/baseR4/MedicationStatement?identifier=urn:trinhcongminh|" + medication_identifier, headers={'Content-type': 'application/xml'})
+    if get_medication.status_code == 200 and 'entry' in get_medication.content.decode('utf-8'):
+        get_root = ET.fromstring(get_medication.content.decode('utf-8'))
+        entry = get_root.find('d:entry', ns)
+        resource = entry.find('d:resource', ns)
+        medication_resource = resource.find('d:MedicationStatement', ns)
+        medication_statement['id'] = medication_resource.find('d:id', ns).attrib['value']
+        medication_statement['identifier'] = medication_identifier
+        medication = medication_resource.find(
+            'd:medicationCodeableConcept', ns)
+        medication_statement['medication_medication'] = medication.find('d:text', ns).attrib['value']
+        medication_statement['medication_effective'] = medication_resource.find('d:effectiveDateTime', ns).attrib['value']
+        medication_statement['medication_dateAsserted'] = medication_resource.find('d:dateAsserted', ns).attrib['value']
+        reasonCode = medication_resource.find('d:reasonCode', ns)
+        medication_statement['medication_reasonCode'] = reasonCode.find('d:text', ns).attrib['value']
+        dosage = medication_resource.find('d:dosage', ns)
+        additional_instruction = dosage.find('d:additionalInstruction', ns)
+        if additional_instruction:
+            medication_statement['dosage_additional_instruction'] = additional_instruction.find('d:text', ns).attrib['value']
+        patient_instruction = dosage.find('d:patientInstruction', ns)
+        if patient_instruction:
+            medication_statement['dosage_patient_instruction'] = patient_instruction.find('d:text', ns).attrib['value']
+        timing = dosage.find('d:timing', ns)
+        repeat = timing.find('d:repeat', ns)
+        duration = repeat.find('d:duration', ns).attrib['value']
+        durationMax = repeat.find('d:durationMax', ns)
+        if durationMax:
+            duration = duration + '-' + durationMax.attrib['value']
+        durationUnit = repeat.find('d:durationUnit', ns).attrib['value']
+        duration = duration + ' ' + durationUnit
+        medication_statement['dosage_duration'] = duration
+        frequency = repeat.find('d:frequency', ns)
+        medication_statement['dosage_frequency'] = frequency.attrib['value']
+        period = repeat.find('d:period', ns).attrib['value']
+        periodMax = repeat.find('d:periodMax', ns)
+        if periodMax:
+            period = period + '-' + periodMax.attrib['value']
+        periodUnit = repeat.find('d:periodUnit', ns)
+        period = period + ' ' + periodUnit.attrib['value']
+        medication_statement['dosage_period'] = period
+        medication_statement['dosage_when'] = repeat.find('d:when', ns).attrib['value']
+        medication_statement['dosage_offset'] = repeat.find('d:offset', ns).attrib['value']
+        route = dosage.find('d:route', ns)
+        medication_statement['dosage_route'] = route.find('d:text', ns).attrib['value']
+        doseAndRate = dosage.find('d:doseAndRate', ns)
+        doseQuantity = doseAndRate.find('d:doseQuantity', ns)
+        quantity = doseQuantity.find('d:value', ns).attrib['value']
+        unit = doseQuantity.find('d:unit', ns).attrib['value']
+        medication_statement['dosage_quantity'] = quantity + ' ' + unit
+    return medication_statement

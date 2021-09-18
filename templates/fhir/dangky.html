@@ -2,25 +2,70 @@
 {%block url1%}'{%url 'fhir:hanhchinh' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
 {%block url2%}'{%url 'fhir:dangky' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
 {%block url3%}'{%url 'fhir:hoibenh' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url5%}'{%url 'fhir:xetnghiem' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
 {%block url4%}'{%url 'fhir:toanthan' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%block url5%}'{%url 'fhir:thuthuat' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%block leftbar%}
-    {%if services%}
-        {%for service in services%}
-            {%if service.service_code%}
-            <li><a href="{%url 'fhir:ketqua' group_name user_name data.Patient.identifier data.Encounter.identifier service.service_identifier%}">{{service.service_code}}</a></li>
-            {%endif%}
-        {%endfor%}
-    {%endif%}
-{%endblock%}
+{%block url6%}'{%url 'fhir:thuthuat' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url7%}'{%url 'fhir:thuoc' group_name user_name data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
+{% load widget_tweaks %}
 {%block function%}
-    {{data.Encounter.Info}}
     {%if data.Encounter_Info.encounter_submitted%}
+    <div id='data'>
+        <h1>THÔNG TIN ĐĂNG KÝ KHÁM</h1>
         <p>Loại hình thăm khám:{{class|get_item:data.Encounter_Info.encounter_class}}</p>
         <p>Loại bệnh án: {{data.Encounter_Info.encounter_type}}</p>
         <p>Dịch vụ khám bệnh: {{data.Encounter_Info.encounter_service}}</p>
         <p>Mức độ ưu tiên: {{priority|get_item:data.Encounter_Info.encounter_priority}}</p>
         <p>Lý do đến khám: {{data.Encounter_Info.encounter_reason}}</p>
+    </div>
+        <div id='form' style="display: none;">
+            <form action="" method="POST">
+                {%csrf_token%}
+            {%with 'value:'|add:data.Encounter.identifier as code%}
+                {{form.encounter_identifier|attr:code|attr:'type:hidden'}}
+            {%endwith%}
+            {%with 'value:'|add:data.Encounter_Info.encounter_class as code%}
+                <label for="id_encounter_class">Loại hình thăm khám:</label>
+                <p>{{form.encounter_class|attr:code}}</p>
+            {%endwith%}
+            {%with 'value:'|add:data.Encounter_Info.encounter_type as code%}
+                <label for="id_encounter_type">Loại bệnh án:</label>
+                <p>{{form.encounter_type|attr:code}}</p>
+            {%endwith%}
+            {%with 'value:'|add:data.Encounter_Info.encounter_service as code%}
+                <label for="id_encounter_service">Dịch vụ khám bệnh:</label>
+                <p>{{form.encounter_service|attr:code}}</p>
+            {%endwith%}
+            {%with 'value:'|add:data.Encounter_Info.encounter_priority as code%}
+                <label for="id_encounter_priority">Mức độ ưu tiên:</label>
+                <p>{{form.encounter_priority|attr:code}}</p>
+            {%endwith%}
+            {%with 'value:'|add:data.Encounter_Info.encounter_reason as code%}
+                <label for="id_encounter_reason">Lý do đến khám:</label>
+                <p>{{form.encounter_reason|attr:code}}</p>
+            {%endwith%}
+            <button type="submit">Lưu lại</button>
+        </form>
+        </div>
+        <div class="button">
+            <button id="clickButton" onclick="changeDisplay()">Chỉnh sửa</button>
+        </div>
+        <script>
+            function changeDisplay(){
+                button = document.getElementById('clickButton');
+                data = document.getElementById('data');
+                form = document.getElementById('form');
+                if (button.textContent == "Chỉnh sửa"){
+                    data.style.display = "none";
+                    form.style.display = "block";
+                    button.textContent = "Hủy bỏ"
+                }
+                else{
+                    data.style.display = "block";
+                    form.style.display = "none";
+                    button.textContent = "Chỉnh sửa"
+                }
+            }
+        </script>
     {%else%}
     <form action="{% url 'fhir:dangky' group_name user_name data.Patient.identifier data.Encounter.identifier %}" method="POST">
         {%csrf_token%}

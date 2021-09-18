@@ -2,24 +2,18 @@
 {%block url1%}'{%url 'fhir:hanhchinh' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
 {%block url2%}'{%url 'fhir:dangky' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
 {%block url3%}'{%url 'fhir:hoibenh' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url5%}'{%url 'fhir:xetnghiem' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
 {%block url4%}'{%url 'fhir:toanthan' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%block url5%}'{%url 'fhir:thuthuat' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%block leftbar%}
-    {%if services%}
-        {%for service in services%}
-            {%if service.service_code%}
-            <li><a href="{%url 'fhir:ketqua' group_name user_name data.Patient.identifier data.Encounter.identifier service.service_identifier%}">{{service.service_code}}</a></li>
-            {%endif%}
-        {%endfor%}
-    {%endif%}
-{%endblock%}
+{%block url6%}'{%url 'fhir:thuthuat' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url7%}'{%url 'fhir:thuoc' group_name user_name data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
+
 {%block function%}
     {%if data%}
-    <h1>Thông tin bệnh nhân</h1>
+    <h1>THÔNG TIN BỆNH NHÂN</h1>
     <p>Mã y tế: {{data.Patient.identifier}}</p>
     <p>Họ và tên: {{data.Patient.name}}</p>
     <p>Giới tính: {{data.Patient.gender}}</p>
-    <p>Ngày sinh: {{data.Patient.birthDate}}</p>
+    <p>Ngày sinh: {{data.Patient.birthDate|date:"d-m-Y"}}</p>
     <p>Địa chỉ: {{data.Patient.home_address}}</p>
     <p>Nơi làm việc: {{data.Patient.work_address}}</p>
     {%else%}

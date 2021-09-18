@@ -1,9 +1,10 @@
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.views import View
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth import get_user_model
 from .forms import UserCreationForm
+from django.contrib import messages
 # Create your views here.
 
 
@@ -42,3 +43,8 @@ class register_app(View):
             else:
                 message = 'Không hợp lệ, vui lòng thử lại'
                 return render(request, 'login/register.html', {'message': message, 'form': form})
+
+def logout_request(request):
+    logout(request)
+    messages.info(request, "Logged out successfully!")
+    return redirect('/login')

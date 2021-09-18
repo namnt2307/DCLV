@@ -113,9 +113,11 @@ class ServiceRequestModel(models.Model):
     service_identifier = models.CharField(max_length=100, primary_key=True)
     service_status = models.CharField(default='active', max_length=100)
     service_category = models.CharField(max_length=10)
-    service_location = models.CharField(null=True, max_length=100)
-    service_note = models.TextField(null=True)
-    service_code = models.TextField(null=True)
+    service_code = models.CharField(max_length=100, null=True)
+    service_requester = models.CharField(max_length=100,null=True)
+    service_note = models.CharField(max_length=100, null=True)
+    service_occurrence = models.DateField(max_length=100)
+    service_authored = models.DateField(max_length=100)
 
 
 class ObservationModel(models.Model):
@@ -124,7 +126,7 @@ class ObservationModel(models.Model):
     service_identifier = models.CharField(max_length=100, default='')
     observation_identifier = models.CharField(max_length=100, primary_key=True)
     observation_status = models.CharField(default='registered', max_length=10)
-    observation_name = models.CharField(default='', max_length=100)
+    observation_code = models.CharField(default='', max_length=100)
     observation_category = models.CharField(default='', max_length=10)
     observation_effective = models.DateTimeField(default=datetime.now)
     observation_valuequantity = models.CharField(
@@ -146,14 +148,14 @@ class ProcedureModel(models.Model):
     )
     encounter_identifier = models.ForeignKey(
         EncounterModel, on_delete=models.CASCADE)
-    procedure_identifier = models.CharField(max_length=100, default='')
+    procedure_identifier = models.CharField(max_length=100, primary_key=True)
     procedure_status = models.CharField(max_length=100)
     procedure_category = models.CharField(
         max_length=100, choices=PROCEDURE_CATEGORY_CHOICES)
     procedure_code = models.CharField(max_length=100)
     procedure_performedDateTime = models.DateTimeField(null=True)
     procedure_asserter = models.CharField(max_length=100, null=True)
-    procedure_performder = models.CharField(max_length=100, null=True)
+    procedure_performer = models.CharField(max_length=100, null=True)
     procedure_location = models.CharField(max_length=100, null=True)
     procedure_reasonCode = models.CharField(max_length=100, null = True)
     procedure_outcome = models.CharField(max_length=100, null=True)
@@ -178,7 +180,20 @@ class AllergyModel(models.Model):
 class MedicationModel(models.Model):
     encounter_identifier = models.ForeignKey(
         EncounterModel, on_delete=models.CASCADE)
+    medication_identifier = models.CharField(max_length=100, primary_key=True)
     medication_medication = models.CharField(max_length=100)
     medication_reasonCode = models.CharField(max_length=100)
-    medication_effective = models.CharField(max_length=100)
-    medication_dosage = models.CharField(max_length=100)
+    medication_effective = models.DateField()
+    medication_dateAsserted = models.DateField()
+    dosage_additional_instruction = models.CharField(max_length=100)
+    dosage_patient_instruction = models.CharField(max_length=100)
+    dosage_frequency = models.CharField(max_length=100)
+    dosage_period = models.CharField(max_length=100)
+    dosage_duration = models.CharField(max_length=100)
+    dosage_route = models.CharField(max_length=100)
+    dosage_quantity = models.CharField(max_length=100)
+    dosage_when = models.CharField(max_length=100)
+    dosage_offset = models.CharField(max_length=100,default=0)
+
+
+
