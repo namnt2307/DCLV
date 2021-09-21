@@ -2,6 +2,8 @@ from django.shortcuts import render
 from django.http import HttpResponse, request, HttpResponseRedirect
 from django.views import View
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.utils.decorators import method_decorator
 from django.contrib.auth import get_user_model
 import xml.etree.ElementTree as ET
 import requests
@@ -86,7 +88,7 @@ def user_app(request, group_name, user_name):
     page = 'fhir/' + str(group_name) + '.html'
     return render(request, page, {'group_name': group_name, 'user_name': user_name})
 
-
+@login_required(login_url='/login/')
 def patient_view(request, group_name, user_name):
     User = get_user_model()
     patient = {}
@@ -104,7 +106,7 @@ def patient_view(request, group_name, user_name):
         message = 'Bạn chưa có hồ sơ khám bệnh'
     return render(request, 'fhir/patient/display.html', {'group_name': group_name, 'user_name': user_name, 'id': user_id, 'patient': patient, 'message': message})
 
-
+@login_required(login_url='/login/')
 def display_detail(request, group_name, user_name, patient_identifier):
     patient = get_user_model()
     encounter_form = EncounterForm()
@@ -118,16 +120,18 @@ def display_detail(request, group_name, user_name, patient_identifier):
     data['Patient']['gender'] = instance.gender
     data['Patient']['home_address'] = instance.home_address
     data['Patient']['work_address'] = instance.work_address
+    data['Patient']['telecom'] = instance.telecom
     data['Encounter'] = EncounterModel.objects.all().filter(
         user_identifier=patient_identifier)
     if data['Encounter']:
         data['encounter_type'] = 'list'
     img_dir = f'/static/img/patient/{patient_identifier}.jpg'
     # pass
-    return render(request, 'fhir/doctor/display.html', {'group_name': group_name, 'user_name': user_name, 'data': data, 'img_dir': img_dir, 'form': encounter_form})
+    return render(request, 'fhir/doctor/display.html', {'group_name': group_name, 'user_name': user_name, 'data': data, 'img_dir': img_dir, 'form': encounter_form, 'class':ENCOUNTER_CLASS_CHOICES})
 
 
-class register(View):
+class register(LoginRequiredMixin, View):
+    login_url='/login/'
     def get(self, request, group_name, user_name):
         EHRform = EHRCreationForm()
         User = get_user_model()
@@ -200,7 +204,8 @@ class register(View):
             return HttpResponse("Please enter your information")
 
 
-class upload(View):
+class upload(LoginRequiredMixin, View):
+    login_url='/login/'
     def get(self, request, group_name, user_name):
         return render(request, 'fhir/doctor/upload.html', {'group_name': group_name, 'user_name': user_name})
 
@@ -259,7 +264,8 @@ class upload(View):
             return render(request, 'fhir/doctor.html', {'message': 'Please upload your file!', 'group_name': group_name, 'user_name': user_name})
 
 
-class search(View):
+class search(LoginRequiredMixin, View):
+    login_url='/login/'
     def get(self, request, group_name, user_name):
         return render(request, 'fhir/doctor/search.html', {'group_name': group_name, 'user_name': user_name})
 
@@ -357,7 +363,8 @@ class search(View):
             return render(request, 'fhir/doctor.html', {'message': 'Please enter an identifier', 'group_name': group_name, 'user_name': user_name})
 
 
-class hanhchinh(View):
+class hanhchinh(LoginRequiredMixin, View):
+    login_url='/login/'
     def get(self, request, group_name, user_name, patient_identifier, encounter_identifier):
         patient = get_user_model()
         data = {'Patient': {}, 'Encounter': {}, 'Observation': []}
@@ -649,7 +656,8 @@ class hanhchinh(View):
             # return render(request, 'fhir/doctor.html', {'message': 'Something wrong', 'group_name': group_name, 'user_name': user_name})
 
 
-class encounter(View):
+class encounter(LoginRequiredMixin, View):
+    login_url='/login/'
     def get(self, request, group_name, user_name, patient_identifier):
         patient = get_user_model()
         data = {'Patient': {}, 'Encounter': {}, 'Observation': []}
@@ -715,7 +723,8 @@ class encounter(View):
 #         pass
 
 
-class dangky(View):
+class dangky(LoginRequiredMixin, View):
+    login_url='/login/'
     def get(self, request, group_name, user_name, patient_identifier, encounter_identifier):
         data = {'Patient': {}, 'Encounter': {}, 'Encounter_Info': {}}
         encounter_form = EncounterForm()
@@ -748,7 +757,8 @@ class dangky(View):
         return render(request, 'fhir/dangky.html', {'group_name': group_name, 'user_name': user_name, 'data': data, 'class': ENCOUNTER_CLASS_CHOICES, 'priority': ENCOUNTER_PRIORITY_CHOICES})
 
 
-class hoibenh(View):
+class hoibenh(LoginRequiredMixin, View):
+    login_url='/login/'
     def get(self, request, group_name, user_name, patient_identifier, encounter_identifier):
         data = {'Patient': {'identifier': patient_identifier},
                 'Encounter': {'identifier': encounter_identifier}}
@@ -798,7 +808,8 @@ class hoibenh(View):
         return render(request, 'fhir/hoibenh.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'condition': condition, 'clinical': CONDITION_CLINICAL_CHOICES, 'severity': CONDITION_SEVERITY_CHOICES, 'form': condition_form})
 
 
-class xetnghiem(View):
+class xetnghiem(LoginRequiredMixin, View):
+    login_url='/login/'
     def get(self, request, group_name, user_name, patient_identifier, encounter_identifier):
         data = {'Patient': {'identifier': patient_identifier},
                 'Encounter': {'identifier': encounter_identifier}}
@@ -845,7 +856,8 @@ class xetnghiem(View):
 #         pass
 
 
-class service(View):
+class service(LoginRequiredMixin, View):
+    login_url='/login/'
     def get(self, request):
         pass
 
@@ -944,7 +956,8 @@ class service(View):
         return render(request, 'fhir/xetnghiem.html', {'group_name': group_name, 'user_name': user_name, 'data': data, 'services': services, 'observations': observations})
 
 
-class ketqua(View):
+class ketqua(LoginRequiredMixin, View):
+    login_url='/login/'
     def get(self, request, group_name, user_name, patient_identifier, encounter_identifier, service_identifier):
         data = {'Patient': {'identifier': patient_identifier}, 'Encounter': {
             'identifier': encounter_identifier}, 'Service': {'identifier': service_identifier}}
@@ -976,7 +989,8 @@ class ketqua(View):
         return render(request, 'fhir/xetnghiem.html', {'group_name': group_name, 'user_name': user_name, 'data': data, 'services': services, 'observations': observations})
 
 
-class save(View):
+class save(LoginRequiredMixin, View):
+    login_url='/login/'
     def get(self, request, group_name, user_name, patient_identifier, encounter_identifier):
         data = {'Patient': {}, 'Encounter': {}, 'Condition': []}
         patient = dt.query_patient(patient_identifier)
@@ -1194,7 +1208,8 @@ class save(View):
             return HttpResponse('Something Wrong')
 
 
-class toanthan(View):
+class toanthan(LoginRequiredMixin, View):
+    login_url='/login/'
     def get(self, request, group_name, user_name, patient_identifier, encounter_identifier):
         data = {'Patient': {'identifier': patient_identifier},
                 'Encounter': {'identifier': encounter_identifier}}
@@ -1242,7 +1257,8 @@ class toanthan(View):
         return render(request, 'fhir/toanthan.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'observations': observations})
 
 
-class thuthuat(View):
+class thuthuat(LoginRequiredMixin, View):
+    login_url='/login/'
     def get(self, request, group_name, user_name, patient_identifier, encounter_identifier):
         data = {'Patient': {'identifier': patient_identifier},
                 'Encounter': {'identifier': encounter_identifier}}
@@ -1278,7 +1294,8 @@ class thuthuat(View):
         return render(request, 'fhir/thuthuat.html', {'data': data, 'group_name': group_name, 'user_name': user_name,  'form': procedure_form, 'procedures': procedures, 'procedure_category': PROCEDURE_CATEGORY_CHOICES})
 
 
-class chitietthuthuat(View):
+class chitietthuthuat(LoginRequiredMixin, View):
+    login_url='/login/'
     def get(self, request, group_name, user_name, patient_identifier, encounter_identifier, procedure_identifier):
         data = {'Patient': {'identifier': patient_identifier},
                 'Encounter': {'identifier': encounter_identifier}}
@@ -1310,7 +1327,8 @@ class chitietthuthuat(View):
         return render(request, 'fhir/chitietthuthuat.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'services': services, 'procedure': procedure_instance, 'form': form})
 
 
-class thuoc(View):
+class thuoc(LoginRequiredMixin, View):
+    login_url='/login/'
     def get(self, request, group_name, user_name, patient_identifier, encounter_identifier):
         data = {'Patient': {'identifier': patient_identifier},
                 'Encounter': {'identifier': encounter_identifier}}
@@ -1343,7 +1361,8 @@ class thuoc(View):
         return render(request, 'fhir/thuoc.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'medications': medications, 'form': medication_form})
 
 
-class chitietxetnghiem(View):
+class chitietxetnghiem(LoginRequiredMixin, View):
+    login_url='/login/'
     def get(self, request, group_name, user_name, patient_identifier, encounter_identifier, service_identifier):
         data = {'Patient': {'identifier': patient_identifier},
                 'Encounter': {'identifier': encounter_identifier}}

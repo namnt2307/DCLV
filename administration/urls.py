@@ -4,6 +4,6 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 app_name = 'administration'
-# urlpatterns = [
-#     path
-# ]
+urlpatterns = [
+    path("", views.administration_view, name="administration"),
+]

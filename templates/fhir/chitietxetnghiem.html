@@ -11,14 +11,16 @@
     {% if service %}
         <h1>KẾT QUẢ XÉT NGHIỆM</h1>
         <table>
-            <tr>
-                <td>Tên xét nghiệm</td>
-                <td>Kết quả</td>
-            </tr>
+            <thead>
+                <th>Tên xét nghiệm</th>
+                <th>Kết quả</th>
+            </thead>
             <tr>
                 <td colspan="2"><b>{{service.service_code}}</b></td>
             </tr>
+            
             {% if service.service_status == 'active'%}
+            <tbody>
                 <form action="" method="POST">
                 {%csrf_token%}
                 {%for observation in observations%}
@@ -31,6 +33,7 @@
                     <td colspan="2"><button type="submit">Lưu lại</button></td>
                 </tr>
             </form>
+        </tbody>
             {%else%}
                 <tbody id='data'>
                 {%for observation in observations%}
@@ -57,10 +60,8 @@
                 </tbody>
 
             {%endif%}
+            <td colspan="2"><button id="clickButton" onclick="changeDisplay()">Chỉnh sửa</button></td>
         </table>
-        <div class="button">
-            <button id="clickButton" onclick="changeDisplay()">Chỉnh sửa</button>
-        </div>
         <script>
             function changeDisplay(){
                 button = document.getElementById('clickButton');
@@ -68,11 +69,11 @@
                 form = document.getElementById('form');
                 if (button.textContent == "Chỉnh sửa"){
                     data.style.display = "none";
-                    form.style.display = "block";
+                    form.style.display = "table-row-group";
                     button.textContent = "Hủy bỏ"
                 }
                 else{
-                    data.style.display = "block";
+                    data.style.display = "table-row-group";
                     form.style.display = "none";
                     button.textContent = "Chỉnh sửa"
                 }

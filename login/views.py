@@ -21,6 +21,8 @@ class login_app(View):
             login(request, my_user)
             group_name = custom_user_model.objects.get(
                 username=user_name).group_name
+            if group_name == "administrator":
+                return HttpResponseRedirect(f'/administration/')
             return HttpResponseRedirect(f'/user/{group_name}/{user_name}')
         else:
             message = 'Người dùng không tồn tại'

@@ -8,56 +8,19 @@
 {%block url7%}'{%url 'fhir:thuoc' group_name user_name data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
 {% load widget_tweaks %}
 {%block function%}
-<style>
-    .servicePopup {
-        position: relative;
-        text-align: center;
-        width: 100%;
-      }
-      .formPopup {
-        display: none;
-        position: fixed;
-        left: 45%;
-        top: 5%;
-        transform: translate(-50%, 5%);
-        border: 3px solid #999999;
-        z-index: 9;
-      }
-      .formContainer {
-        max-width: 300px;
-        padding: 20px;
-        background-color: #fff;
-      }
-      .formContainer .btn {
-        padding: 12px 20px;
-        border: none;
-        background-color: #8ebf42;
-        color: #fff;
-        cursor: pointer;
-        width: 100%;
-        margin-bottom: 15px;
-        opacity: 0.8;
-      }
-      .formContainer .cancel {
-        background-color: #cc0000;
-      }
-      .formContainer .btn:hover,
-      .openButton:hover {
-        opacity: 1;
-      }
-</style>
 <h1>THUỐC</h1>
 <table>
-    <tr>
-        <td>Thuốc</td>
-        <td>Lý do dùng thuốc</td>
-        <td>Bắt đầu dùng thuốc từ</td>
-        <td>Tần suất dùng thuốc</td>
-        <td>Liều dùng</td>
-        <td>Thời gian sử dụng</td>
-        <td>Đường dùng</td>
-        <td>Ngày chỉ định</td>
-    </tr>
+    <thead>
+        <th>Thuốc</th>
+        <th>Lý do dùng thuốc</th>
+        <th>Bắt đầu dùng thuốc từ</th>
+        <th>Tần suất dùng thuốc</th>
+        <th>Liều dùng</th>
+        <th>Thời gian sử dụng</th>
+        <th>Đường dùng</th>
+        <th>Ngày chỉ định</th>
+    </thead>
+    <tbody>
     {% if medications %}
         {% for medication in medications %}
         <tr>
@@ -76,7 +39,9 @@
                 <p>Hướng dẫn đặc biệt: {{medication.dosage_patient_instruction}}</p>
             </td>
         </tr>
+    </tbody>
         <div class="formPopup" id="{{medication.medication_identifier}}" style="display: none;">
+            <div class="formContainer">
             <form action="" method="POST" class="formContainer">
                 {%csrf_token%}
             {%with 'value:'|add:medication.medication_identifier as code%}
@@ -145,22 +110,25 @@
             {{form.dosage_patient_instruction|attr:code}}
             {%endwith%}
             <br>
-            <button type="submit">Lưu lại</button>
+            <button type="submit" class="btn">Lưu lại</button>
             <button type="button" class="btn cancel" onclick="closeForm('{{medication.medication_identifier}}')">Close</button>
         </form>
-        </div>
-        <td><button class="submit-button" onclick="openForm('{{medication.medication_identifier}}')">Chỉnh sửa</button></td>
+    </div>
+    </div>
+        <td colspan="8"><button class="submit-button" onclick="openForm('{{medication.medication_identifier}}')">Chỉnh sửa</button></td>
         {% endfor %}
     {% endif %}
 
     <div>
         <div class="formPopup" id="thuocForm">
+            <div class="formContainer">
         <form action="" method="POST">
             {%csrf_token%}
             {{form.as_p}}
             <button type="submit" class="btn">Add</button>
             <button type="button" class="btn cancel" onclick="closeForm('thuocForm')">Close</button>
         </form>
+    </div>
     </div>
     </div>
     <tr>

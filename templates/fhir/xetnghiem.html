@@ -11,31 +11,33 @@
 {%block function%}
 <h1>CÁC XÉT NGHIỆM</h1>
 <table>
-    <tr>
-        <td>ID xét nghiệm</td>
-        <td>Tên xét nghiệm</td>
-        <td>Tình trạng xét nghiệm</td>
-        <td>Ngày dự kiến thực hiện xét nghiệm</td>
-        <td>Ngày yêu cầu xét nghiệm</td>
-        <td>Bác sĩ yêu cầu xét nghiệm</td>
-        <td>Ghi chú cho xét nghiệm</td>
-    </tr>
+    <thead>
+        <th>ID xét nghiệm</th>
+        <th>Tên xét nghiệm</th>
+        <th>Tình trạng xét nghiệm</th>
+        <th>Ngày dự kiến thực hiện xét nghiệm</th>
+        <th>Ngày yêu cầu xét nghiệm</th>
+        <th>Bác sĩ yêu cầu xét nghiệm</th>
+        <th>Ghi chú cho xét nghiệm</th>
+    </thead>
+    <tbody>
     {% if services %}
         {% for service in services %}
         <tr>
             <td><a href="{%url 'fhir:chitietxetnghiem' group_name user_name data.Patient.identifier data.Encounter.identifier service.service_identifier%}"">{{service.service_identifier}}</a></td>
             <td>{{service.service_code}}</td>
             <td>{{service.service_status}}</td>
-            <td>{{service.service_occurrence}}</td>
-            <td>{{service.service_authored}}</td>
+            <td>{{service.service_occurrence|date:"d-m-Y"}}</td>
+            <td>{{service.service_authored|date:"d-m-Y"}}</td>
             <td>{{service.service_requester}}</td>
             <td>{{service.service_note}}</td>
         </tr>
         {% endfor %}
     {% endif %}
-
+</tbody>
     <div>
         <div class="formPopup" id="serviceForm">
+        <div class="formContainer">
         <form action="" method="POST">
             {%csrf_token%}
             {{form.as_p}}
@@ -44,8 +46,9 @@
         </form>
     </div>
     </div>
+    </div>
     <tr>
-        <td colspan="6"><button class="float-left submit-button" onclick="openForm('serviceForm')">Thêm xét nghiệm</button></td>
+        <td colspan="7"><button class="float-left submit-button" onclick="openForm('serviceForm')">Thêm xét nghiệm</button></td>
     </tr>
 </table>
 {%endblock%}

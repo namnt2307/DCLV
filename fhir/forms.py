@@ -1,11 +1,12 @@
 from django import forms
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
-from django.forms import fields
+from django.forms import fields, widgets
 from lib.tools import generate_password
 from .models import EncounterModel, ServiceRequestModel, ProcedureModel, AllergyModel, UserModel, ConditionModel, ObservationModel, ProcedureModel, MedicationModel
 
-
+class DateInput(forms.DateInput):
+    input_type = 'date'
 class EHRCreationForm(forms.ModelForm):
     birthDate = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}))
 
@@ -37,8 +38,7 @@ class UserForm(forms.ModelForm):
 
 
 class ConditionForm(forms.ModelForm):
-    condition_onset = forms.DateField(
-        widget=forms.DateInput(attrs={'type': 'date'}))
+    
 
     class Meta:
         model = ConditionModel
@@ -49,6 +49,9 @@ class ConditionForm(forms.ModelForm):
             'condition_clinicalstatus': 'Tình trạng',
             'condition_onset': 'Dấu hiệu bắt đầu từ ngày',
             'condition_severity': 'Mức độ',
+        }
+        widgets = {
+            'condition_onset': DateInput()
         }
 
 
@@ -93,7 +96,6 @@ class ProcedureDetailForm(forms.ModelForm):
 
 
 class MedicationForm(forms.ModelForm):
-    medication_effective = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}))
     class Meta:
         model = MedicationModel
         fields = (
@@ -113,10 +115,13 @@ class MedicationForm(forms.ModelForm):
             'dosage_additional_instruction': 'Hướng dẫn thêm',
             'dosage_patient_instruction': 'Hướng dẫn đặc biệt'
         }
+        widgets = {
+            'medication_effective': DateInput()
+        }
 
 
 class ServiceRequestForm(forms.ModelForm):
-    service_occurrence = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}))
+    
     class Meta:
         model = ServiceRequestModel
         fields = (
@@ -126,4 +131,7 @@ class ServiceRequestForm(forms.ModelForm):
             'service_code': 'Tên xét nghiệm',
             'service_occurrence': 'Ngày dự kiến thực hiện xét nghiệm',
             'service_note': 'Ghi chú thêm'
+        }
+        widgets = {
+            'service_occurrence': DateInput()
         }

@@ -15,57 +15,10 @@
 {%block function %}
 {% load static %}
 <link rel="stylesheet" href="{% static 'css/fhir/display.css'%}">
-<style>
-    
-  .servicePopup {
-    position: relative;
-    text-align: center;
-    width: 100%;
-}
 
-.formPopup {
-    display: none;
-    transform: translate(-50%, 5%);
-    border: 3px solid #999999;
-    z-index: 9;
-    text-align: center;
-    width: 60%;
-    height: 50%;
-
-}
-
-.formContainer {
-    max-width: 100%;
-    padding: 20px;
-    background-color: #fff;
-    text-align: left;
-    max-height: 100%;
-    height: 100%;
-}
-
-.formContainer .btn {
-    padding: 12px 20px;
-    border: none;
-    background-color: #8ebf42;
-    color: #fff;
-    cursor: pointer;
-    width: 100%;
-    margin-bottom: 15px;
-    opacity: 0.8;
-}
-
-.formContainer .cancel {
-    background-color: #cc0000;
-}
-
-.formContainer .btn:hover,
-.openButton:hover {
-    opacity: 1;
-}
-</style>
 <div class="display-box">
     <div class="display-data">
-        <h1>Thông tin bệnh nhân</h1>
+        <h1>THÔNG TIN BỆNH NHÂN</h1>
         <div class="patient-data">
             <div class="text-data">
                 <div class="name patient">
@@ -101,29 +54,29 @@
         </div>
         <h1>CÁC LẦN ĐĂNG KÝ KHÁM </h1>
         <table>
-            <tr>
-                <td>Ngày đăng ký</td>
-                <td>Mã đợt khám</td>
-                <td>Loại thăm khám</td>
-                <td>Tình trạng thăm khám</td>
-                <td>Ngày kết thúc</td>
-            </tr>
+            <thead>
+                <th>Ngày đăng ký</th>
+                <th>Mã đợt khám</th>
+                <th>Loại thăm khám</th>
+                <th>Tình trạng thăm khám</th>
+                <th>Ngày kết thúc</th>
+            </thead>
             {%if data.Encounter%}
             {%if data.encounter_type == 'list'%}
             {%for encounter in data.Encounter%}
             <tr>
-                <td>{{encounter.encounter_start}}</td>
+                <td>{{encounter.encounter_start|date:"d-m-Y H:i:s"}}</td>
                 <td><a
                         href="{% url 'fhir:hanhchinh' group_name user_name data.Patient.identifier encounter.encounter_identifier %}">{{encounter.encounter_identifier}}</a>
                 </td>
-                <td>{{encounter.encounter_class}}</td>
+                <td>{{class|get_item:encounter.encounter_class}}</td>
                 {% if encounter.encounter_status == 'in-progress' %}
                 <td> Đang Khám</td>
                 {%elif encounter.encounter_status == 'finished'%}
                 <td>Đã Khám xong</td>
                 {%endif%}
                 {%if encounter.encounter_end%}
-                <td>{{encounter.encounter_end}}</td>
+                <td>{{encounter.encounter_end|date:"d-m-Y H:i:s"}}</td>
                 {%endif%}
             </tr>
             {%endfor%}
@@ -163,7 +116,7 @@
         location.href = "{% url 'fhir:encounter' group_name user_name data.Patient.identifier%} ";
     };
 </script>
-</script>
+
 </div>
 <div>
     <script>

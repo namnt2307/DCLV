@@ -6,44 +6,6 @@
 <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-<style>
-    .servicePopup {
-        position: relative;
-        text-align: center;
-        width: 100%;
-      }
-      .formPopup {
-        display: none;
-        position: fixed;
-        left: 45%;
-        top: 5%;
-        transform: translate(-50%, 5%);
-        border: 3px solid #999999;
-        z-index: 9;
-      }
-      .formContainer {
-        max-width: 300px;
-        padding: 20px;
-        background-color: #fff;
-      }
-      .formContainer .btn {
-        padding: 12px 20px;
-        border: none;
-        background-color: #8ebf42;
-        color: #fff;
-        cursor: pointer;
-        width: 100%;
-        margin-bottom: 15px;
-        opacity: 0.8;
-      }
-      .formContainer .cancel {
-        background-color: #cc0000;
-      }
-      .formContainer .btn:hover,
-      .openButton:hover {
-        opacity: 1;
-      }
-</style>
 {% comment %} <div class="top-menu">
     <ul class="menu">
         <li><a href="{% url 'fhir:user_detail'  group_name user_name %}"><i class="fa fa-home" aria-hidden="true"></i> </a></li>
@@ -114,7 +76,7 @@
         </ul> {% endcomment %}
     
     </div>
-    <div class="verticle-line"></div>
+    {%comment%}<div class="verticle-line"></div>{%endcomment%}
     <div class="right-body">
         {%if message%}
             <script>

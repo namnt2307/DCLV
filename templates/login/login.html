@@ -124,11 +124,13 @@
                     <input type="submit" class="btn btn-block btn-login" >
                 </div>
             </div>
+            {%comment%}
             <div class="register">
                 <h4>
                     <a href="{% url 'login:register'%}" >Register</a>
                 </h4>
             </div>
+            {%endcomment%}
         </form>
 </div>
 {%if message%}
