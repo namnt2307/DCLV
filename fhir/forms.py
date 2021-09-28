@@ -96,7 +96,24 @@ class ProcedureDetailForm(forms.ModelForm):
 
 
 class MedicationForm(forms.ModelForm):
+
     class Meta:
+        DOSAGE_WHEN_CHOICES = (
+        ('HS', 'dùng trước khi đi ngủ'),
+        ('WAKE', 'dùng sau khi thức dậy'),
+        ('C', 'dùng trong bữa ăn'),
+        ('CM', 'dùng trong bữa sáng'),
+        ('CD', 'dùng trong bữa trưa'),
+        ('CV', 'dùng trong bữa tối'),
+        ('AC', 'dùng trước bữa ăn'),
+        ('ACM', 'dùng trước bữa sáng'),
+        ('ACD', 'dùng trước bữa trưa'),
+        ('ACV', 'dùng trước bữa tối'),
+        ('PC', 'dùng sau bữa ăn'),
+        ('PCM', 'dùng sau bữa sáng'),
+        ('PCD', 'dùng sau bữa trưa'),
+        ('PCV', 'dùng sau bữa tối')
+        )
         model = MedicationModel
         fields = (
             'medication_medication', 'medication_reason_code', 'medication_effective', 'dosage_frequency', 'dosage_period', 'dosage_duration', 'dosage_route', 'dosage_quantity', 'dosage_when', 'dosage_offset', 'dosage_additional_instruction', 'dosage_patient_instruction'
@@ -116,7 +133,8 @@ class MedicationForm(forms.ModelForm):
             'dosage_patient_instruction': 'Hướng dẫn đặc biệt'
         }
         widgets = {
-            'medication_effective': DateInput()
+            'medication_effective': DateInput(),
+            'dosage_when': forms.Select(choices=DOSAGE_WHEN_CHOICES ,attrs={'onchange':'whenFunction();'})
         }
 
 

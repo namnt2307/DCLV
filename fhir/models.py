@@ -188,6 +188,22 @@ class AllergyModel(models.Model):
 
 
 class MedicationModel(models.Model):
+    DOSAGE_WHEN_CHOICES = (
+        ('HS', 'dùng trước khi đi ngủ'),
+        ('WAKE', 'dùng sau khi thức dậy'),
+        ('C', 'dùng trong bữa ăn'),
+        ('CM', 'dùng trong bữa sáng'),
+        ('CD', 'dùng trong bữa trưa'),
+        ('CV', 'dùng trong bữa tối'),
+        ('AC', 'dùng trước bữa ăn'),
+        ('ACM', 'dùng trước bữa sáng'),
+        ('ACD', 'dùng trước bữa trưa'),
+        ('ACV', 'dùng trước bữa tối'),
+        ('PC', 'dùng sau bữa ăn'),
+        ('PCM', 'dùng sau bữa sáng'),
+        ('PCD', 'dùng sau bữa trưa'),
+        ('PCV', 'dùng sau bữa tối')
+    )
     encounter_identifier = models.ForeignKey(
         EncounterModel, on_delete=models.CASCADE)
     medication_identifier = models.CharField(max_length=100, primary_key=True)
@@ -202,7 +218,7 @@ class MedicationModel(models.Model):
     dosage_duration = models.CharField(max_length=100)
     dosage_route = models.CharField(max_length=100)
     dosage_quantity = models.CharField(max_length=100)
-    dosage_when = models.CharField(max_length=100)
+    dosage_when = models.CharField(choices=DOSAGE_WHEN_CHOICES, max_length=100, blank=True)
     dosage_offset = models.CharField(max_length=100,default=0)
 
 

@@ -35,7 +35,7 @@
         </tr>
         <tr>
             <td colspan="8">
-                <p>Hướng dẫn sử dụng: Dùng thuốc {{medication.dosage_when}} {%if medication.dosage_offset != '0'%}{{medication.dosage_offset}} phút {%endif%}, {{medication.dosage_additional_instruction}}</p>
+                <p>Hướng dẫn sử dụng: {{when|get_item:medication.dosage_when}} {%if medication.dosage_offset != '0'%}{{medication.dosage_offset}} phút {%endif%}, {{medication.dosage_additional_instruction}}</p>
                 <p>Hướng dẫn đặc biệt: {{medication.dosage_patient_instruction}}</p>
             </td>
         </tr>
@@ -135,4 +135,12 @@
         <td colspan="8"><button class="float-left submit-button" onclick="openForm('thuocForm')">Thêm thuốc</button></td>
     </tr>
 </table>
+<script>
+    function whenFunction(){
+        var select = document.getElementById('id_dosage_when');
+        console.log(select);
+        var value = select.getAttribute('value');
+        console.log(value);
+    }
+</script>
 {%endblock%}

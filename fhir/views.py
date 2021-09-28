@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import HttpResponse, request, HttpResponseRedirect
 from django.views import View
 from django.contrib.auth.decorators import login_required
@@ -26,11 +26,34 @@ def get_item(dictionary, key):
     return dictionary.get(key)
 
 
+DOSAGE_WHEN_CHOICES = {
+    'HS': 'dùng trước khi đi ngủ',
+    'WAKE': 'dùng sau khi thức dậy',
+    'C': 'dùng trong bữa ăn',
+    'CM': 'dùng trong bữa sáng',
+    'CD': 'dùng trong bữa trưa',
+    'CV': 'dùng trong bữa tối',
+    'AC': 'dùng trước bữa ăn',
+    'ACM': 'dùng trước bữa sáng',
+    'ACD': 'dùng trước bữa trưa',
+    'ACV': 'dùng trước bữa tối',
+    'PC': 'dùng sau bữa ăn',
+    'PCM': 'dùng sau bữa sáng',
+    'PCD': 'dùng sau bữa trưa',
+    'PCV': 'dùng sau bữa tối'
+}
+
+
 GENDER_CHOICES = {
     'male': 'Nam',
     'female': 'Nữ'
 }
 
+PROCEDURE_OUTCOME_CHOICES = {
+    'thành công': '385669000',
+    'không thành công': '385671000',
+    'thành công một phần': '385670004'
+}
 
 ENCOUNTER_CLASS_CHOICES = {
     'IMP': 'Nội trú',
@@ -144,11 +167,11 @@ ns = {'d': "http://hl7.org/fhir"}
 
 def createobservations(encounter_instance, service_identifier, service_name):
     request_observations = service_dict.get(service_name, None)
+    service_instance = ServiceRequestModel.objects.get(service_identifier=service_identifier)
     i = 1
-    print(request_observations)
     if request_observations:
         for key, value in request_observations.items():
-            ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_identifier, observation_identifier=service_identifier +
+            ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_instance, observation_identifier=service_identifier +
                                             '_' + str(i), observation_code=key, observation_category='laboratory', observation_value_unit=value['unit'], observation_reference_range=value['ref_range'])
             i += 1
     else:
@@ -231,6 +254,7 @@ class register(LoginRequiredMixin, View):
             get_patient = requests.get(fhir_server + "/Patient?identifier=urn:trinhcongminh|" +
                                        data['Patient']['identifier'], headers={'Content-type': 'application/xml'})
             if get_patient.status_code == 200 and 'entry' in get_patient.content.decode('utf-8'):
+                print(get_patient.content.decode('utf-8'))
                 data['Patient']['id'] = dt.query_patient(
                     data['Patient']['identifier'])['id']
             patient = dt.create_patient_resource(data['Patient'])
@@ -274,7 +298,8 @@ class register(LoginRequiredMixin, View):
                             user_n.group_name = 'patient'
                             user_n.save()
                             form.save()
-                        return render(request, 'fhir/doctor/display.html', {'group_name': group_name, 'user_name': user_name, 'data': data, 'form': encounter_form})
+                        return redirect('/user/'+group_name+'/'+user_name+'/' + 'display-detail'+ '/'+ data['Patient']['identifier'])
+                        # return render(request, 'fhir/doctor/display.html', {'group_name': group_name, 'user_name': user_name, 'data': data, 'form': encounter_form})
                     else:
                         return HttpResponse("Something wrong when trying to register patient")
         else:
@@ -831,6 +856,7 @@ class encounter(LoginRequiredMixin, View):
         data['Encounter']['identifier'] = newencounter_identifier
         data['Encounter_Info'] = EncounterModel.objects.get(
             encounter_identifier=newencounter_identifier)
+        return redirect('/user/'+group_name+'/' + user_name+'/encounter/'+patient_identifier+'/' + newencounter_identifier + '/hanhchinh')
         return render(request, 'fhir/hanhchinh.html', {'group_name': group_name, 'user_name': user_name, 'data': data})
 
 
@@ -1207,7 +1233,7 @@ class khambenh(LoginRequiredMixin, View):
                         condition_object['condition_use'] = 'admission'
                         condition_object['condition_asserter'] = user_name
                         ConditionModel.objects.create(encounter_identifier=encounter_instance, **condition_object)
-        observation_instances = ObservationModel.objects.filter(encounter_identifier=encounter_instance, observation_category='laboratory')
+        observation_instances = ObservationModel.objects.filter(encounter_identifier=encounter_instance, observation_category='vital-signs')
         observation_objects = {}
         for instance in observation_instances:
             if instance.observation_code.lower() == 'mạch':
@@ -1227,47 +1253,36 @@ class khambenh(LoginRequiredMixin, View):
         condition_objects={}
         toanthan = ConditionModel.objects.filter(encounter_identifier=encounter_instance, condition_use='admission', condition_category='toanthan')
         if toanthan:
-            print(toanthan)
             condition_objects['toanthan'] = toanthan
         tuanhoan = ConditionModel.objects.filter(encounter_identifier=encounter_instance, condition_use='admission', condition_category='tuanhoan')
         if tuanhoan:
-            print(tuanhoan)
             condition_objects['tuanhoan'] = tuanhoan
         hohap = ConditionModel.objects.filter(encounter_identifier=encounter_instance, condition_use='admission', condition_category='hohap')
         if hohap:
-            print(hohap)
             condition_objects['hohap'] = hohap
         tieuhoa = ConditionModel.objects.filter(encounter_identifier=encounter_instance, condition_use='admission', condition_category='tieuhoa')
         if tieuhoa:
-            print(tieuhoa)
             condition_objects['tieuhoa'] = tieuhoa
         tts = ConditionModel.objects.filter(encounter_identifier=encounter_instance, condition_use='admission', condition_category='tts')
         if tts:
-            print(tts)
             condition_objects['tts'] = tts
         thankinh = ConditionModel.objects.filter(encounter_identifier=encounter_instance, condition_use='admission', condition_category='thankinh')
         if thankinh:
-            print(thankinh)
             condition_objects['thankinh'] = thankinh
         cxk = ConditionModel.objects.filter(encounter_identifier=encounter_instance, condition_use='admission', condition_category='cxk')
         if cxk:
-            print(cxk)
             condition_objects['cxk'] = cxk
         tmh = ConditionModel.objects.filter(encounter_identifier=encounter_instance, condition_use='admission', condition_category='tmh')
         if tmh:
-            print(tmh)
             condition_objects['tmh'] = tmh
         rhm = ConditionModel.objects.filter(encounter_identifier=encounter_instance, condition_use='admission', condition_category='rhm')
         if rhm:
-            print(rhm)
             condition_objects['rhm'] = rhm
         mat = ConditionModel.objects.filter(encounter_identifier=encounter_instance, condition_use='admission', condition_category='mat')
         if mat:
-            print(mat)
             condition_objects['mat'] = mat
         noitiet = ConditionModel.objects.filter(encounter_identifier=encounter_instance, condition_use='admission', condition_category='noitiet')
         if noitiet:
-            print(noitiet)
             condition_objects['noitiet'] = noitiet
         context = {
             'data': data,
@@ -1599,7 +1614,7 @@ class thuoc(LoginRequiredMixin, View):
         medications = MedicationModel.objects.all().filter(
             encounter_identifier=encounter_instance)
         medication_form = MedicationForm()
-        return render(request, 'fhir/thuoc.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'medications': medications, 'form': medication_form})
+        return render(request, 'fhir/thuoc.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'medications': medications, 'form': medication_form, 'when': DOSAGE_WHEN_CHOICES})
 
     def post(self, request, group_name, user_name, patient_identifier, encounter_identifier):
         data = {'Patient': {'identifier': patient_identifier},
@@ -1607,7 +1622,7 @@ class thuoc(LoginRequiredMixin, View):
         encounter_instance = EncounterModel.objects.get(
             encounter_identifier=encounter_identifier)
         form = MedicationForm(request.POST)
-        print(form)
+        print(request.POST['dosage_when'])
         if form.is_valid():
             medication = form.save(commit=False)
             medication.encounter_identifier = encounter_instance
@@ -1887,8 +1902,6 @@ class save(LoginRequiredMixin, View):
         data['Encounter']['serviceType'] = encounter_instance.encounter_service
         data['Encounter']['priority'] = encounter_instance.encounter_priority
         data['Encounter']['reasonCode'] = encounter_instance.encounter_reason
-        delta = encounter_instance.encounter_start.date(
-        ) - encounter_instance.encounter_end.date()
         data['Encounter']['length'] = encounter_instance.encounter_length
         if get_encounter:
             data['Encounter']['id'] = get_encounter['id']
@@ -1928,17 +1941,17 @@ class save(LoginRequiredMixin, View):
                 else:
                     post_condition = requests.post(fhir_server + "/Condition/", headers={
                         'Content-type': 'application/xml'}, data=condition_data.decode('utf-8'))
-                get_condition = dt.query_condition(condition['identifier'])
+            #     get_condition = dt.query_condition(condition['identifier'])
                
-                conditions.append(
-                    {'id': get_condition['id'], 'use': condition_instance.condition_use})
+            #     conditions.append(
+            #         {'id': get_condition['id'], 'use': condition_instance.condition_use})
 
-            data['Encounter']['conditions'] = conditions
-            data['Encounter']['id'] = encounter['id']
-            encounter_data = dt.create_encounter_resource(
-                data['Encounter'], patient['id'], patient['name'], practitioner['id'])
-            put_encounter = requests.put(fhir_server + "/Encounter/" + encounter['id'], headers={
-                'Content-type': 'application/xml'}, data=encounter_data.decode('utf-8'))
+            # data['Encounter']['conditions'] = conditions
+            # data['Encounter']['id'] = encounter['id']
+            # encounter_data = dt.create_encounter_resource(
+            #     data['Encounter'], patient['id'], patient['name'], practitioner['id'])
+            # put_encounter = requests.put(fhir_server + "/Encounter/" + encounter['id'], headers={
+            #     'Content-type': 'application/xml'}, data=encounter_data.decode('utf-8'))
             service_instances = ServiceRequestModel.objects.all().filter(
                 encounter_identifier=encounter_identifier)
             for service_instance in service_instances:
@@ -2045,7 +2058,6 @@ class save(LoginRequiredMixin, View):
                     try:
                         diagnostic_report_instance = DiagnosticReportModel.objects.get(encounter_identifier=encounter_instance,
                             service_identifier=service_instance)
-                        print(diagnostic_report_instance)
                         put_diagnostic_report = None
                         post_diagnostic_report = None
                         diagnostic_report = {}
@@ -2061,10 +2073,8 @@ class save(LoginRequiredMixin, View):
                             diagnostic_report['identifier'])
                         if get_diagnostic_report:
                             diagnostic_report['id'] = get_diagnostic_report['id']
-                        print(diagnostic_report)
                         diagnostic_report_data = dt.create_diagnostic_report_resource(
                             diagnostic_report, patient['id'], patient['name'],encounter['id'], service_query['id'])
-                        print(diagnostic_report_data)
                         if get_diagnostic_report:
                             put_diagnostic_report = requests.put(fhir_server + '/DiagnosticReport/' + diagnostic_report['id'], headers={
                                 'Content-type': 'application/xml'}, data=diagnostic_report_data.decode('utf-8'))
@@ -2151,7 +2161,11 @@ class view(LoginRequiredMixin, View):
                 'Observation': {}}
         patient = get_user_model().objects.get(identifier=patient_identifier)
         encounter = EncounterModel.objects.get(encounter_identifier=encounter_identifier)
-        condition = ConditionModel.objects.get(encounter_identifier=encounter_identifier, condition_use='admission')
+        try:
+            condition = ConditionModel.objects.get(encounter_identifier=encounter_identifier, condition_use='admission')
+        except Exception as e:
+            condition = None
+            print(e)
         observations = ObservationModel.objects.all().filter(encounter_identifier=encounter_identifier, observation_category='vital-signs')
         for observation in observations:
             if observation.observation_code.lower() == 'mạch':

@@ -328,9 +328,9 @@ def create_patient_resource(patient):
         elif patient['gender'] == 'Nữ':
             code = 'female'
         gender.set('value', code)
-    if patient.get('birthDate'):
+    if patient.get('birthdate'):
         birthDate = ET.SubElement(root, 'birthDate')
-        birthDate.set('value', patient['birthDate'])
+        birthDate.set('value', patient['birthdate'])
     if patient.get('home_address'):
         address = ET.SubElement(root, 'address')
         address_type(address, patient['home_address'], use='home')

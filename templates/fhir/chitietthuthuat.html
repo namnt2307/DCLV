@@ -19,7 +19,7 @@
        
         {%elif procedure.procedure_status == 'completed'%}
             <div id="data">
-                <p>Ngày thực hiện: {{procedure.procedure_performed_dateTime|date:"d-m-Y H:i:s"}}</p>
+                <p>Ngày thực hiện: {{procedure.procedure_performed_datetime|date:"d-m-Y H:i:s"}}</p>
                 <p>Kết quả thủ thuật, phẫu thuật: {{procedure.procedure_outcome}}</p>
                 <p>Các biến chứng sau thủ thuật, phẫu thuật: {{procedure.procedure_complication}}</p>
                 <p>Các hướng dẫn bệnh nhân sau thủ thuật, phẫu thuật: {{procedure.procedure_follow_up}}</p>
