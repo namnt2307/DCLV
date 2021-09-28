@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models.deletion import CASCADE
 from django.db.models.enums import Choices
 # Create your models here.
 from login.models import myUser
@@ -54,6 +55,7 @@ class EncounterModel(models.Model):
     encounter_identifier = models.CharField(max_length=100, primary_key=True)
     encounter_start = models.DateTimeField(default=datetime.now)
     encounter_end = models.DateTimeField(null=True)
+    encounter_length = models.CharField(max_length=100, null=True)
     encounter_status = models.CharField(max_length=20, default='in-progress')
     encounter_class = models.CharField(
         default="AMB", null=True, max_length=10, choices=CLASS_CHOICES)
@@ -64,6 +66,7 @@ class EncounterModel(models.Model):
         null=True, max_length=10, choices=PRIORITY_CHOICES)
     encounter_reason = models.CharField(null=True, max_length=10)
     # encounter_location = models.CharField(null=True,max_length=20, choices=LOCATION_CHOICES)
+    encounter_participant = models.CharField(max_length=100, null=True)
     encounter_submitted = models.BooleanField(default=False)
 
 
@@ -74,7 +77,7 @@ class UserModel(models.Model):
     )
     identifier = models.CharField(primary_key=True, max_length=10)
     name = models.CharField(default='', max_length=100)
-    birthDate = models.DateField(default=datetime.now)
+    birthdate = models.DateField(default=datetime.now)
     gender = models.CharField(max_length=3, choices=GENDER_CHOICES, default='')
     work_address = models.CharField(default='', max_length=255)
     home_address = models.CharField(default='', max_length=255)
@@ -102,9 +105,13 @@ class ConditionModel(models.Model):
     condition_code = models.CharField(max_length=100, default='')
     condition_clinicalstatus = models.CharField(
         max_length=100, choices=CLINICAL_CHOICES)
-    condition_onset = models.DateTimeField(default='')
+    condition_category = models.CharField(max_length=100, null=True)
+    condition_use = models.CharField(max_length=100,null=True)
+    condition_onset = models.DateField(null=True)
+    condition_abatement = models.DateField(null=True)
     condition_severity = models.CharField(
         choices=SEVERITY_CHOICES, max_length=100)
+    condition_asserter = models.CharField(max_length=100, null=True)
 
 
 class ServiceRequestModel(models.Model):
@@ -118,22 +125,24 @@ class ServiceRequestModel(models.Model):
     service_note = models.CharField(max_length=100, null=True)
     service_occurrence = models.DateField(max_length=100)
     service_authored = models.DateField(max_length=100)
+    service_performer = models.CharField(max_length=100, default='')
 
 
 class ObservationModel(models.Model):
     encounter_identifier = models.ForeignKey(
         EncounterModel, on_delete=models.CASCADE)
-    service_identifier = models.CharField(max_length=100, default='')
+    service_identifier = models.ForeignKey(ServiceRequestModel, on_delete=CASCADE, null=True)
     observation_identifier = models.CharField(max_length=100, primary_key=True)
     observation_status = models.CharField(default='registered', max_length=10)
     observation_code = models.CharField(default='', max_length=100)
     observation_category = models.CharField(default='', max_length=10)
     observation_effective = models.DateTimeField(default=datetime.now)
-    observation_valuequantity = models.CharField(
+    observation_value_quantity = models.CharField(
         default='', max_length=10, null=True)
-    observation_valueunit = models.CharField(default='', max_length=10)
+    observation_value_unit = models.CharField(default='', max_length=10)
     observation_performer = models.CharField(default='', max_length=100)
     observation_note = models.CharField(default='', max_length=300, null=True)
+    observation_reference_range = models.CharField(max_length=100, null=True)
 
 
 class ProcedureModel(models.Model):
@@ -148,20 +157,21 @@ class ProcedureModel(models.Model):
     )
     encounter_identifier = models.ForeignKey(
         EncounterModel, on_delete=models.CASCADE)
+    service_identifier = models.ForeignKey(ServiceRequestModel, on_delete=CASCADE, null=True)
     procedure_identifier = models.CharField(max_length=100, primary_key=True)
     procedure_status = models.CharField(max_length=100)
     procedure_category = models.CharField(
         max_length=100, choices=PROCEDURE_CATEGORY_CHOICES)
     procedure_code = models.CharField(max_length=100)
-    procedure_performedDateTime = models.DateTimeField(null=True)
+    procedure_performed_datetime = models.DateTimeField(null=True)
     procedure_asserter = models.CharField(max_length=100, null=True)
     procedure_performer = models.CharField(max_length=100, null=True)
     procedure_location = models.CharField(max_length=100, null=True)
-    procedure_reasonCode = models.CharField(max_length=100, null = True)
+    procedure_reason_code = models.CharField(max_length=100, null = True)
     procedure_outcome = models.CharField(max_length=100, null=True)
     procedure_complication = models.CharField(max_length=100, null=True)
-    procedure_followUp = models.CharField(max_length=100, null=True)
-    procedure_focalDevice = models.CharField(max_length=100, null=True)
+    procedure_follow_up = models.CharField(max_length=100, null=True)
+    procedure_used = models.CharField(max_length=100, null=True)
     procedure_note = models.CharField(max_length=100, null=True)
 
 
@@ -182,9 +192,9 @@ class MedicationModel(models.Model):
         EncounterModel, on_delete=models.CASCADE)
     medication_identifier = models.CharField(max_length=100, primary_key=True)
     medication_medication = models.CharField(max_length=100)
-    medication_reasonCode = models.CharField(max_length=100)
+    medication_reason_code = models.CharField(max_length=100, default='')
     medication_effective = models.DateField()
-    medication_dateAsserted = models.DateField()
+    medication_date_asserted = models.DateField(null=True)
     dosage_additional_instruction = models.CharField(max_length=100)
     dosage_patient_instruction = models.CharField(max_length=100)
     dosage_frequency = models.CharField(max_length=100)
@@ -195,5 +205,22 @@ class MedicationModel(models.Model):
     dosage_when = models.CharField(max_length=100)
     dosage_offset = models.CharField(max_length=100,default=0)
 
+
+class DiagnosticReportModel(models.Model):
+    encounter_identifier = models.ForeignKey(
+        EncounterModel, on_delete=CASCADE
+    )
+    service_identifier = models.ForeignKey(
+        ServiceRequestModel, on_delete=CASCADE
+    )
+    diagnostic_identifier = models.CharField(max_length=100, primary_key=True)
+    diagnostic_status = models.CharField(max_length=100)
+    diagnostic_category = models.CharField(max_length=100)
+    diagnostic_code = models.CharField(max_length=100)
+    diagnostic_effective = models.DateTimeField(null = True)
+    diagnostic_performer = models.CharField(max_length=100)
+    diagnostic_conclusion = models.CharField(max_length=1000)
+
+    
 
 

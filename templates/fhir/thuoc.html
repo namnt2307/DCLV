@@ -4,8 +4,8 @@
 {%block url3%}'{%url 'fhir:hoibenh' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
 {%block url5%}'{%url 'fhir:xetnghiem' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
 {%block url4%}'{%url 'fhir:toanthan' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%block url6%}'{%url 'fhir:thuthuat' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%block url7%}'{%url 'fhir:thuoc' group_name user_name data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
+{%comment%}{%block url8%}'{%url 'fhir:thuthuat' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}{%endcomment%}{%block url7%}'{%url 'fhir:thuoc' group_name user_name data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
+{%block url6%}'{%url 'fhir:hinhanh' group_name user_name data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
 {% load widget_tweaks %}
 {%block function%}
 <h1>THUỐC</h1>
@@ -25,13 +25,13 @@
         {% for medication in medications %}
         <tr>
             <td>{{medication.medication_medication}}</td>
-            <td>{{medication.medication_reasonCode}}</td>
+            <td>{{medication.medication_reason_code}}</td>
             <td>{{medication.medication_effective|date:"d-m-Y"}}</td>
             <td>{{medication.dosage_frequency}}</td>
             <td>{{medication.dosage_quantity}}</td>
             <td>{{medication.dosage_duration}}</td>
             <td>{{medication.dosage_route}}</td>
-            <td>{{medication.medication_dateAsserted|date:"d-m-Y"}}</td>
+            <td>{{medication.medication_date_asserted|date:"d-m-Y"}}</td>
         </tr>
         <tr>
             <td colspan="8">
@@ -52,7 +52,7 @@
             {{form.medication_medication|attr:code}}
             {%endwith%}
             <br>
-            {%with 'value:'|add:medication.medication_reasonCode as code%}
+            {%with 'value:'|add:medication.medication_reason_code as code%}
             <label for="id_medication_reasonCode">Lý do dùng thuốc:</label>
             {{form.medication_reasonCode|attr:code}}
             {%endwith%}

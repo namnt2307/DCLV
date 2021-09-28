@@ -1,0 +1,270 @@
+{% extends 'fhir/view/base.html' %}
+{% block right-body %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/fhir/benhan.css' %}">
+    <div class="right-body__head">
+        <div class="right-body__head-left">
+            <p>Sở Y tế</p>
+            <p>Bệnh viện</p>
+            <p>Khoa Giường</p>
+            
+        </div>
+        <div class="right-body__head-center">
+            <h1>{{encounter.encounter_type|upper}}</h1>
+        </div>
+        <div class="right-body__head-right">
+            <p>Số lưu trữ</p>
+            <p>Mã YT</p>
+        </div>
+    </div>
+    <div class="right-body__body">
+        <div class="right-body__body-section ">
+            <h2>I. HÀNH CHÍNH</h2>
+            <div class="right-body__body-section__flexcontainer">
+                <div class="right-body__body-section__flexitem">
+                    <p>1. Họ và tên: <span>{{patient.name}}</span></p>
+                    <p>3. Giới tính: <span>{{patient.gender}}</span></p>
+                    <p>5. Dân tộc</p>
+                </div>
+                <div class="right-body__body-section__flexitem">        
+                    <p>2. Sinh ngày: <span>{{patient.birthdate|date:'d-m-Y'}}</span></p>          
+                    <p>4. Nghề nghiệp</p>            
+                    <p>6. Ngoại kiều</p>
+                </div>
+            </div>
+            <p>7. Địa chỉ: {{patient.home_address}}</p>
+            <p>8. Nơi làm việc: {{patient.work_address}}</p>
+            <p>9. Họ tên, địa chỉ người nhà khi cần báo tin, Điện thoại số</p>
+        </div>
+        <div class="right-body__body-section">
+            <h2>II. QUẢN LÝ NGƯỜI BỆNH</h2>
+            <div class="right-body__body-section__item-content right-body__body-section__item-content--flex">
+                <div class="right-body__body-section__item-content--flex__item right-body__body-section__item-content--flex__item--with-border">
+                    <p>12. Vào viện: {{encounter.encounter_start|date:'H:i:s'}} ngày {{encounter.encounter_start|date:'d-m-Y'}} </p>
+                    <p>13. Trực tiếp vào</p>
+                </div>
+                <div class="right-body__body-section__item-content--flex__item right-body__body-section__item-content--flex__item--with-border">
+                    <p>14. Nơi giới thiệu</p>
+                    <p>- Vào viện do bệnh này lần thứ</p>
+                </div>
+            </div>
+            <div class="right-body__body-section__item-content right-body__body-section__item-content--flex">
+                <div class="right-body__body-section__item-content--flex__item right-body__body-section__item-content--flex__item--with-border">
+                    <p>15. Vào khoa</p>
+                    <p>16. Chuyển khoa</p>
+                </div>
+                <div class="right-body__body-section__item-content--flex__item right-body__body-section__item-content--flex__item--with-border">
+                    <p>17. Chuyển viện</p>
+                    <p>18. Ra viện: {{encounter.encounter_end|date:'H:i:s'}} ngày {{encounter.encounter_end|date:'d-m-Y'}} </p>
+                    <p>19. Tổng số ngày điều trị: {{encounter.encounter_length}} ngày</p>
+                </div>
+            </div>
+        </div>
+        <div class="right-body__body-section">
+            <h2>III. CHẨN ĐOÁN</h1>
+                <div class="right-body__body-section__item-content right-body__body-section__item-content--flex">
+                    <div class="right-body__body-section__item-content--flex__item right-body__body-section__item-content--flex__item--with-border">
+                        <p>20. Nơi chuyển đến</p>
+                        <p>21. KKB, Cấp cứu</p>
+                        <p>22. Khi vào khoa điều trị</p>
+                    </div>
+                    <div class="right-body__body-section__item-content--flex__item right-body__body-section__item-content--flex__item--with-border">
+                        <p>23. Ra viện</p>
+                        <p>+ Bệnh chính</p>
+                        <p>+ Bệnh kèm theo</p>
+                    </div>
+                </div>
+        </div>
+        <div class="right-body__body-section">
+            <h2>IV. TÌNH TRẠNG RA VIỆN</h1>
+                <div class="right-body__body-section__item-content right-body__body-section__item-content--flex">
+                    <div class="right-body__body-section__item-content--flex__item right-body__body-section__item-content--flex__item--with-border">
+                        <p>24. Kết quả điều trị</p>
+                        <p>25. Giải phẫu bệnh</p>
+                    </div>
+                    <div class="right-body__body-section__item-content--flex__item--2 right-body__body-section__item-content--flex__item--with-border">
+                        <p>26. Tình hình tử vong</p>
+                        <p>27. Nguyên nhân chính tử vong</p>
+                        <p>28. Khám nghiệm tử thi</p>
+                    </div>
+                </div>
+        </div>
+        <div class="right-body__body-section">
+            <h2>A. BỆNH ÁN</h2>
+            <div class="right-body__body-section__part-1">
+                <h3>Lý do vào viện: {{encounter.encounter_reason}}</h3>
+            </div>
+            <div class="right-body__body-section__part-2">         
+                
+                    
+                        <h3>Hỏi bệnh</h3>
+                            <h4>1. Quá trình bệnh lý</h4>
+                            <div class='right-body__body-section__item-content'>
+                                <p>{{ condition.condition_code }}</p>
+                            </div>
+                            <h4>2. Tiền sử bệnh</h4>
+                                <h3>+ Bản thân</h3>
+                                <div class='right-body__body-section__item-content'></div>
+                                <h3>+ Dị ứng</h3>
+                                <div class='right-body__body-section__item-content'></div>
+                                <h3>+ Gia đình</h3>
+                                <div class='right-body__body-section__item-content'></div>
+                 
+            </div>
+            <div class="right-body__body-section__part-3">
+                <h3>Khám bệnh</h3>
+                <div class='right-body__body-section__item'>
+                    <h4>1. Toàn thân</h4>
+                    <div class="right-body__body-section__item-content right-body__body-section__item-content--flex right-body__body-section__item-content--flex--align-center">
+                        <p class="right-body__body-section__item-content--flex__item right-body__body-section__item-content--flex__item--with-border"></p>
+                        <div class="right-body__body-section__item-content--flex__item--with-border">                                   
+                            <p>Mạch: {{data.Observation.mach.observation_valuequantity}} lần/ph</p>                                                        
+                            <p>Nhiệt độ: {{data.Observation.nhietdo.observation_valuequantity}} độ C</p>                            
+                            <p>Huyết áp: {{data.Observation.tamthu.observation_valuequantity}}/{{data.Observation.tamtruong.observation_valuequantity}} mmHg</p>             
+                            <p>Nhịp thở: {{data.Observation.nhiptho.observation_valuequantity}} lần/ph</p>
+                            <p>Cân nặng: {{data.Observation.cannang.observation_valuequantity}} kg</p>
+                        </div>
+                    </div>
+                </div class='right-body__body-section__item'>
+                    <h4>2. Các cơ quan</h4>
+                        <h5>+ Tuần hoàn</h5>
+                            <div class='right-body__body-section__item-content'></div>
+                                     
+                        <h5>+ Hô hấp</h5>
+                          <div class='right-body__body-section__item-content'></div>
+                         
+                    
+                        <h5>+ Tiêu hóa</h5>
+                        <div class='right-body__body-section__item-content'></div>
+                    
+                    
+                        <h5>+ Thận - Tiết niệu - Sinh dục</h5>
+                        <div class='right-body__body-section__item-content'></div>
+                    
+                    
+                        <h5>+ Thần kinh</h5>
+                        <div class='right-body__body-section__item-content'></div>
+                    
+                    
+                        <h5>+ Cơ - Xương - Khớp</h5>
+                        <div class='right-body__body-section__item-content'></div>
+                   
+                    
+                        <h5>+ Tai - Mũi - Họng</h5>
+                        <div class='right-body__body-section__item-content'></div>
+                    
+                    
+                        <h5>+ Răng - Hàm - Mặt</h5>
+                        <div class='right-body__body-section__item-content'></div>
+                    
+                    
+                        <h5>+ Mắt</h5>
+                        <div class='right-body__body-section__item-content'></div>
+                    
+                    
+                        <h5>+ Nội tiết, dinh dưỡng và các bệnh lý khác</h5>
+                        <div class='right-body__body-section__item-content'></div>
+                    
+                    <h4>3. Các xét nghiệm cận lâm sàng cần làm</h4>
+                    <div class='right-body__body-section__item-content'></div>
+                    <h4>4. Tóm tắt bệnh án</h4>
+                    <div class='right-body__body-section__item-content'></div>
+            </div>
+            <div>
+                <h3>Chẩn đoán khi vào khoa điều trị</h3>
+                        <h5>+ Bệnh chính</h5>
+                        <div class='right-body__body-section__item-content'></div>
+                        <h5>+ Bệnh kèm theo</h5>
+                        <div class='right-body__body-section__item-content'></div>
+                        <h5>+ Phân biệt</h5>
+                        <div class='right-body__body-section__item-content'></div>
+            </div>
+            <div>
+                <h3>Tiên lượng</h3>
+                <div class='right-body__body-section__item-content'></div>
+            </div>
+            <div>
+                <h3>Hướng điều trị</h3>
+                <div class='right-body__body-section__item-content'></div>
+            </div>
+            <div class="signature">
+                <div class='signature__content'>
+                    <p class='signature__content-date'>Ngày {{encounter.encounter_end|date:'d'}} tháng {{encounter.encounter_end|date:'m'}} năm {{encounter.encounter_end|date:'Y'}}</p>
+                    <h3 class='signature__content-person'>Bác sỹ làm bệnh án</h3>        
+                </div>
+            </div>
+            </table>
+        </div>
+        <div class="right-body__body-section">
+            <h2>B. TỔNG KẾT BỆNH ÁN</h2>
+                <h3>1. Quá trình và diễn biến lâm sàng</h3>
+                <div class='right-body__body-section__item-content'></div>
+                <h3>2. Tóm tắt kết quả xét nghiệm cận lâm sàng có giá trị chẩn đoán</h3>
+                <div class='right-body__body-section__item-content'>
+                    {% for diagnostic_report in diagnostic_reports %}
+                        <p>- {{diagnostic_report.diagnostic_code}}: {{diagnostic_report.diagnostic_conclusion}} </p>
+                    {% endfor %}
+                </div>
+                <h3>3. Phương pháp điều trị</h3>
+                <div class='right-body__body-section__item-content'></div>
+                <h3>4. Tình trạng người bệnh ra viện</h3>
+                <div class='right-body__body-section__item-content'>
+                    <h4>+ Bệnh chính</h4>
+                    {% for condition in discharge_conditions %}
+                        <p>- {{ condition.condition_code }}</p>
+                    {% endfor %}
+                    <h4>+ Bệnh kèm theo</h4>
+                    {% for condition in comorbidity_conditions %}
+                        <p>- {{condition.condition_code}}</p>
+                    {% endfor %}
+                </div>
+                <h3>5. Hướng điều trị và các chế độ tiếp theo</h3>
+                <div class='right-body__body-section__item-content'></div>
+            <div class="right-body__body-section__item-content right-body__body-section__item-content--flex">
+                <table class="right-body__body-section__item-content--flex__item">
+                    <tr>
+                        <th colspan="2">Hồ sơ phim ảnh</th>    
+                    </tr>
+                    <tr>
+                        <th>Loại</th>
+                        <th>Số tờ</th>
+                    </tr>
+                    <tr>
+                        <td>X-quang</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>CT Scanner</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Siêu âm</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Xét nghiệm</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Khác</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Toàn bộ hồ sơ</td>
+                        <td></td>
+                    </tr>
+                </table>
+                <div class="right-body__body-section__item-content--flex-column right-body__body-section__item-content--flex__item right-body__body-section__item-content--flex__item--with-border">
+                    <div class="right-body__body-section__item-content--flex__item" style="text-align: center;">
+                        <p>Ngày {{encounter.encounter_end|date:'d'}} tháng {{encounter.encounter_end|date:'m'}} năm {{encounter.encounter_end|date:'Y'}} </p>
+                        <h3>Bác sĩ điều trị</h3>
+                        
+                    </div>
+                    <div class="right-body__body-section__item-content--flex__item" style="text-align: left; margin-top: 50px;">
+                        <h3>Họ tên: {{encounter.encounter_participant}}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

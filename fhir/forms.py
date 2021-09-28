@@ -3,16 +3,16 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
 from django.forms import fields, widgets
 from lib.tools import generate_password
-from .models import EncounterModel, ServiceRequestModel, ProcedureModel, AllergyModel, UserModel, ConditionModel, ObservationModel, ProcedureModel, MedicationModel
+from .models import EncounterModel, ServiceRequestModel, ProcedureModel, AllergyModel, UserModel, ConditionModel, ObservationModel, ProcedureModel, MedicationModel, DiagnosticReportModel
 
 class DateInput(forms.DateInput):
     input_type = 'date'
 class EHRCreationForm(forms.ModelForm):
-    birthDate = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}))
+    birthdate = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}))
 
     class Meta:
         model = get_user_model()
-        fields = ('name', 'gender', 'birthDate',
+        fields = ('name', 'gender', 'birthdate',
                   'home_address', 'work_address', 'identifier', 'telecom')
 
 
@@ -33,7 +33,7 @@ class EncounterForm(forms.ModelForm):
 class UserForm(forms.ModelForm):
     class Meta:
         model = UserModel()
-        fields = ('identifier', 'name', 'gender', 'birthDate',
+        fields = ('identifier', 'name', 'gender', 'birthdate',
                   'home_address', 'work_address', 'telecom')
 
 
@@ -59,7 +59,7 @@ class ObservationForm(forms.ModelForm):
     class Meta:
         model = ObservationModel
         fields = (
-            ('observation_valuequantity', 'observation_note')
+            ('observation_value_quantity', 'observation_note')
         )
         labels = {
             'observation_note': 'Nhận xét của bác sĩ'
@@ -70,13 +70,13 @@ class ProcedureForm(forms.ModelForm):
     class Meta:
         model = ProcedureModel
         fields = (
-            'procedure_category', 'procedure_code', 'procedure_location', 'procedure_reasonCode'
+            'procedure_category', 'procedure_code', 'procedure_location', 'procedure_reason_code'
         )
         labels = {
             'procedure_category': 'Phân loại phương pháp điều trị',
             'procedure_code': 'Phương pháp thực hiện',
             'procedure_location': 'Nơi thực hiện',
-            'procedure_reasonCode': 'Lý do thực hiện'
+            'procedure_reason_code': 'Lý do thực hiện'
         }
 
 
@@ -84,13 +84,13 @@ class ProcedureDetailForm(forms.ModelForm):
     class Meta:
         model = ProcedureModel
         fields = (
-            'procedure_outcome', 'procedure_complication', 'procedure_followUp', 'procedure_focalDevice', 'procedure_note'
+            'procedure_outcome', 'procedure_complication', 'procedure_follow_up', 'procedure_used', 'procedure_note'
         )
         labels = {
             'procedure_outcome': 'Kết quả thủ thuật, phẫu thuật',
             'procedure_complication': 'Các biến chứng sau thủ thuật, phẫu thuật',
-            'procedure_followUp': 'Các hướng dẫn bệnh nhân sau thủ thuật, phẫu thuật',
-            'procedure_focalDevice': 'Thiết bị thực hiện thủ thuật, phẫu thuật',
+            'procedure_follow_up': 'Các hướng dẫn bệnh nhân sau thủ thuật, phẫu thuật',
+            'procedure_used': 'Thiết bị sử dụng',
             'procedure_note': 'Ghi chú của bác sĩ'
         }
 
@@ -99,11 +99,11 @@ class MedicationForm(forms.ModelForm):
     class Meta:
         model = MedicationModel
         fields = (
-            'medication_medication', 'medication_reasonCode', 'medication_effective', 'dosage_frequency', 'dosage_period', 'dosage_duration', 'dosage_route', 'dosage_quantity', 'dosage_when', 'dosage_offset', 'dosage_additional_instruction', 'dosage_patient_instruction'
+            'medication_medication', 'medication_reason_code', 'medication_effective', 'dosage_frequency', 'dosage_period', 'dosage_duration', 'dosage_route', 'dosage_quantity', 'dosage_when', 'dosage_offset', 'dosage_additional_instruction', 'dosage_patient_instruction'
         )
         labels = {
             'medication_medication': 'Thuốc chỉ định',
-            'medication_reasonCode': 'Lý do dùng thuốc',
+            'medication_reason_code': 'Lý do dùng thuốc',
             'medication_effective': 'Ngày bắt đầu dùng thuốc',
             'dosage_frequency': 'Tần suất dùng thuốc',
             'dosage_period': 'Chu kì dùng thuốc',
@@ -120,8 +120,7 @@ class MedicationForm(forms.ModelForm):
         }
 
 
-class ServiceRequestForm(forms.ModelForm):
-    
+class ServiceRequestForm(forms.ModelForm):  
     class Meta:
         model = ServiceRequestModel
         fields = (
@@ -129,9 +128,70 @@ class ServiceRequestForm(forms.ModelForm):
         )
         labels = {
             'service_code': 'Tên xét nghiệm',
-            'service_occurrence': 'Ngày dự kiến thực hiện xét nghiệm',
+            'service_occurrence': 'Ngày dự kiến thực hiện',
             'service_note': 'Ghi chú thêm'
         }
         widgets = {
             'service_occurrence': DateInput()
+        }
+
+
+class RequestForImageForm(forms.ModelForm):
+    # CATEGORY_CHOICES = (
+    #     ('363679005', 'Imaging'),
+    #     ('409063005', 'Counselling'),
+    #     ('409073007', 'Education'),
+    #     ('387713003', 'Surgical procedure')
+    # )
+    class Meta:
+        model = ServiceRequestModel
+        fields = (
+            'service_code', 'service_occurrence', 'service_note'
+        )
+        labels = {
+            'service_code': 'Tên thủ thuật/phẫu thuật',
+            'service_occurrence': 'Ngày dự kiến thực hiện',
+            'service_note': 'Ghi chú thêm'
+        }
+        widgets = {
+            'service_occurrence': DateInput(),
+            # 'service_category': widgets.Select(choices=)
+        }
+
+
+class RequestForProcedureForm(forms.ModelForm):
+    # CATEGORY_CHOICES = (
+    #     ('363679005', 'Imaging'),
+    #     ('409063005', 'Counselling'),
+    #     ('409073007', 'Education'),
+    #     ('387713003', 'Surgical procedure')
+    # )
+    class Meta:
+        model = ServiceRequestModel
+        fields = (
+            'service_category','service_code', 'service_occurrence', 'service_note'
+        )
+        labels = {
+            'service_category': 'Phân loại thủ thuật/phẫu thuật',
+            'service_code': 'Tên thủ thuật/phẫu thuật',
+            'service_occurrence': 'Ngày dự kiến thực hiện',
+            'service_note': 'Ghi chú thêm'
+        }
+        widgets = {
+            'service_occurrence': DateInput(),
+            # 'service_category': widgets.Select(choices=)
+        }
+
+
+class DiagnosticReportForm(forms.ModelForm):
+    class Meta:
+        model = DiagnosticReportModel
+        fields = (
+            'diagnostic_conclusion',
+        ) 
+        labels = {
+            'diagnostic_conclusion': 'Chẩn đoán của bác sĩ'
+        }
+        widgets = {
+            'diagnostic_conclusion': forms.Textarea()
         }

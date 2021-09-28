@@ -1,0 +1,50 @@
+{% extends 'fhir/view/base.html' %}
+{% block right-body %}
+{% load static %}
+<link rel="stylesheet" href="">
+<div>
+    <div>
+        <h1>ĐƠN THUỐC</h1>
+        <p>HỌ TÊN: {{patient.name}}</p>
+        <p>GIỚI: {{patient.gender}}</p>
+        <p>NGÀY SINH: {{patient.birthdate|date:'d-m-Y'}}</p>
+        <p>ĐỊA CHỈ: {{patient.home_address}}</p>
+    </div>
+    <div>
+        <table>
+            <thead>
+                <th>Thuốc</th>
+                <th>Lý do dùng thuốc</th>
+                <th>Bắt đầu dùng thuốc từ</th>
+                <th>Tần suất dùng thuốc</th>
+                <th>Liều dùng</th>
+                <th>Thời gian sử dụng</th>
+                <th>Đường dùng</th>
+                <th>Ngày chỉ định</th>
+            </thead>
+            <tbody>
+            {% if medications %}
+                {% for medication in medications %}
+                <tr>
+                    <td>{{medication.medication_medication}}</td>
+                    <td>{{medication.medication_reasonCode}}</td>
+                    <td>{{medication.medication_effective|date:"d-m-Y"}}</td>
+                    <td>{{medication.dosage_frequency}}</td>
+                    <td>{{medication.dosage_quantity}}</td>
+                    <td>{{medication.dosage_duration}}</td>
+                    <td>{{medication.dosage_route}}</td>
+                    <td>{{medication.medication_dateAsserted|date:"d-m-Y"}}</td>
+                </tr>
+                <tr>
+                    <td colspan="8">
+                        <p>Hướng dẫn sử dụng: Dùng thuốc {{medication.dosage_when}} {%if medication.dosage_offset != '0'%}{{medication.dosage_offset}} phút {%endif%}, {{medication.dosage_additional_instruction}}</p>
+                        <p>Hướng dẫn đặc biệt: {{medication.dosage_patient_instruction}}</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            {% endif %}
+        </table>
+    </div>
+</div>
+{% endblock %}

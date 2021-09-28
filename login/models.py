@@ -8,7 +8,7 @@ GENDER_CHOICES = (
 )
 class myUser(AbstractUser):
     name = models.CharField(default='',max_length=100)
-    birthDate = models.DateField(default=datetime.now)
+    birthdate = models.DateField(default=datetime.now)
     gender = models.CharField(max_length=3,choices=GENDER_CHOICES,default='')
     work_address = models.CharField(default= '',max_length=255)
     home_address = models.CharField(default= '',max_length=255)

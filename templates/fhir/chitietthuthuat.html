@@ -4,53 +4,53 @@
 {%block url3%}'{%url 'fhir:hoibenh' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
 {%block url5%}'{%url 'fhir:xetnghiem' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
 {%block url4%}'{%url 'fhir:toanthan' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%block url6%}'{%url 'fhir:thuthuat' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%block url7%}'{%url 'fhir:thuoc' group_name user_name data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
+{%comment%}{%block url8%}'{%url 'fhir:thuthuat' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}{%endcomment%}{%block url7%}'{%url 'fhir:thuoc' group_name user_name data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
+{%block url6%}'{%url 'fhir:hinhanh' group_name user_name data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
 {% load widget_tweaks %}
 {%block function%}
     {% if procedure %}
         <h1>THÔNG TIN THỦ THUẬT</h1>
         {% if procedure.procedure_status == 'preparation'%}
-        <form action="" method="POST">
-        {%csrf_token%}
-        {{form.as_p}}
-        <button type="submit">Lưu lại</button>
-        </form>
+            <form action="" method="POST">
+                {%csrf_token%}
+                {{procedure_form.as_p}}
+                <button type="submit">Lưu lại</button>
+            </form>
        
         {%elif procedure.procedure_status == 'completed'%}
             <div id="data">
-                <p>Ngày thực hiện: {{procedure.procedure_performedDateTime|date:"d-m-Y H:i:s"}}</p>
+                <p>Ngày thực hiện: {{procedure.procedure_performed_dateTime|date:"d-m-Y H:i:s"}}</p>
                 <p>Kết quả thủ thuật, phẫu thuật: {{procedure.procedure_outcome}}</p>
                 <p>Các biến chứng sau thủ thuật, phẫu thuật: {{procedure.procedure_complication}}</p>
-                <p>Các hướng dẫn bệnh nhân sau thủ thuật, phẫu thuật: {{procedure.procedure_followUp}}</p>
-                <p>Thiết bị thực hiện thủ thuật, phẫu thuật: {{procedure.procedure_focalDevice}}</p>
+                <p>Các hướng dẫn bệnh nhân sau thủ thuật, phẫu thuật: {{procedure.procedure_follow_up}}</p>
+                <p>Thiết bị thực hiện thủ thuật, phẫu thuật: {{procedure.procedure_used}}</p>
                 <p>Ghi chú của bác sĩ: {{procedure.procedure_note}}</p>
             </div>
             <div id="form" style="display: none;">
                 <form action="" method="POST">
                     {%csrf_token%}
                     {%with 'value:'|add:procedure.procedure_identifier as code%}
-                        {{form.procedure_identifier|attr:code|attr:'type:hidden'}}
+                        {{procedure_form.procedure_identifier|attr:code|attr:'type:hidden'}}
                     {%endwith%}
                     {%with 'value:'|add:procedure.procedure_outcome as code%}
                         <label for="id_procedure_outcome">Kết quả thủ thuật, phẫu thuật:</label>
-                        <p>{{form.procedure_outcome|attr:code}}</p>
+                        <p>{{procedure_form.procedure_outcome|attr:code}}</p>
                     {%endwith%}
                     {%with 'value:'|add:procedure.procedure_complication as code%}
                         <label for="id_procedure_complication">Các biến chứng sau thủ thuật, phẫu thuật:</label>
-                        <p>{{form.procedure_complication|attr:code}}</p>
+                        <p>{{procedure_form.procedure_complication|attr:code}}</p>
                     {%endwith%}
-                    {%with 'value:'|add:procedure.procedure_followUp as code%}
+                    {%with 'value:'|add:procedure.procedure_follow_up as code%}
                         <label for="id_procedure_followUp">Các hướng dẫn bệnh nhân sau thủ thuật, phẫu thuật:</label>
-                        <p>{{form.procedure_followUp|attr:code}}</p>
+                        <p>{{procedure_form.procedure_follow_up|attr:code}}</p>
                     {%endwith%}
-                    {%with 'value:'|add:procedure.procedure_focalDevice as code%}
+                    {%with 'value:'|add:procedure.procedure_used as code%}
                         <label for="id_procedure_focalDevice">Thiết bị thực hiện thủ thuật, phẫu thuật:</label>
-                        <p>{{form.procedure_focalDevice|attr:code}}</p>
+                        <p>{{procedure_form.procedure_used|attr:code}}</p>
                     {%endwith%}
                     {%with 'value:'|add:procedure.procedure_note as code%}
                         <label for="id_procedure_note">Ghi chú của bác sĩ:</label>
-                        <p>{{form.procedure_note|attr:code}}</p>
+                        <p>{{procedure_form.procedure_note|attr:code}}</p>
                     {%endwith%}
                 <button type="submit">Lưu lại</button>
                 </form>

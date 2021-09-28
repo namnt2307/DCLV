@@ -1,0 +1,70 @@
+{% extends 'fhir/view/base.html' %}
+{% block right-body %}
+{% load static %}
+<link rel="stylesheet" href="">
+<div>
+    <table>
+        <thead>
+            <th>ID thủ thuật</th>
+            <th>Tên thủ thuật</th>
+            <th>Tình trạng thủ thuật</th>
+            <th>Ngày dự kiến thực hiện</th>
+            <th>Ngày yêu cầu</th>
+            <th>Bác sĩ yêu cầu</th>
+            <th>Ghi chú</th>
+        </thead>
+        <tbody>
+            {% if services %}
+                {% for service in services %}
+                <tr onclick="displayToggle('{{service.service_identifier}}')">
+                    <td>{{service.service_identifier}}</td>
+                    <td>{{service.service_code}}</td>
+                    <td>{{service.service_status}}</td>
+                    <td>{{service.service_occurrence|date:"d-m-Y"}}</td>
+                    <td>{{service.service_authored|date:"d-m-Y"}}</td>
+                    <td>{{service.service_requester}}</td>
+                    <td>{{service.service_note}}</td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="7">Không có thủ thuật được thực hiện</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+    <div class="display-data" id="display-data">
+        <div class="">
+            <h1>PHIẾU KẾT QUẢ THỦ THUẬT</h1>
+            <div>
+                <p>HỌ TÊN: {{patient.name}}</p>
+                <p>GIỚI: {{patient.gender}}</p>
+                <p>NGÀY SINH: {{patient.birthdate|date:'d-m-Y'}}</p>
+                <p>ĐỊA CHỈ: {{patient.home_address}}</p>
+                <p>BS CHỈ ĐỊNH: {{encounter.encounter_participant}}</p>
+                <p>NGÀY GIỜ CÓ KẾT QUẢ: </p>
+            </div>
+        </div>
+        {% for service in services %}
+            <div id="display-data__{{service.service_identifier}}">
+                <h2>THÔNG TIN THỦ THUẬT</h2>
+                {% for procedure in service.proceduremodel_set.all %}
+                    <p>THỦ THUẬT THỰC HIỆN: {{ procedure.procedure_code }}</p>
+                    <p>LÝ DO THỰC HIỆN: {{ procedure.procedure_reason_code }}</p>
+                    <p>NGÀY THỰC HIỆN: {{ procedure.procedure_performed_datetime }}</p>
+                    <p>KẾT QUẢ: {{procedure.procedure_outcome}}</p>
+                    <p>THIẾT BỊ SỬ DỤNG: {{procedure.procedure_used}}</p>
+                    <p>BIẾN CHỨNG SAU THỦ THUẬT: {{procedure.procedure_complication}}</p>
+                    <p>HƯỚNG DẪN SAU THỦ THUẬT: {{procedure.procedure_follow_up}}</p>
+                    <h2>BÁC SĨ THỰC HIỆN: {{procedure.procedure_performer}}</h2>
+                {% endfor %}    
+                <h2>CHẨN ĐOÁN</h2>
+                {% for diagnostic_report in service.diagnosticreportmodel_set.all %}
+                    <p>{{diagnostic_report.diagnostic_conclusion}}</p>
+                    <p>BÁC SĨ CHẨN ĐOÁN: {{diagnostic_performer}}</p>
+                {% endfor %}
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

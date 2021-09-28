@@ -1,0 +1,61 @@
+{%extends 'fhir/base.html'%}
+{%block url1%}'{%url 'fhir:hanhchinh' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url2%}'{%url 'fhir:dangky' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url3%}'{%url 'fhir:hoibenh' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url5%}'{%url 'fhir:xetnghiem' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url4%}'{%url 'fhir:toanthan' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%comment%}{%block url8%}'{%url 'fhir:thuthuat' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}{%endcomment%}{%block url7%}'{%url 'fhir:thuoc' group_name user_name data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
+{%block url6%}'{%url 'fhir:hinhanh' group_name user_name data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
+{%block leftbar%}
+{%endblock%}
+{%block function%}
+<h1>CÁC THỦ THUẬT XỬ LÍ HÌNH ẢNH</h1>
+<table>
+    <thead>
+        <th>ID thủ thuật</th>
+        <th>Tên thủ thuật</th>
+        <th>Tình trạng thủ thuật</th>
+        <th>Ngày dự kiến thực hiện</th>
+        <th>Ngày yêu cầu</th>
+        <th>Bác sĩ yêu cầu</th>
+        <th>Ghi chú</th>
+        <th>Chi tiết</th>
+        <th>Kết quả hình ảnh</th>
+        <th>Chẩn đoán</th>
+    </thead>
+    <tbody>
+    {% if services %}
+        {% for service in services %}
+        <tr>
+            <td>{{service.service_identifier}}</td>
+            <td>{{service.service_code}}</td>
+            <td>{{service.service_status}}</td>
+            <td>{{service.service_occurrence|date:"d-m-Y"}}</td>
+            <td>{{service.service_authored|date:"d-m-Y"}}</td>
+            <td>{{service.service_requester}}</td>
+            <td>{{service.service_note}}</td>
+            <td><a href="{%url 'fhir:chitiethinhanh' group_name user_name data.Patient.identifier data.Encounter.identifier service.service_identifier%}">test</a></td>
+            <td></td>
+            {%comment%}<td><a href="{%url 'fhir:ketquahinhanh' group_name user_name data.Patient.identifier data.Encounter.identifier service.service_identifier %}"></a></td>{%endcomment%}
+            <td><a href="{%url 'fhir:chandoan' group_name user_name data.Patient.identifier data.Encounter.identifier service.service_identifier %}">Chẩn đoán</a></td>
+        </tr>
+        {% endfor %}
+    {% endif %}
+</tbody>
+    <div>
+        <div class="formPopup" id="serviceForm">
+            <div class="formContainer">
+                <form action="" method="POST">
+                    {%csrf_token%}
+                    {{service_form.as_p}}
+                    <button type="submit" class="btn">Add</button>
+                    <button type="button" class="btn cancel" onclick="closeForm('serviceForm')">Close</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <tr>
+        <td colspan="10"><button class="float-left submit-button" onclick="openForm('serviceForm')">Thêm xét nghiệm</button></td>
+    </tr>
+</table>
+{%endblock%}

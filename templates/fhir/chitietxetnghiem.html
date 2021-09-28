@@ -4,9 +4,8 @@
 {%block url3%}'{%url 'fhir:hoibenh' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
 {%block url5%}'{%url 'fhir:xetnghiem' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
 {%block url4%}'{%url 'fhir:toanthan' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%block url6%}'{%url 'fhir:thuthuat' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%block url7%}'{%url 'fhir:thuoc' group_name user_name data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
-
+{%comment%}{%block url8%}'{%url 'fhir:thuthuat' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}{%endcomment%}{%block url7%}'{%url 'fhir:thuoc' group_name user_name data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
+{%block url6%}'{%url 'fhir:hinhanh' group_name user_name data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
 {%block function%}
     {% if service %}
         <h1>KẾT QUẢ XÉT NGHIỆM</h1>
@@ -14,9 +13,11 @@
             <thead>
                 <th>Tên xét nghiệm</th>
                 <th>Kết quả</th>
+                <th>Trị số bình thường</th>
+                <th>Đơn vị</th>
             </thead>
             <tr>
-                <td colspan="2"><b>{{service.service_code}}</b></td>
+                <td colspan="3"><b>{{service.service_code}}</b></td>
             </tr>
             
             {% if service.service_status == 'active'%}
@@ -26,7 +27,9 @@
                 {%for observation in observations%}
                 <tr>
                     <td>{{observation.observation_code}}</td>
-                    <td><input type="text" name="{{observation.observation_identifier}}"><p style="display:inline">{{observation.observation_valueunit}}</p></td>
+                    <td><input type="text" name="{{observation.observation_identifier}}"></td>
+                    <td>{{observation.observation_reference_range}}</td>
+                    <td>{{observation.observation_value_unit}}</td>
                 </tr>
                 {%endfor%}
                 <tr>
@@ -39,7 +42,9 @@
                 {%for observation in observations%}
                 <tr>
                     <td>{{observation.observation_code}}</td>
-                    <td>{{observation.observation_valuequantity}}{{observation.observation_valueunit}}</td>
+                    <td>{{observation.observation_value_quantity}}</td>
+                    <td>{{observation.observation_reference_range}}</td>
+                    <td>{{observation.observation_value_unit}}</td>
                 </tr>
                 {%endfor%}
                 </tbody>
@@ -50,18 +55,21 @@
                         {%for observation in observations%}
                         <tr>
                             <td>{{observation.observation_code}}</td>
-                            <td><input type="text" name="{{observation.observation_identifier}}" value="{{observation.observation_valuequantity}}"><p style="display:inline">{{observation.observation_valueunit}}</p></td>
+                            <td><input type="text" name="{{observation.observation_identifier}}" value="{{observation.observation_value_quantity}}"></td>
+                            <td>{{observation.observation_reference_range}}</td>
+                            <td>{{observation.observation_value_unit}}</td>
                         </tr>
                         {%endfor%}
                         <tr>
-                            <td colspan="2"><button type="submit">Lưu lại</button></td>
+                            <td colspan="3"><button type="submit">Lưu lại</button></td>
                         </tr>
                     </form>
                 </tbody>
 
             {%endif%}
-            <td colspan="2"><button id="clickButton" onclick="changeDisplay()">Chỉnh sửa</button></td>
+            <td colspan="3"><button id="clickButton" onclick="changeDisplay()">Chỉnh sửa</button></td>
         </table>
+        <h1>Bác sĩ làm xét nghiệm: {{service.service_performer}}</h1>
         <script>
             function changeDisplay(){
                 button = document.getElementById('clickButton');

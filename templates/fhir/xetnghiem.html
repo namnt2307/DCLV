@@ -4,8 +4,8 @@
 {%block url3%}'{%url 'fhir:hoibenh' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
 {%block url5%}'{%url 'fhir:xetnghiem' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
 {%block url4%}'{%url 'fhir:toanthan' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%block url6%}'{%url 'fhir:thuthuat' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%block url7%}'{%url 'fhir:thuoc' group_name user_name data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
+{%comment%}{%block url8%}'{%url 'fhir:thuthuat' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}{%endcomment%}{%block url7%}'{%url 'fhir:thuoc' group_name user_name data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
+{%block url6%}'{%url 'fhir:hinhanh' group_name user_name data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
 {%block leftbar%}
 {%endblock%}
 {%block function%}
@@ -19,6 +19,7 @@
         <th>Ngày yêu cầu xét nghiệm</th>
         <th>Bác sĩ yêu cầu xét nghiệm</th>
         <th>Ghi chú cho xét nghiệm</th>
+        <th>Chẩn đoán</th>
     </thead>
     <tbody>
     {% if services %}
@@ -31,6 +32,7 @@
             <td>{{service.service_authored|date:"d-m-Y"}}</td>
             <td>{{service.service_requester}}</td>
             <td>{{service.service_note}}</td>
+            <td><a href="{% url 'fhir:chandoan' group_name user_name data.Patient.identifier data.Encounter.identifier service.service_identifier%}">Chẩn đoán</a></td>
         </tr>
         {% endfor %}
     {% endif %}
@@ -48,7 +50,7 @@
     </div>
     </div>
     <tr>
-        <td colspan="7"><button class="float-left submit-button" onclick="openForm('serviceForm')">Thêm xét nghiệm</button></td>
+        <td colspan="8"><button class="float-left submit-button" onclick="openForm('serviceForm')">Thêm xét nghiệm</button></td>
     </tr>
 </table>
 {%endblock%}

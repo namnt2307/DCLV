@@ -4,11 +4,11 @@
 {%block url3%}'{%url 'fhir:hoibenh' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
 {%block url5%}'{%url 'fhir:xetnghiem' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
 {%block url4%}'{%url 'fhir:toanthan' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%block url6%}'{%url 'fhir:thuthuat' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%comment%}{%block url8%}'{%url 'fhir:thuthuat' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}{%endcomment%}
 {%block url7%}'{%url 'fhir:thuoc' group_name user_name data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
-
+{%block url6%}'{%url 'fhir:hinhanh' group_name user_name data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
 {%block function%}
-
+{{services}}
 <h1>CÁC THỦ THUẬT ĐƯỢC THỰC HIỆN </h1>
 <table>
     <thead>
@@ -34,7 +34,7 @@
     {% endif %}
 </tbody>
     <tr>
-        <td colspan="6"><button class="float-left submit-button" onclick="openForm()">Thêm thủ thuật</button></td>
+        <td colspan="6"><button class="float-left submit-button" onclick="openForm('procPopupForm')">Thêm thủ thuật</button></td>
     </tr>
 </table>
 <div class="formPopup" id="procPopupForm">
@@ -43,10 +43,53 @@
         {%csrf_token%}
         {{form.as_p}}
         <button type="submit" class="btn">Add</button>
-        <button type="button" class="btn cancel" onclick="closeForm()">Close</button>
+        <button type="button" class="btn cancel" onclick="closeForm('procPopupForm')">Close</button>
     </form>
 </div>
-
+<h1>CÁC THỦ THUẬT KHÁC</h1>
+<table>
+    <thead>
+        <th>ID xét nghiệm</th>
+        <th>Tên xét nghiệm</th>
+        <th>Tình trạng</th>
+        <th>Ngày dự kiến thực hiện</th>
+        <th>Ngày yêu cầu</th>
+        <th>Bác sĩ yêu cầu</th>
+        <th>Ghi chú</th>
+    </thead>
+    <tbody>
+        {%comment%}
+    {% if services %}
+        {% for service in services %}
+        <tr>
+            <td><a href="{%url 'fhir:chitietxetnghiem' group_name user_name data.Patient.identifier data.Encounter.identifier service.service_identifier%}"">{{service.service_identifier}}</a></td>
+            <td>{{service.service_code}}</td>
+            <td>{{service.service_status}}</td>
+            <td>{{service.service_occurrence|date:"d-m-Y"}}</td>
+            <td>{{service.service_authored|date:"d-m-Y"}}</td>
+            <td>{{service.service_requester}}</td>
+            <td>{{service.service_note}}</td>
+        </tr>
+        {% endfor %}
+    {% endif %}
+    {%endcomment%}
+</tbody>
+    <div>
+        <div class="formPopup" id="serviceForm">
+        <div class="formContainer">
+        <form action="" method="POST">
+            {%csrf_token%}
+            {{service_form.as_p}}
+            <button type="submit" class="btn">Add</button>
+            <button type="button" class="btn cancel" onclick="closeForm('serviceForm')">Close</button>
+        </form>
+    </div>
+    </div>
+    </div>
+    <tr>
+        <td colspan="7"><button class="float-left submit-button" onclick="openForm('serviceForm')">Thêm thủ thuật, phẫu thuật</button></td>
+    </tr>
+</table>
 
 
 <script type="text/javascript">
@@ -56,6 +99,7 @@ document.getElementById("myButton").onclick = function () {
 </script>
 
 </div>
+{%comment%}
 <div>
 <script>
     function openForm() {
@@ -66,4 +110,5 @@ document.getElementById("myButton").onclick = function () {
     }
 </script>
 </div>
+{%endcomment%}
 {%endblock%}

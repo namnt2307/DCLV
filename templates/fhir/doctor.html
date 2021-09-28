@@ -19,25 +19,25 @@
     <ul class="menu">
         <li>
             <div class="dropdown">
-                <a href="{% url 'fhir:user_detail' user_name group_name %}"><i class="fa fa-home"
+                <a href="{% url 'fhir:user_detail' group_name user_name %}"><i class="fa fa-home"
                         aria-hidden="true"></i></a>
             </div>
         </li>
         <li>
             <div class="dropdown">
-                <a href="{% url 'fhir:register' user_name group_name %}"> Quản lí hồ sơ </a>
+                <a href="{% url 'fhir:register' group_name user_name %}"> Quản lí hồ sơ </a>
                 <div class="dropdown-content">
-                    <a href="{% url 'fhir:register' user_name group_name %}">Tạo hồ sơ</a>
+                    <a href="{% url 'fhir:register' group_name user_name %}">Tạo hồ sơ</a>
                     <a href="">Tạo bệnh án</a>
-                    <a href="{% url 'fhir:upload' user_name group_name %}">Chuyển đổi excel</a>
-                    <a href="{% url 'fhir:search' user_name group_name %}">Tìm kiếm hồ sơ</a>
+                    <a href="{% url 'fhir:upload' group_name user_name %}">Chuyển đổi excel</a>
+                    <a href="{% url 'fhir:search' group_name user_name %}">Tìm kiếm hồ sơ</a>
                 </div>
                 <!-- #328be4; -->
             </div>
         </li>
         <li>
             <div class="dropdown">
-                <a href="{% url 'fhir:upload' user_name group_name %}"> Quản lí lịch khám </a>
+                <a href="{% url 'fhir:upload' group_name user_name %}"> Quản lí lịch khám </a>
                 <div class="dropdown-content">
                     <a href="">TEXT</a>
                     <a href="">TEXT2</a>
@@ -55,12 +55,16 @@
         </li>
     </ul>
 </div>
-
+<div class="content">
+{%block function%}
+{% endblock %}
+</div>
+{% comment %}
 <div class="body">
     <div class="left-body">
       {%block leftbody%}
       {%endblock%}
-        {% comment %} <ul>
+         <ul>
             <li><a href={%block url1%}{%endblock%}> Thông tin hành chính </a></li>
             <li><a href={%block url2%}{%endblock%}> Thông tin đăng ký khám </a></li>
             <li><a href={%block url3%}{%endblock%}> Thông tin hỏi bệnh </a></li>
@@ -73,10 +77,10 @@
                     location.href = " ";
                 };
             </script> -->
-        </ul> {% endcomment %}
+        </ul> 
     
     </div>
-    {%comment%}<div class="verticle-line"></div>{%endcomment%}
+    <div class="verticle-line"></div>
     <div class="right-body">
         {%if message%}
             <script>
@@ -87,5 +91,5 @@
         {% endblock %}
     </div>
 </div>
-
+{% endcomment %}
 {% endblock %}

@@ -7,6 +7,8 @@
     padding-left: 50px;
     padding-right: 50px;
     padding-bottom: 30px;
+    margin: 20px auto 10px;
+    position: relative;
 
 }
 .display-box .display-data {
@@ -51,4 +53,35 @@ table, th, td {
     border: 1px solid black;
     /* border-collapse: collapse; */
     padding: 5px;
-  }
+ }
+ .formPopup {
+    display: none;
+    position: absolute;
+    left: calc(50% - 180px);
+    top:10px;
+    background-color: #fff;
+    
+    }
+    .formContainer {
+    padding: 20px;
+    background-color: #fff;
+    border: 1px solid black;
+    }
+    .formContainer .btn {
+    padding: 12px 20px;
+    border: none;
+    background-color: #8ebf42;
+    color: #fff;
+    cursor: pointer;
+    width: 100%;
+    margin-bottom: 15px;
+    opacity: 0.8;
+    
+    }
+    .formContainer .cancel {
+    background-color: #cc0000;
+    }
+    .formContainer .btn:hover,
+    .openButton:hover {
+    opacity: 1;
+}

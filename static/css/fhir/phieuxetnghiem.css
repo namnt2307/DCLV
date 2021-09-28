@@ -1,0 +1,16 @@
+
+table{
+    width: 80%;
+    margin: 10px auto;
+}
+table th{
+    background-color: #58a6f5;
+}
+table tbody{
+    width: 100%;
+}
+table th,td {
+    padding: 5px;
+    border: 1px solid;
+    text-align: center;
+}

@@ -4,14 +4,14 @@
 {%block url3%}'{%url 'fhir:hoibenh' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
 {%block url5%}'{%url 'fhir:xetnghiem' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
 {%block url4%}'{%url 'fhir:toanthan' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%block url6%}'{%url 'fhir:thuthuat' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%block url7%}'{%url 'fhir:thuoc' group_name user_name data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
-
+{%comment%}{%block url8%}'{%url 'fhir:thuthuat' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}{%endcomment%}{%block url7%}'{%url 'fhir:thuoc' group_name user_name data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
+{%block url6%}'{%url 'fhir:hinhanh' group_name user_name data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
 {%block function%}
-<h1>THÔNG TIN KHÁM TOÀN THÂN</h1>
+<h1>THÔNG TIN KHÁM BỆNH</h1>
+{% comment %}
     {%if observations%}
         {%for observation in observations%}
-            <p>{{observation.observation_code}}: {{observation.observation_valuequantity}} {{observation.observation_valueunit}}</p>
+            <p>{{observation.observation_code}}: {{observation.observation_value_quantity}} {{observation.observation_value_unit}}</p>
         {%endfor%}
     {%else%}
         
@@ -40,4 +40,155 @@
             <button type="submit">Lưu lại</button>
         </form>
     {%endif%}
+{% endcomment %}
+{% if conditions or observations %}
+    <div>
+        <div>
+            <h2>1. Toàn thân</h2>
+            {% for condition in conditions.toanthan %}
+                <p> {{condition.condition_code}} </p>
+            {% endfor %}
+        </div>
+        <div>
+            <p>Mạch: {{ observations.mach.observation_value_quantity }} lần/ph</p>
+            <p>Nhiệt độ: {{ observations.nhietdo.observation_value_quantity }} Cel</p>
+            <p>Huyết áp: {{ observations.tamthu.observation_value_quantity }}/{{ observation.tamtruong.observation_value_quantity }} mmHg</p>
+            <p>Nhịp thở: {{ observations.nhiptho.observation_value_quantity }} lần/ph</p>
+            <p>Cân nặng: {{ observations.cannang.observation_value_quantity }} kg</p>
+        </div>
+    </div>
+    <div>
+        <h2>Các cơ quan</h2>
+        <div>
+            <h3>+ Tuần hoàn</h3>
+            {% for condition in conditions.tuanhoan %}
+                <p>{{ condition.condition_code }}</p>
+            {% endfor %}
+        </div>
+        <div>
+            <h3>+ Hô hấp</h3>
+            {% for condition in conditions.hohap %}
+                <p>{{ condition.condition_code }}</p>
+            {% endfor %}
+        </div>
+        <div>
+            <h3>+ Tiêu hóa</h3>
+            {% for condition in conditions.tieuhoa %}
+                <p>{{ condition.condition_code }}</p>
+            {% endfor %}
+        </div>
+        <div>
+            <h3>+ Thận - Tiết niệu - Sinh dục</h3>
+            {% for condition in conditions.tts %}
+                <p>{{ condition.condition_code }}</p>
+            {% endfor %}
+        </div>
+        <div>
+            <h3>+ Thần kinh</h3>
+            {% for condition in conditions.thankinh %}
+                <p>{{ condition.condition_code }}</p>
+            {% endfor %}
+        </div>
+        <div>
+            <h3>+ Cơ - Xương - Khớp</h3>
+            {% for condition in conditions.cxk %}
+                <p>{{condition.condition_code}}</p>
+            {% endfor %}
+        </div>
+        <div>
+            <h3>+ Tai - Mũi - Họng</h3>
+            {% for condition in conditions.tmh %}
+                <p>{{condition.condition_code}}</p>
+            {% endfor %}
+        </div>
+        <div>
+            <h3>+ Răng - Hàm - Mặt</h3>
+            {% for condition in conditions.rhm %}
+                <p>{{condition.condition_code}}</p>
+            {% endfor %}
+        </div>
+        <div>
+            <h3>+ Mắt</h3>
+            {% for condition in conditions.mat %}
+                <p>{{condition.condition_code}}</p>
+            {% endfor %}
+        </div>
+        <div>
+            <h3>+ Nội tiết, dinh dưỡng và các bệnh lý khác</h3>
+            {% for condition in conditions.noitiet %}
+                <p>{{condition.condition_code}}</p>
+            {% endfor %}
+        </div>
+    </div>
+{% else %}
+<div>
+    <form action="" method="POST">
+        {% csrf_token %}
+        <div>
+            <h2>1. Toàn thân</h2>
+            <textarea name="toanthan"></textarea>
+            <div>
+                <label for="mach">Mạch</label>
+                <input type="text" name="mach" id="mach">
+                <br>
+                <label for="nhietdo">Nhiệt độ</label>
+                <input type="text" name="nhietdo" id="nhietdo">
+                <br>
+                <label for="huyetap">Huyết áp</label>
+                <input type="text" name="huyetap" id="huyetap">
+                <br>
+                <label for="nhiptho">Nhịp thở</label>
+                <input type="text" name="nhiptho" id="nhiptho">
+                <br>
+                <label for="cannang">Cân nặng</label>
+                <input type="text" name="cannang" id="cannang">
+            </div>
+        </div>
+        <div>
+            <h2>2. Các cơ quan</h2>
+            <div>
+                <h3>+ Tuần hoàn</h3>
+                <textarea name="tuanhoan"></textarea>
+            </div>
+            <div>
+                <h3>+ Hô hấp</h3>
+                <textarea name="hohap"></textarea>
+            </div>
+            <div>
+                <h3>+ Tiêu hóa</h3>
+                <textarea name="tieuhoa"></textarea>
+            </div>
+            <div>
+                <h3>+ Thận - Tiết niệu - Sinh dục</h3>
+                <textarea name="tts"></textarea>
+            </div>
+            <div>
+                <h3>+ Thần kinh</h3>
+                <textarea name="thankinh"></textarea>
+            </div>
+            <div>
+                <h3>+ Cơ - Xương - Khớp</h3>
+                <textarea name="cxk"></textarea>
+            </div>
+            <div>
+                <h3>+ Tai - Mũi - Họng</h3>
+                <textarea name="tmh"></textarea>
+            </div>
+            <div>
+                <h3>+ Răng - Hàm - Mặt</h3>
+                <textarea name="rhm"></textarea>
+            </div>
+            <div>
+                <h3>+ Mắt</h3>
+                <textarea name="mat"></textarea>
+            </div>
+            <div>
+                <h3>+ Nội tiết, dinh dưỡng và các bệnh lý khác</h3>
+                <textarea name="noitiet"></textarea>
+            </div>
+        </div>
+        <button type="submit">Lưu lại</button>
+    </form>
+</div>
+{% endif %}
 {%endblock%}

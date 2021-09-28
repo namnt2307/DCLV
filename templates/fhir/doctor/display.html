@@ -15,7 +15,6 @@
 {%block function %}
 {% load static %}
 <link rel="stylesheet" href="{% static 'css/fhir/display.css'%}">
-
 <div class="display-box">
     <div class="display-data">
         <h1>THÔNG TIN BỆNH NHÂN</h1>
@@ -60,6 +59,7 @@
                 <th>Loại thăm khám</th>
                 <th>Tình trạng thăm khám</th>
                 <th>Ngày kết thúc</th>
+                <th>Xem hồ sơ</th>
             </thead>
             {%if data.Encounter%}
             {%if data.encounter_type == 'list'%}
@@ -77,7 +77,10 @@
                 {%endif%}
                 {%if encounter.encounter_end%}
                 <td>{{encounter.encounter_end|date:"d-m-Y H:i:s"}}</td>
+                {%else%}
+                <td></td>
                 {%endif%}
+                <td><a href="{% url 'fhir:view' group_name user_name data.Patient.identifier encounter.encounter_identifier %}">Xem</a></td>
             </tr>
             {%endfor%}
 
@@ -94,7 +97,7 @@
             {%endif%}
             {%endif%}
             <tr>
-                <td colspan="5"><button class="float-left submit-button" onclick="openForm()">Lần đăng ký khám
+                <td colspan="6"><button class="float-left submit-button" onclick="openForm()">Lần đăng ký khám
                         mới</button></td>
             </tr>
         </table>

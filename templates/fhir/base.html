@@ -2,7 +2,7 @@
 {% block doctor %}
 {% load static %}
 {% load widget_tweaks %}
-<link rel="stylesheet" href="{% static 'css/fhir/doctor.css'%}">
+<link rel="stylesheet" href="{% static 'css/fhir/khambenh.css'%}">
 <!-- <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css"> -->
 <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
 <!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"> -->
@@ -12,25 +12,25 @@
   <ul class="menu">
       <li>
           <div class="dropdown">
-              <a href="{% url 'fhir:user_detail' user_name group_name %}"><i class="fa fa-home"
+              <a href="{% url 'fhir:user_detail' group_name user_name %}"><i class="fa fa-home"
                       aria-hidden="true"></i></a>
           </div>
       </li>
       <li>
           <div class="dropdown">
-              <a href="{% url 'fhir:register' user_name group_name %}"> Quản lí hồ sơ </a>
+              <a href="{% url 'fhir:register' group_name user_name %}"> Quản lí hồ sơ </a>
               <div class="dropdown-content">
-                  <a href="{% url 'fhir:register' user_name group_name %}">Tạo hồ sơ</a>
+                  <a href="{% url 'fhir:register' group_name user_name %}">Tạo hồ sơ</a>
                   <a href="">Tạo bệnh án</a>
-                  <a href="{% url 'fhir:upload' user_name group_name %}">Chuyển đổi excel</a>
-                  <a href="{% url 'fhir:search' user_name group_name %}">Tìm kiếm hồ sơ</a>
+                  <a href="{% url 'fhir:upload' group_name user_name %}">Chuyển đổi excel</a>
+                  <a href="{% url 'fhir:search' group_name user_name %}">Tìm kiếm hồ sơ</a>
               </div>
               <!-- #328be4; -->
           </div>
       </li>
       <li>
           <div class="dropdown">
-              <a href="{% url 'fhir:upload' user_name group_name %}"> Quản lí lịch khám </a>
+              <a href="{% url 'fhir:upload' group_name user_name %}"> Quản lí lịch khám </a>
               <div class="dropdown-content">
                   <a href="">TEXT</a>
                   <a href="">TEXT2</a>
@@ -39,7 +39,7 @@
       </li>
       <li>
           <div class="dropdown">
-              <a href="{% url 'fhir:search' user_name group_name %}"> Tim kiem ho so</a>
+              <a href="{% url 'fhir:search' group_name user_name %}"> Tim kiem ho so</a>
               <div class="dropdown-content">
                   <a href="">TEXT</a>
                   <a href="">TEXT2</a>
@@ -61,10 +61,13 @@
             <hr>
             <li class="left-body__list-item"><a href={%block url5%}{%endblock%}> Các xét nghiệm</a></li>
             <hr>
-            <li class="left-body__list-item"><a href={%block url6%}{%endblock%}> Các thủ thuật, phẫu thuật</a></li>
+            <li class="left-body__list-item"><a href={%block url6%}{%endblock%}> Hình ảnh</a></li>
             <hr>
             <li class="left-body__list-item"><a href={%block url7%}{%endblock%}> Thuốc</a></li>
             <hr>
+            {%comment%}<li class="left-body__list-item"><a href={%block url8%}{%endblock%}> Các thủ thuật, phẫu thuật khác</a></li>
+            <hr>
+            {%endcomment%}
             {%block leftbar%}
             {%endblock%}
               <script>

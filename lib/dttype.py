@@ -3,7 +3,9 @@ import xml.etree.ElementTree as ET
 import requests
 import openpyxl as xl
 from datetime import datetime
-ns = {'d':"http://hl7.org/fhir"}
+ns = {'d': "http://hl7.org/fhir"}
+
+fhir_server = "http://10.0.0.16:8080/fhir"
 
 def identifier_type(resource, system, value, use="usual", _type=None, period=None, assigner=None):
     ET.SubElement(resource, 'use value=\"{}\"'.format(use))
@@ -19,6 +21,7 @@ def identifier_type(resource, system, value, use="usual", _type=None, period=Non
         assigner_res = ET.SubElement(resource, 'assigner')
         reference_type(assigner_res, assigner.reference,
                        assigner._type, assigner_res.identifier)
+
 
 def period_type(resource, start=None, end=None):
     if start:
@@ -142,6 +145,7 @@ def duration_type(resource, value, unit, system, code):
     ET.SubElement(resource, 'system value=\"{}\"'.format(system))
     ET.SubElement(resource, 'code value=\"{}\"'.format(code))
 
+
 def annotation_type(resource, text, author=None, time=None):
     if author:
         ET.SubElement(resource, 'author')
@@ -151,16 +155,12 @@ def annotation_type(resource, text, author=None, time=None):
     textobject = ET.SubElement(resource, 'text')
     textobject.set('value', text)
 
+
 def timing_type(resource, duration_value, frequency_value, period_value, when_value, offset_value=None, event_value=None):
     if event_value:
         event = ET.SubElement(resource, 'event')
         event.set('value', event_value)
     repeat = ET.SubElement(resource, 'repeat')
-    print(duration_value)
-    print(frequency_value)
-    print(period_value)
-    print(when_value)
-
     get_duration = duration_value.split(' ')
     duration = ET.SubElement(repeat, 'duration')
     if '-' in get_duration[0]:
@@ -180,7 +180,6 @@ def timing_type(resource, duration_value, frequency_value, period_value, when_va
     else:
         frequency.set('value', get_frequency[0])
     get_period = period_value.split(' ')
-    print(get_period)
     period = ET.SubElement(repeat, 'period')
     if '-' in get_period[0]:
         period.set('value', get_period[0].split('-')[0])
@@ -196,10 +195,10 @@ def timing_type(resource, duration_value, frequency_value, period_value, when_va
         offset = ET.SubElement(repeat, 'offset')
         offset.set('value', offset_value)
 
-        
 
 def get_observation(encounter_id):
-    get_observation = requests.get("http://hapi.fhir.org/baseR4/Observation?encounter=" + str(encounter_id), headers={'Content-type': 'application/xml'})
+    get_observation = requests.get(fhir_server + "/Observation?encounter=" + str(
+        encounter_id), headers={'Content-type': 'application/xml'})
     if get_observation.status_code == 200 and 'entry' in get_observation.content.decode('utf-8'):
         get_root = ET.fromstring(get_observation.content.decode('utf-8'))
         observation = []
@@ -210,11 +209,13 @@ def get_observation(encounter_id):
             coding = code.find('d:coding', ns)
             display = coding.find('d:display', ns).attrib['value']
             quantity = observation_resource.find('d:valueQuantity', ns)
-            value = quantity.find('d:value', ns).attrib['value'] + quantity.find('d:unit', ns).attrib['value'] 
+            value = quantity.find(
+                'd:value', ns).attrib['value'] + quantity.find('d:unit', ns).attrib['value']
             observation.append({'display': display, 'value': value})
         return observation
     else:
         return None
+
 
 def getdatetime(datetime_str):
     get_datetime = datetime_str.split('+')[0]
@@ -222,10 +223,10 @@ def getdatetime(datetime_str):
     return datetime.strftime(datetime_obj, "%Y-%m-%d %H:%M:%S")
 
 
-
 def get_encounter(encounter_id):
     encounter = {}
-    get_encounter =  requests.get("http://hapi.fhir.org/baseR4/Encounter/" + str(encounter_id), headers={'Content-type': 'application/xml'})
+    get_encounter = requests.get(fhir_server + "/Encounter/" + str(
+        encounter_id), headers={'Content-type': 'application/xml'})
     print(get_encounter.status_code)
     print(get_encounter.content)
     if get_encounter.status_code == 200:
@@ -244,54 +245,59 @@ def get_patient_upload_data(excel_file):
     sh = wb['Sheet1']
     m_row = sh.max_row
     last_line = 0
-    data = {'Patient':{},'Encounter':{},'Observation':[]}
-    for i in range(1,m_row+1):
+    data = {'Patient': {}, 'Encounter': {}, 'Observation': []}
+    for i in range(1, m_row+1):
         cell = sh.cell(row=i, column=4)
         if(cell.value):
             tag = sh.cell(row=i, column=2)
             if tag.value == 'HO_TEN':
                 data['Patient']['name'] = cell.value
-            elif tag.value =='MA_DKBD':
+            elif tag.value == 'MA_DKBD':
                 data['Patient']['identifier'] = cell.value
             elif tag.value == 'NGAY_SINH':
                 data['Patient']['birthDate'] = cell.value
             elif tag.value == 'GIOI_TINH':
                 data['Patient']['gender'] = cell.value
             elif tag.value == 'DIA_CHI':
-                data['Patient']['address'] = [{'address':cell.value}]
+                data['Patient']['address'] = [{'address': cell.value}]
             elif tag.value == 'NGAY_VAO':
-                data['Encounter']['period'] = {'start':cell.value}
+                data['Encounter']['period'] = {'start': cell.value}
                 data['Encounter']['start_date'] = cell.value
             elif tag.value == 'NGAY_RA':
                 if data['Encounter'].get('period'):
                     data['Encounter']['period']['stop'] = cell.value
                 else:
-                    data['Encounter']['period'] = {'stop':cell.value}
+                    data['Encounter']['period'] = {'stop': cell.value}
             elif tag.value == 'MA_LOAI_KCB':
                 data['Encounter']['class'] = cell.value
             elif tag.value == 'MA_KHOA':
                 data['Encounter']['location'] = cell.value
             elif tag.value == 'SO_NGAY_DTRI':
-                data['Encounter']['length'] = cell.value                        
+                data['Encounter']['length'] = cell.value
             elif not tag.value:
                 tag_2 = sh.cell(row=i, column=3)
                 tag_2_content = tag_2.value.split('.')
                 if tag_2_content[0] == 'Patient':
                     if data['Patient'][tag_2_content[1]]:
-                        data['Patient'][tag_2_content[1]].append({tag_2_content[1]:cell.value})
+                        data['Patient'][tag_2_content[1]].append(
+                            {tag_2_content[1]: cell.value})
                         if len(tag_2_content) > 2:
                             for i in range(2, len(tag_2_content)):
-                                data['Patient'][tag_2_content[1]][-1][tag_2_content[i].split('=')[0]] = tag_2_content[i].split('=')[1]
+                                data['Patient'][tag_2_content[1]][-1][tag_2_content[i].split(
+                                    '=')[0]] = tag_2_content[i].split('=')[1]
                 elif tag_2_content[0] == 'Encounter':
                     if data['Encounter'][tag_2_content[1]]:
-                        data['Encounter'][tag_2_content[1]].append({tag_2_content[1]:cell.value})
+                        data['Encounter'][tag_2_content[1]].append(
+                            {tag_2_content[1]: cell.value})
                         if len(tag_2_content) > 2:
                             for i in range(2, len(tag_2_content)):
-                                data['Encounter'][tag_2_content[1]][-1][tag_2_content[i].split('=')[0]] = tag_2_content[i].split('=')[1]
+                                data['Encounter'][tag_2_content[1]][-1][tag_2_content[i].split(
+                                    '=')[0]] = tag_2_content[i].split('=')[1]
                 elif tag_2_content[0] == 'Observation':
                     _observation = {}
                     for i in range(1, len(tag_2_content)):
-                        _observation[tag_2_content[i].split('=')[0]] = tag_2_content[i].split('=')[1]
+                        _observation[tag_2_content[i].split(
+                            '=')[0]] = tag_2_content[i].split('=')[1]
                     _observation['valueQuantity'] = cell.value
                     data['Observation'].append(_observation)
     print(data)
@@ -301,13 +307,14 @@ def get_patient_upload_data(excel_file):
 def create_patient_resource(patient):
     root = ET.Element('Patient')
     tree = ET.ElementTree(root)
-    root.set("xmlns","http://hl7.org/fhir")
+    root.set("xmlns", "http://hl7.org/fhir")
     if patient.get('id'):
         id = ET.SubElement(root, 'id')
         id.set('value', patient['id'])
-    if patient.get('identifier'):    
+    if patient.get('identifier'):
         identifier_resource = ET.SubElement(root, 'identifier')
-        identifier_type(identifier_resource, 'urn:trinhcongminh', patient['identifier'], 'usual', [{'system': 'http://terminology.hl7.org/CodeSystem/v2-0203', 'code': 'MR'}])
+        identifier_type(identifier_resource, 'urn:trinhcongminh', patient['identifier'], 'usual', [
+                        {'system': 'http://terminology.hl7.org/CodeSystem/v2-0203', 'code': 'MR'}])
     if patient.get('name'):
         name = ET.SubElement(root, 'name')
         name_type(name, patient['name'])
@@ -325,25 +332,29 @@ def create_patient_resource(patient):
         birthDate = ET.SubElement(root, 'birthDate')
         birthDate.set('value', patient['birthDate'])
     if patient.get('home_address'):
-        address = ET.SubElement(root,'address')
+        address = ET.SubElement(root, 'address')
         address_type(address, patient['home_address'], use='home')
     if patient.get('work_address'):
-        address = ET.SubElement(root,'address')
+        address = ET.SubElement(root, 'address')
         address_type(address, patient['work_address'], use='work')
     if patient.get('contact'):
         contact = ET.SubElement(root, 'contact')
     return ET.tostring(root, encoding="us-ascii", method="xml", xml_declaration=None, default_namespace=None, short_empty_elements=True)
 
 
-def create_encounter_resource(encounter, patient_id, patient_name):
+def create_encounter_resource(encounter, patient_id, patient_name, practitioner_id):
     root = ET.Element('Encounter')
     tree = ET.ElementTree(root)
-    root.set("xmlns","http://hl7.org/fhir")
+    root.set("xmlns", "http://hl7.org/fhir")
     # identifier = ET.SubElement(root, 'identifier')
     # dttype.identifier_type(identifier, )
+    if encounter.get('id'):
+        id_ = ET.SubElement(root, 'id')
+        id_.set('value', encounter['id'])
     if encounter.get('identifier'):
         identifier_resource = ET.SubElement(root, 'identifier')
-        identifier_type(identifier_resource, 'urn:trinhcongminh', encounter['identifier'], 'usual', [{'system': 'http://terminology.hl7.org/CodeSystem/v2-0203', 'code': 'MR'}])
+        identifier_type(identifier_resource, 'urn:trinhcongminh', encounter['identifier'], 'usual', [
+                        {'system': 'http://terminology.hl7.org/CodeSystem/v2-0203', 'code': 'MR'}])
     if not encounter.get('status'):
         status = ET.SubElement(root, 'status')
         status.set('value', 'in-progress')
@@ -352,32 +363,56 @@ def create_encounter_resource(encounter, patient_id, patient_name):
         status.set('value', encounter['status'])
     if encounter.get('class'):
         _class = ET.SubElement(root, 'class')
-        coding_type(_class, 'http://terminology.hl7.org/CodeSystem/v3-ActCode', encounter['class'])
+        coding_type(
+            _class, 'http://terminology.hl7.org/CodeSystem/v3-ActCode', encounter['class'])
     if encounter.get('type'):
         _type = ET.SubElement(root, 'type')
-        codeable_concept(_type,text=encounter['type'])
+        codeable_concept(_type, text=encounter['type'])
     if encounter.get('serviceType'):
         serviceType = ET.SubElement(root, 'serviceType')
-        codeable_concept(serviceType,text=encounter['serviceType'])
+        codeable_concept(serviceType, text=encounter['serviceType'])
     if encounter.get('priority'):
         priority = ET.SubElement(root, 'priority')
-        codeable_concept(priority,1,[{'system':'http://terminology.hl7.org/CodeSystem/v3-ActPriority','code':encounter['priority'], 'version':'2018-08-12'}])
+        codeable_concept(priority, 1, [
+                         {'system': 'http://terminology.hl7.org/CodeSystem/v3-ActPriority', 'code': encounter['priority'], 'version':'2018-08-12'}])
     subject = ET.SubElement(root, 'subject')
-    reference_type(subject, 'Patient/'+ patient_id, 'Patient', display=patient_name)
+    reference_type(subject, 'Patient/' + patient_id,
+                   'Patient', display=patient_name)
+    participant = ET.SubElement(root, 'participant')
+    reference_type(participant, 'Practitioner/' +
+                   practitioner_id, 'Practitioner')
     if encounter.get('period'):
         period = ET.SubElement(root, 'period')
-        period_type(period, encounter['period'].get('start'), encounter['period'].get('end'))
+        period_type(period, encounter['period'].get(
+            'start'), encounter['period'].get('end'))
     if encounter.get('length'):
         length = ET.SubElement(root, 'length')
-        duration_type(length, encounter['length'], 'days', 'http://unitsofmeasure.org', 'd')    
+        duration_type(length, encounter['length'],
+                      'days', 'http://unitsofmeasure.org', 'd')
     if encounter.get('reasonCode'):
         reason = ET.SubElement(root, 'reasonCode')
         codeable_concept(reason, text=encounter['reasonCode'])
+    if encounter.get('conditions'):
+        for condition in encounter['conditions']:
+            diagnosis = ET.SubElement(root, 'diagnosis')
+            condition_ref = ET.SubElement(diagnosis, 'condition')
+            reference_type(condition_ref, 'Condition/' +
+                           condition['id'], 'Condition')
+            condition_use = ET.SubElement(diagnosis, 'use')
+            code = None
+            if condition['use'] == 'admission':
+                code = {'system': 'http://terminology.hl7.org/CodeSystem/diagnosis-role',
+                        'code': 'AD', 'display': 'admission diagnosis'}
+            elif condition['use'] == 'discharge':
+                code = {'system': 'http://terminology.hl7.org/CodeSystem/diagnosis-role',
+                        'code': 'DD', 'display': 'discharge diagnosis'}
+            codeable_concept(condition_use, 1, [code])
     # if data['Encounter'].get('location'):
     #     location = ET.SubElement(root, 'location')
     if encounter.get('serviceProvider'):
         serviceProvider = ET.SubElement(root, 'serviceProvider')
-    return  ET.tostring(root, encoding="us-ascii", method="xml", xml_declaration=None, default_namespace=None, short_empty_elements=True)
+    return ET.tostring(root, encoding="us-ascii", method="xml", xml_declaration=None, default_namespace=None, short_empty_elements=True)
+
 
 def create_observation_resource(observation, patient_name, patient_id, encounter_id):
     root = ET.Element('Observation')
@@ -389,46 +424,61 @@ def create_observation_resource(observation, patient_name, patient_id, encounter
     if observation.get('category'):
         category = ET.SubElement(root, 'category')
         coding = ET.SubElement(category, 'coding')
-        coding_type(coding, 'http://terminology.hl7.org/CodeSystem/observation-category', observation['category'])
+        coding_type(
+            coding, 'http://terminology.hl7.org/CodeSystem/observation-category', observation['category'])
     if observation.get('code'):
         code = ET.SubElement(root, 'code')
         if patient_id:
             subject = ET.SubElement(root, 'subject')
-            reference_type(subject, 'Patient/' + patient_id, 'Patient', display=patient_name)
+            reference_type(subject, 'Patient/' + patient_id,
+                           'Patient', display=patient_name)
         if encounter_id:
             encounter = ET.SubElement(root, 'encounter')
             reference_type(encounter, 'Encounter/'+encounter_id, 'Encounter')
         if observation['code'] == '8867-4':
             coding = ET.SubElement(code, 'coding')
-            coding_type(coding, 'http://loinc.org', '8867-4', display='Heart rate')
+            coding_type(coding, 'http://loinc.org',
+                        '8867-4', display='Heart rate')
             valueQuantity = ET.SubElement(root, 'valueQuantity')
-            quantity_type(valueQuantity, observation['valueQuantity'], 'beats/minute', 'http://unitsofmeasure.org', '{Beats}/min')
+            quantity_type(valueQuantity, observation['valueQuantity'],
+                          'beats/minute', 'http://unitsofmeasure.org', '{Beats}/min')
         elif observation['code'] == '8310-5':
             coding = ET.SubElement(code, 'coding')
-            coding_type(coding, 'http://loinc.org', '8867-4', display='Body temperature')
+            coding_type(coding, 'http://loinc.org',
+                        '8867-4', display='Body temperature')
             valueQuantity = ET.SubElement(root, 'valueQuantity')
-            quantity_type(valueQuantity, observation['valueQuantity'], 'Cel', 'http://unitsofmeasure.org', 'Cel')
+            quantity_type(
+                valueQuantity, observation['valueQuantity'], 'Cel', 'http://unitsofmeasure.org', 'Cel')
         elif observation['code'] == '8480-6':
             coding = ET.SubElement(code, 'coding')
-            coding_type(coding, 'http://loinc.org', '8480-6', display='Systolic blood pressure')
+            coding_type(coding, 'http://loinc.org', '8480-6',
+                        display='Systolic blood pressure')
             valueQuantity = ET.SubElement(root, 'valueQuantity')
-            quantity_type(valueQuantity, observation['valueQuantity'], 'mmHg', 'http://unitsofmeasure.org', 'mm[Hg]')
+            quantity_type(
+                valueQuantity, observation['valueQuantity'], 'mmHg', 'http://unitsofmeasure.org', 'mm[Hg]')
         elif observation['code'] == '8462-4':
             coding = ET.SubElement(code, 'coding')
-            coding_type(coding, 'http://loinc.org', '8462-4', display='Diastolic blood pressure')
+            coding_type(coding, 'http://loinc.org', '8462-4',
+                        display='Diastolic blood pressure')
             valueQuantity = ET.SubElement(root, 'valueQuantity')
-            quantity_type(valueQuantity, observation['valueQuantity'], 'mmHg', 'http://unitsofmeasure.org', 'mm[Hg]')
+            quantity_type(
+                valueQuantity, observation['valueQuantity'], 'mmHg', 'http://unitsofmeasure.org', 'mm[Hg]')
         elif observation['code'] == '9279-1':
             coding = ET.SubElement(code, 'coding')
-            coding_type(coding, 'http://loinc.org', '9279-1', display='Respiratory rate')
+            coding_type(coding, 'http://loinc.org',
+                        '9279-1', display='Respiratory rate')
             valueQuantity = ET.SubElement(root, 'valueQuantity')
-            quantity_type(valueQuantity, observation['valueQuantity'], 'breaths/minute', 'http://unitsofmeasure.org', '{Breaths}/min')
+            quantity_type(valueQuantity, observation['valueQuantity'],
+                          'breaths/minute', 'http://unitsofmeasure.org', '{Breaths}/min')
         elif observation['code'] == '29463-7':
             coding = ET.SubElement(code, 'coding')
-            coding_type(coding, 'http://loinc.org', '29463-7', display='Body weight')
+            coding_type(coding, 'http://loinc.org',
+                        '29463-7', display='Body weight')
             valueQuantity = ET.SubElement(root, 'valueQuantity')
-            quantity_type(valueQuantity, observation['valueQuantity'], 'kg', 'http://unitsofmeasure.org', 'kg')
+            quantity_type(
+                valueQuantity, observation['valueQuantity'], 'kg', 'http://unitsofmeasure.org', 'kg')
     return ET.tostring(root, encoding="us-ascii", method="xml", xml_declaration=None, default_namespace=None, short_empty_elements=True)
+
 
 def create_condition_resource(condition, patient_id, patient_name, encounter_id):
     root = ET.Element('Condition')
@@ -439,10 +489,12 @@ def create_condition_resource(condition, patient_id, patient_name, encounter_id)
         id_.set('value', condition['id'])
     if condition.get('identifier'):
         identifier = ET.SubElement(root, 'identifier')
-        identifier_type(identifier, 'urn:trinhcongminh', condition['identifier'], 'usual')
+        identifier_type(identifier, 'urn:trinhcongminh',
+                        condition['identifier'], 'usual')
     if condition.get('clinicalStatus'):
         clinical = ET.SubElement(root, 'clinicalStatus')
-        codeable_concept(clinical,1,[{'system':'http://terminology.hl7.org/CodeSystem/condition-clinical','code':condition['clinicalStatus'], 'version':'2018-08-12'}], text=condition['clinicalStatus'])
+        codeable_concept(clinical, 1, [{'system': 'http://terminology.hl7.org/CodeSystem/condition-clinical',
+                         'code': condition['clinicalStatus'], 'version':'2018-08-12'}], text=condition['clinicalStatus'])
     if condition.get('verificationStatus'):
         verify = ET.SubElement(root, 'verificationStatus')
         codeable_concept(verify, text=condition['verificationStatus'])
@@ -456,9 +508,10 @@ def create_condition_resource(condition, patient_id, patient_name, encounter_id)
         code = ET.SubElement(root, 'code')
         codeable_concept(code, text=condition['code'])
     subject = ET.SubElement(root, 'subject')
-    reference_type(subject, 'Patient/' + patient_id, 'Patient', display=patient_name)
+    reference_type(subject, 'Patient/' + patient_id,
+                   'Patient', display=patient_name)
     encounter = ET.SubElement(root, 'encounter')
-    reference_type(encounter, 'Encounter/'+encounter_id, 'Encounter')            
+    reference_type(encounter, 'Encounter/'+encounter_id, 'Encounter')
     if condition.get('onset'):
         onset = ET.SubElement(root, 'onsetDateTime')
         onset.set('value', condition['onset'])
@@ -474,7 +527,8 @@ def create_service_resource(service, patient_id, patient_name, encounter_id):
         id_.set('value', service['id'])
     if service.get('identifier'):
         identifier = ET.SubElement(root, 'identifier')
-        identifier_type(identifier, 'urn:trinhcongminh', service['identifier'], 'usual')
+        identifier_type(identifier, 'urn:trinhcongminh',
+                        service['identifier'], 'usual')
     if service.get('status'):
         status = ET.SubElement(root, 'status')
         status.set('value', service['status'])
@@ -488,19 +542,24 @@ def create_service_resource(service, patient_id, patient_name, encounter_id):
         code = ET.SubElement(root, 'code')
         codeable_concept(code, text=service['code'])
     subject = ET.SubElement(root, 'subject')
-    reference_type(subject, 'Patient/'+ patient_id, 'Patient', display=patient_name)
+    reference_type(subject, 'Patient/' + patient_id,
+                   'Patient', display=patient_name)
     encounter = ET.SubElement(root, 'encounter')
-    reference_type(encounter, 'Encounter/'+ encounter_id, 'Encounter')
+    reference_type(encounter, 'Encounter/' + encounter_id, 'Encounter')
     if service.get('occurrence'):
         occurrence = ET.SubElement(root, 'occurrenceDateTime')
         occurrence.set('value', service['occurrence'])
     if service.get('authoredOn'):
         authoredOn = ET.SubElement(root, 'authoredOn')
         authoredOn.set('value', service['authoredOn'])
+    if service.get('requester'):
+        requester = ET.SubElement(root, 'requester')
+        reference_type(requester, 'Practitioner/' + service['requester'], 'Practitioner')
     if service.get('note'):
         note = ET.SubElement(root, 'note')
         annotation_type(note, text=service['note'])
     return ET.tostring(root, encoding="us-ascii", method="xml", xml_declaration=None, default_namespace=None, short_empty_elements=True)
+
 
 def create_observation_resource(observation, patient_id, patient_name, encounter_id, service_id=None):
     root = ET.Element('Observation')
@@ -508,10 +567,12 @@ def create_observation_resource(observation, patient_id, patient_name, encounter
     root.set('xmlns', 'http://hl7.org/fhir')
     if observation.get('identifier'):
         identifier = ET.SubElement(root, 'identifier')
-        identifier_type(identifier, 'urn:trinhcongminh', observation['identifier'], 'usual')
+        identifier_type(identifier, 'urn:trinhcongminh',
+                        observation['identifier'], 'usual')
     if service_id:
         basedOn = ET.SubElement(root, 'basedOn')
-        reference_type(basedOn, 'ServiceRequest/' + service_id, 'ServiceRequest')
+        reference_type(basedOn, 'ServiceRequest/' +
+                       service_id, 'ServiceRequest')
     if observation.get('status'):
         status = ET.SubElement(root, 'status')
         status.set('value', observation['status'])
@@ -522,27 +583,35 @@ def create_observation_resource(observation, patient_id, patient_name, encounter
         code = ET.SubElement(root, 'code')
         codeable_concept(code, text=observation['code'])
     subject = ET.SubElement(root, 'subject')
-    reference_type(subject, 'Patient/' + patient_id, 'Patient', display=patient_name)
+    reference_type(subject, 'Patient/' + patient_id,
+                   'Patient', display=patient_name)
     encounter = ET.SubElement(root, 'encounter')
     reference_type(encounter, 'Encounter/' + encounter_id, 'Encounter')
     if observation.get('effective'):
         effectiveDateTime = ET.SubElement(root, 'effectiveDateTime')
         effectiveDateTime.set('value', observation['effective'])
+    if observation.get('performer'):
+        performer = ET.SubElement(root, 'performer')
+        reference_type(performer, 'Practitioner/' + observation['performer'], 'Practitioner')
     if observation.get('valuequantity'):
         valueQuantity = ET.SubElement(root, 'valueQuantity')
-        quantity_type(valueQuantity, observation['valuequantity'], observation['valueunit'])
+        quantity_type(
+            valueQuantity, observation['valuequantity'], observation['valueunit'])
     return ET.tostring(root, encoding="us-ascii", method="xml", xml_declaration=None, default_namespace=None, short_empty_elements=True)
 
-def create_procedure_resource(procedure, patient_id, patient_name, encounter_id, practitioner_id=None, service_id=None):
+
+def create_procedure_resource(procedure, patient_id, patient_name, encounter_id,  service_id):
     root = ET.Element('Procedure')
     tree = ET.ElementTree(root)
     root.set('xmlns', 'http://hl7.org/fhir')
     if procedure.get('identifier'):
         identifier = ET.SubElement(root, 'identifier')
-        identifier_type(identifier, 'urn:trinhcongminh', procedure['identifier'], 'usual')
+        identifier_type(identifier, 'urn:trinhcongminh',
+                        procedure['identifier'], 'usual')
     if service_id:
         basedOn = ET.SubElement(root, 'basedOn')
-        reference_type(basedOn, 'ServiceRequest/' + service_id, 'ServiceRequest')
+        reference_type(basedOn, 'ServiceRequest/' +
+                       service_id, 'ServiceRequest')
     if procedure.get('status'):
         status = ET.SubElement(root, 'status')
         status.set('value', procedure['status'])
@@ -553,7 +622,8 @@ def create_procedure_resource(procedure, patient_id, patient_name, encounter_id,
         code = ET.SubElement(root, 'code')
         codeable_concept(code, text=procedure['code'])
     subject = ET.SubElement(root, 'subject')
-    reference_type(subject, 'Patient/' + patient_id, 'Patient', display=patient_name)
+    reference_type(subject, 'Patient/' + patient_id,
+                   'Patient', display=patient_name)
     encounter = ET.SubElement(root, 'encounter')
     reference_type(encounter, 'Encounter/' + encounter_id, 'Encounter')
     if procedure.get('performedDateTime'):
@@ -562,10 +632,12 @@ def create_procedure_resource(procedure, patient_id, patient_name, encounter_id,
         print(procedure['performedDateTime'])
     if procedure.get('asserter'):
         asserter = ET.SubElement(root, 'asserter')
-        reference_type(asserter, 'Practitioner/' + practitioner_id, 'Practitioner')
+        reference_type(asserter, 'Practitioner/' +
+                       procedure['asserter'], 'Practitioner')
     if procedure.get('performer'):
         performer = ET.SubElement(root, 'performer')
-        reference_type(performer, 'Practitioner/' + practitioner_id, 'Practitioner')
+        reference_type(performer, 'Practitioner/' +
+                       procedure['performer'], 'Practitioner')
     if procedure.get('reasonCode'):
         reasonCode = ET.SubElement(root, 'reasonCode')
         codeable_concept(reasonCode, text=procedure['reasonCode'])
@@ -582,14 +654,16 @@ def create_procedure_resource(procedure, patient_id, patient_name, encounter_id,
         note = ET.SubElement(root, 'note')
         annotation_type(note, text=procedure['note'])
     return ET.tostring(root, encoding="us-ascii", method="xml", xml_declaration=None, default_namespace=None, short_empty_elements=True)
-    
+
+
 def create_medication_resource(medication, patient_id, patient_name, encounter_id):
     root = ET.Element('MedicationStatement')
     tree = ET.ElementTree(root)
     root.set('xmlns', 'http://hl7.org/fhir')
     if medication.get('identifier'):
         identifier = ET.SubElement(root, 'identifier')
-        identifier_type(identifier, 'urn:trinhcongminh', medication['identifier'], 'usual')
+        identifier_type(identifier, 'urn:trinhcongminh',
+                        medication['identifier'], 'usual')
     if medication.get('status'):
         status = ET.SubElement(root, 'status')
         status.set('value', medication['status'])
@@ -597,9 +671,10 @@ def create_medication_resource(medication, patient_id, patient_name, encounter_i
         medicationobject = ET.SubElement(root, 'medicationCodeableConcept')
         codeable_concept(medicationobject, text=medication['medication'])
     subject = ET.SubElement(root, 'subject')
-    reference_type(subject, 'Patient/' + patient_id, 'Patient', display=patient_name)
+    reference_type(subject, 'Patient/' + patient_id,
+                   'Patient', display=patient_name)
     context = ET.SubElement(root, 'context')
-    reference_type(context, 'Encounter/' + encounter_id, 'Encounter')    
+    reference_type(context, 'Encounter/' + encounter_id, 'Encounter')
     if medication.get('effective'):
         effective = ET.SubElement(root, 'effectiveDateTime')
         effective.set('value', medication['effective'])
@@ -614,13 +689,15 @@ def create_medication_resource(medication, patient_id, patient_name, encounter_i
     dosage = ET.SubElement(root, 'dosage')
     if medication.get('additionalInstruction'):
         additionalInstruction = ET.SubElement(dosage, 'additionalInstruction')
-        codeable_concept(additionalInstruction, text=medication['additionalInstruction'])
+        codeable_concept(additionalInstruction,
+                         text=medication['additionalInstruction'])
     if medication.get('patientInstruction'):
         patientInstruction = ET.SubElement(dosage, 'patientInstruction')
-        patientInstruction.set('value', medication['patientInstruction']) 
+        patientInstruction.set('value', medication['patientInstruction'])
     timing = ET.SubElement(dosage, 'timing')
     if medication.get('frequency') and medication.get('period') and medication.get('duration') and medication.get('when'):
-        timing_type(timing, medication['duration'], medication['frequency'], medication['period'], medication['when'], medication.get('offset'))
+        timing_type(timing, medication['duration'], medication['frequency'],
+                    medication['period'], medication['when'], medication.get('offset'))
     if medication.get('route'):
         route = ET.SubElement(dosage, 'route')
         codeable_concept(route, text=medication['route'])
@@ -631,11 +708,50 @@ def create_medication_resource(medication, patient_id, patient_name, encounter_i
         dose_unit = medication['quantity'].split(' ')[1]
         quantity_type(doseQuantity, dose_value, dose_unit)
     return ET.tostring(root, encoding="us-ascii", method="xml", xml_declaration=None, default_namespace=None, short_empty_elements=True)
-    
+
+
+def create_diagnostic_report_resource(diagnostic_report, patient_id, patient_name, encounter_id, service_id):
+    root = ET.Element('DiagnosticReport')
+    tree = ET.ElementTree(root)
+    root.set('xmlns', 'http://hl7.org/fhir')
+    if diagnostic_report.get('id'):
+        id_ = ET.SubElement(root, 'id')
+        id_.set('value', diagnostic_report['id'])
+    if diagnostic_report.get('identifier'):
+        identifier = ET.SubElement(root, 'identifier')
+        identifier_type(identifier, 'urn:trinhcongminh',
+                        diagnostic_report['identifier'], 'usual' )
+    based_on = ET.SubElement(root, 'basedOn')
+    reference_type(based_on, 'ServiceRequest/' + service_id, 'ServiceRequest')
+    if diagnostic_report.get('status'):
+        status = ET.SubElement(root, 'status')
+        status.set('value', diagnostic_report['status'])
+    if diagnostic_report.get('category'):
+        category = ET.SubElement(root, 'category')
+        codeable_concept(category, text=diagnostic_report['category'])
+    if diagnostic_report.get('code'):
+        code = ET.SubElement(root, 'code')
+        codeable_concept(code, text=diagnostic_report['code'])
+    subject = ET.SubElement(root, 'subject')
+    reference_type(subject, 'Patient/' + patient_id, 'Patient', display=patient_name)
+    encounter = ET.SubElement(root, 'encounter')
+    reference_type(encounter, 'Encounter/' + encounter_id, 'Encounter')
+    if diagnostic_report.get('effective'):
+        effective_datetime = ET.SubElement(root, 'effectiveDateTime')
+        effective_datetime.set('value', diagnostic_report['effective'])
+    if diagnostic_report.get('performer'):
+        performer = ET.SubElement(root, 'performer')
+        reference_type(performer, 'Practitioner/' + diagnostic_report['performer'], 'Practitioner')
+    if diagnostic_report.get('conclusion'):
+        conclusion = ET.SubElement(root, 'conclusion')
+        conclusion.set('value', diagnostic_report['conclusion'])
+    return ET.tostring(root, encoding="us-ascii", method="xml", xml_declaration=None, default_namespace=None, short_empty_elements=True)
+
 
 def query_patient(patient_identifier):
     patient = {}
-    get_req = requests.get("http://hapi.fhir.org/baseR4/Patient?identifier=urn:trinhcongminh|" + patient_identifier, headers={'Content-type': 'application/xml'})
+    get_req = requests.get(fhir_server + "/Patient?identifier=urn:trinhcongminh|" +
+                           patient_identifier, headers={'Content-type': 'application/xml'})
     if get_req.status_code == 200 and 'entry' in get_req.content.decode('utf-8'):
         print(get_req.status_code)
         get_root = ET.fromstring(get_req.content.decode('utf-8'))
@@ -645,7 +761,8 @@ def query_patient(patient_identifier):
         id_resource = patient_resource.find('d:id', ns)
         patient['id'] = id_resource.attrib['value']
         name_resource = patient_resource.find('d:name', ns)
-        patient['name'] = name_resource.find('d:family', ns).attrib['value'] + ' ' + name_resource.find('d:given', ns).attrib['value']
+        patient['name'] = name_resource.find(
+            'd:family', ns).attrib['value'] + ' ' + name_resource.find('d:given', ns).attrib['value']
         gender = patient_resource.find('d:gender', ns).attrib['value']
         telecom = patient_resource.find('d:telecom', ns)
         patient['telecom'] = telecom.find('d:value', ns).attrib['value']
@@ -653,22 +770,27 @@ def query_patient(patient_identifier):
             patient['gender'] = 'Nam'
         elif gender == 'female':
             patient['gender'] = 'Nữ'
-        patient['birthDate'] = patient_resource.find('d:birthDate', ns).attrib['value']
+        patient['birthdate'] = patient_resource.find(
+            'd:birthDate', ns).attrib['value']
         for address in patient_resource.findall('d:address', ns):
             addr_type = address.find('d:use', ns).attrib['value']
             if addr_type == 'home':
-                patient['home_address'] = address.find('d:line', ns).attrib['value'] + ', ' + address.find('d:district', ns).attrib['value'] + ', ' + address.find('d:city', ns).attrib['value']
+                patient['home_address'] = address.find('d:line', ns).attrib['value'] + ', ' + address.find(
+                    'd:district', ns).attrib['value'] + ', ' + address.find('d:city', ns).attrib['value']
             elif addr_type == 'work':
-                patient['work_address'] = address.find('d:line', ns).attrib['value'] + ', ' + address.find('d:district', ns).attrib['value'] + ', ' + address.find('d:city', ns).attrib['value']
+                patient['work_address'] = address.find('d:line', ns).attrib['value'] + ', ' + address.find(
+                    'd:district', ns).attrib['value'] + ', ' + address.find('d:city', ns).attrib['value']
         patient['identifier'] = patient_identifier
         return patient
     else:
         return None
 
+
 def query_encounter(encounter_identifier):
     encounter = {}
-    
-    get_encounter = requests.get("http://hapi.fhir.org/baseR4/Encounter?identifier=urn:trinhcongminh|" + encounter_identifier, headers={'Content-type': 'application/xml'})
+
+    get_encounter = requests.get(fhir_server + "/Encounter?identifier=urn:trinhcongminh|" +
+                                 encounter_identifier, headers={'Content-type': 'application/xml'})
     if get_encounter.status_code == 200 and 'entry' in get_encounter.content.decode('utf-8'):
         get_root = ET.fromstring(get_encounter.content.decode('utf-8'))
         entry = get_root.find('d:entry', ns)
@@ -676,13 +798,15 @@ def query_encounter(encounter_identifier):
         encounter_resource = resource.find('d:Encounter', ns)
         encounter['id'] = encounter_resource.find('d:id', ns).attrib['value']
         encounter['identifier'] = encounter_identifier
-        encounter['status'] = encounter_resource.find('d:status', ns).attrib['value']
+        encounter['status'] = encounter_resource.find(
+            'd:status', ns).attrib['value']
         _class = encounter_resource.find('d:class', ns)
         encounter['class'] = _class.find('d:code', ns).attrib['value']
         _type = encounter_resource.find('d:type', ns)
         encounter['type'] = _type.find('d:text', ns).attrib['value']
         servicetype = encounter_resource.find('d:serviceType', ns)
-        encounter['serviceType'] = servicetype.find('d:text', ns).attrib['value']
+        encounter['serviceType'] = servicetype.find(
+            'd:text', ns).attrib['value']
         priority = encounter_resource.find('d:priority', ns)
         encounter['priority'] = priority.find('d:text', ns)
         period = encounter_resource.find('d:period', ns)
@@ -691,14 +815,13 @@ def query_encounter(encounter_identifier):
         if period.find('d:end', ns) != None:
             end_date = period.find('d:end', ns).attrib['value']
             encounter['end'] = getdatetime(end_date)
-    print(encounter)
     return encounter
-        
 
 
 def query_service(service_identifier):
     service = {}
-    get_service = requests.get("http://hapi.fhir.org/baseR4/ServiceRequest?identifier=urn:trinhcongminh|" + service_identifier, headers={'Content-type': 'application/xml'})
+    get_service = requests.get(fhir_server + "/ServiceRequest?identifier=urn:trinhcongminh|" +
+                               service_identifier, headers={'Content-type': 'application/xml'})
     if get_service.status_code == 200 and 'entry' in get_service.content.decode('utf-8'):
         get_root = ET.fromstring(get_service.content.decode('utf-8'))
         entry = get_root.find('d:entry', ns)
@@ -706,17 +829,20 @@ def query_service(service_identifier):
         service_resource = resource.find('d:ServiceRequest', ns)
         service['id'] = service_resource.find('d:id', ns).attrib['value']
         service['identifier'] = service_identifier
-        service['service_status'] = service_resource.find('d:status', ns).attrib['value']
+        service['service_status'] = service_resource.find(
+            'd:status', ns).attrib['value']
         category = service_resource.find('d:category', ns)
-        service['service_category'] = category.find('d:text', ns).attrib['value']
+        service['service_category'] = category.find(
+            'd:text', ns).attrib['value']
         code = service_resource.find('d:code', ns)
         service['service_code'] = code.find('d:text', ns).attrib['value']
-    print(service)
     return service
+
 
 def query_condition(condition_identifier):
     condition = {}
-    get_condition = requests.get("http://hapi.fhir.org/baseR4/Condition?identifier=urn:trinhcongminh|" + condition_identifier, headers={'Content-type': 'application/xml'})
+    get_condition = requests.get(fhir_server + "/Condition?identifier=urn:trinhcongminh|" +
+                                 condition_identifier, headers={'Content-type': 'application/xml'})
     if get_condition.status_code == 200 and 'entry' in get_condition.content.decode('utf-8'):
         get_root = ET.fromstring(get_condition.content.decode('utf-8'))
         entry = get_root.find('d:entry', ns)
@@ -725,42 +851,52 @@ def query_condition(condition_identifier):
         condition['id'] = condition_resource.find('d:id', ns).attrib['value']
         condition['identifier'] = condition_identifier
         clinical_status = condition_resource.find('d:clinicalStatus', ns)
-        condition['condition_clinicalstatus'] = clinical_status.find('d:text', ns).attrib['value']
+        condition['condition_clinicalstatus'] = clinical_status.find(
+            'd:text', ns).attrib['value']
         severity = condition_resource.find('d:severity', ns)
-        condition['condition_severiy'] = severity.find('d:text', ns).attrib['value']
+        condition['condition_severiy'] = severity.find(
+            'd:text', ns).attrib['value']
         code = condition_resource.find('d:code', ns)
         condition['condition_code'] = code.find('d:text', ns).attrib['value']
-        condition['condition_onset'] = getdatetime(condition_resource.find('d:onsetDateTime', ns).attrib['value'])
-    print(condition)
+        condition['condition_onset'] = getdatetime(
+            condition_resource.find('d:onsetDateTime', ns).attrib['value'])
     return(condition)
 
-        
+
 def query_observation(observation_identifier):
     observation = {}
-    get_observation = requests.get("http://hapi.fhir.org/baseR4/Observation?identifier=urn:trinhcongminh|" + observation_identifier, headers={'Content-type': 'application/xml'})
+    get_observation = requests.get(fhir_server + "/Observation?identifier=urn:trinhcongminh|" +
+                                   observation_identifier, headers={'Content-type': 'application/xml'})
     if get_observation.status_code == 200 and 'entry' in get_observation.content.decode('utf-8'):
         get_root = ET.fromstring(get_observation.content.decode('utf-8'))
         entry = get_root.find('d:entry', ns)
         resource = entry.find('d:resource', ns)
         observation_resource = resource.find('d:Observation', ns)
-        observation['id'] = observation_resource.find('d:id', ns).attrib['value']
+        observation['id'] = observation_resource.find(
+            'd:id', ns).attrib['value']
         observation['identifier'] = observation_identifier
-        observation['observation_status'] = observation_resource.find('d:status', ns).attrib['value']
+        observation['observation_status'] = observation_resource.find(
+            'd:status', ns).attrib['value']
         category = observation_resource.find('d:category', ns)
-        observation['observation_category'] = category.find('d:text', ns).attrib['value']
+        observation['observation_category'] = category.find(
+            'd:text', ns).attrib['value']
         code = observation_resource.find('d:code', ns)
-        observation['observation_code'] = code.find('d:text', ns).attrib['value']
-        observation['observation_effective'] = getdatetime(observation_resource.find('d:effectiveDateTime', ns).attrib['value'])
+        observation['observation_code'] = code.find(
+            'd:text', ns).attrib['value']
+        observation['observation_effective'] = getdatetime(
+            observation_resource.find('d:effectiveDateTime', ns).attrib['value'])
         value_quantity = observation_resource.find('d:valueQuantity', ns)
-        observation['observation_valuequantity'] = value_quantity.find('d:value', ns).attrib['value']
-        observation['observation_valueunit'] = value_quantity.find('d:unit', ns).attrib['value']
+        observation['observation_valuequantity'] = value_quantity.find(
+            'd:value', ns).attrib['value']
+        observation['observation_valueunit'] = value_quantity.find(
+            'd:unit', ns).attrib['value']
     return observation
 
 
 def query_procedure(procedure_identifier):
     procedure = {}
-    get_procedure = requests.get("http://hapi.fhir.org/baseR4/Procedure?identifier=urn:trinhcongminh|" + procedure_identifier, headers={'Content-type': 'application/xml'})
-    print(get_procedure.content.decode('utf-8'))
+    get_procedure = requests.get(fhir_server + "/Procedure?identifier=urn:trinhcongminh|" +
+                                 procedure_identifier, headers={'Content-type': 'application/xml'})
     if get_procedure.status_code == 200 and 'entry' in get_procedure.content.decode('utf-8'):
         get_root = ET.fromstring(get_procedure.content.decode('utf-8'))
         entry = get_root.find('d:entry', ns)
@@ -768,48 +904,64 @@ def query_procedure(procedure_identifier):
         procedure_resource = resource.find('d:Procedure', ns)
         procedure['id'] = procedure_resource.find('d:id', ns).attrib['value']
         procedure['procedure_identifier'] = procedure_identifier
-        procedure['procedure_status'] = procedure_resource.find('d:status', ns).attrib['value']
+        procedure['procedure_status'] = procedure_resource.find(
+            'd:status', ns).attrib['value']
         category = procedure_resource.find('d:category', ns)
-        procedure['procedure_category'] = category.find('d:text', ns).attrib['value']
+        procedure['procedure_category'] = category.find(
+            'd:text', ns).attrib['value']
         code = procedure_resource.find('d:code', ns)
         procedure['procedure_code'] = code.find('d:text', ns).attrib['value']
-        procedure['procedure_performedDateTime'] = getdatetime(procedure_resource.find('d:performedDateTime', ns).attrib['value'])
+        procedure['procedure_performedDateTime'] = getdatetime(
+            procedure_resource.find('d:performedDateTime', ns).attrib['value'])
         reason_code = procedure_resource.find('d:reasonCode', ns)
-        procedure['procedure_reasonCode'] = reason_code.find('d:text', ns).attrib['value']
+        procedure['procedure_reasonCode'] = reason_code.find(
+            'd:text', ns).attrib['value']
         outcome = procedure_resource.find('d:outcome', ns)
-        procedure['procedure_outcome'] = outcome.find('d:text', ns).attrib['value']
+        procedure['procedure_outcome'] = outcome.find(
+            'd:text', ns).attrib['value']
         complication = procedure_resource.find('d:complication', ns)
-        procedure['procedure_complication'] = complication.find('d:text', ns).attrib['value']
+        procedure['procedure_complication'] = complication.find(
+            'd:text', ns).attrib['value']
         follow_up = procedure_resource.find('d:followUp', ns)
-        procedure['procedure_followUp'] = follow_up.find('d:text', ns).attrib['value']
+        procedure['procedure_followUp'] = follow_up.find(
+            'd:text', ns).attrib['value']
         note = procedure_resource.find('d:note', ns)
         procedure['procedure_note'] = note.find('d:text', ns).attrib['value']
     return procedure
 
+
 def query_medication(medication_identifier):
     medication_statement = {}
-    get_medication = requests.get("http://hapi.fhir.org/baseR4/MedicationStatement?identifier=urn:trinhcongminh|" + medication_identifier, headers={'Content-type': 'application/xml'})
+    get_medication = requests.get(fhir_server + "/MedicationStatement?identifier=urn:trinhcongminh|" +
+                                  medication_identifier, headers={'Content-type': 'application/xml'})
     if get_medication.status_code == 200 and 'entry' in get_medication.content.decode('utf-8'):
         get_root = ET.fromstring(get_medication.content.decode('utf-8'))
         entry = get_root.find('d:entry', ns)
         resource = entry.find('d:resource', ns)
         medication_resource = resource.find('d:MedicationStatement', ns)
-        medication_statement['id'] = medication_resource.find('d:id', ns).attrib['value']
+        medication_statement['id'] = medication_resource.find(
+            'd:id', ns).attrib['value']
         medication_statement['identifier'] = medication_identifier
         medication = medication_resource.find(
             'd:medicationCodeableConcept', ns)
-        medication_statement['medication_medication'] = medication.find('d:text', ns).attrib['value']
-        medication_statement['medication_effective'] = medication_resource.find('d:effectiveDateTime', ns).attrib['value']
-        medication_statement['medication_dateAsserted'] = medication_resource.find('d:dateAsserted', ns).attrib['value']
+        medication_statement['medication_medication'] = medication.find(
+            'd:text', ns).attrib['value']
+        medication_statement['medication_effective'] = medication_resource.find(
+            'd:effectiveDateTime', ns).attrib['value']
+        medication_statement['medication_dateAsserted'] = medication_resource.find(
+            'd:dateAsserted', ns).attrib['value']
         reasonCode = medication_resource.find('d:reasonCode', ns)
-        medication_statement['medication_reasonCode'] = reasonCode.find('d:text', ns).attrib['value']
+        medication_statement['medication_reasonCode'] = reasonCode.find(
+            'd:text', ns).attrib['value']
         dosage = medication_resource.find('d:dosage', ns)
         additional_instruction = dosage.find('d:additionalInstruction', ns)
         if additional_instruction:
-            medication_statement['dosage_additional_instruction'] = additional_instruction.find('d:text', ns).attrib['value']
+            medication_statement['dosage_additional_instruction'] = additional_instruction.find(
+                'd:text', ns).attrib['value']
         patient_instruction = dosage.find('d:patientInstruction', ns)
         if patient_instruction:
-            medication_statement['dosage_patient_instruction'] = patient_instruction.find('d:text', ns).attrib['value']
+            medication_statement['dosage_patient_instruction'] = patient_instruction.find(
+                'd:text', ns).attrib['value']
         timing = dosage.find('d:timing', ns)
         repeat = timing.find('d:repeat', ns)
         duration = repeat.find('d:duration', ns).attrib['value']
@@ -828,13 +980,75 @@ def query_medication(medication_identifier):
         periodUnit = repeat.find('d:periodUnit', ns)
         period = period + ' ' + periodUnit.attrib['value']
         medication_statement['dosage_period'] = period
-        medication_statement['dosage_when'] = repeat.find('d:when', ns).attrib['value']
-        medication_statement['dosage_offset'] = repeat.find('d:offset', ns).attrib['value']
+        medication_statement['dosage_when'] = repeat.find(
+            'd:when', ns).attrib['value']
+        medication_statement['dosage_offset'] = repeat.find(
+            'd:offset', ns).attrib['value']
         route = dosage.find('d:route', ns)
-        medication_statement['dosage_route'] = route.find('d:text', ns).attrib['value']
+        medication_statement['dosage_route'] = route.find(
+            'd:text', ns).attrib['value']
         doseAndRate = dosage.find('d:doseAndRate', ns)
         doseQuantity = doseAndRate.find('d:doseQuantity', ns)
         quantity = doseQuantity.find('d:value', ns).attrib['value']
         unit = doseQuantity.find('d:unit', ns).attrib['value']
         medication_statement['dosage_quantity'] = quantity + ' ' + unit
     return medication_statement
+
+
+def query_practitioner(practitioner_identifier):
+    practitioner = {}
+    get_practitioner = requests.get(fhir_server + '/Practitioner?identifier=urn:trinhcongminh|' +
+                                    practitioner_identifier, headers={'Content-type': 'application/xml'})
+    if get_practitioner.status_code == 200 and 'entry' in get_practitioner.content.decode('utf-8'):
+        get_root = ET.fromstring(get_practitioner.content.decode('utf-8'))
+        entry = get_root.find('d:entry', ns)
+        resource = entry.find('d:resource', ns)
+        practitioner_resource = resource.find('d:Practitioner', ns)
+        practitioner['id'] = practitioner_resource.find(
+            'd:id', ns).attrib['value']
+        practitioner['identifier'] = practitioner_identifier
+        practitioner_name = practitioner_resource.find('d:name', ns)
+        practitioner['name'] = practitioner_name.find(
+            'd:family', ns).attrib['value'] + ' ' + practitioner_name.find('d:given', ns).attrib['value']
+        practitioner_telecom = practitioner_resource.find('d:telecom', ns)
+        practitioner['telecom'] = practitioner_telecom.find(
+            'd:value', ns).attrib['value']
+        practitioner_gender = practitioner_resource.find('d:gender', ns)
+        if practitioner_gender == 'male':
+            practitioner['gender'] = 'Nam'
+        else:
+            practitioner['gender'] = 'Nữ'
+        practitioner_birthdate = practitioner_resource.find('d:birthDate', ns)
+        practitioner['birthDate'] = practitioner_birthdate.attrib['value']
+        practitioner_qualification = practitioner_resource.find(
+            'd:qualification', ns)
+        if practitioner_qualification:
+            practitioner_qualification_code = practitioner_qualification.find(
+                'd:code', ns)
+            practitioner['qualification'] = practitioner_qualification_code.find(
+                'd:text', ns).attrib['value']
+    return practitioner
+
+
+def query_diagnostic_report(diagnostic_report_identifier):
+    diagnostic_report = {}
+    get_diagnostic_report = requests.get(fhir_server + '/DiagnosticReport?identifier=urn:trinhcongminh|' + diagnostic_report_identifier, headers={'Content-type': 'application/xml'})
+    if get_diagnostic_report.status_code == 200 and 'entry' in get_diagnostic_report.content.decode('utf-8'):
+        get_root = ET.fromstring(get_diagnostic_report.content.decode('utf-8'))
+        entry = get_root.find('d:entry', ns)
+        resource = entry.find('d:resource', ns)
+        diagnostic_report_resource = resource.find('d:DiagnosticReport', ns)
+        id_ = diagnostic_report_resource.find('d:id', ns)
+        diagnostic_report['id'] = id_.attrib['value']
+        diagnostic_report['identifier'] = diagnostic_report_identifier
+        status = diagnostic_report_resource.find('d:status', ns)
+        diagnostic_report['status'] = status.attrib['value']
+        category = diagnostic_report_resource.find('d:category', ns)
+        diagnostic_report['category'] = category.find('d:text', ns).attrib['value']
+        code = diagnostic_report_resource.find('d:code', ns)
+        diagnostic_report['code'] = code.find('d:text', ns)
+        effective = diagnostic_report_resource.find('d:effectiveDateTime', ns)
+        diagnostic_report['effective'] = effective.attrib['value']
+        conclusion = diagnostic_report_resource.find('d:conclusion', ns)
+        diagnostic_report['conclusion'] = conclusion.attrib['value']
+    return diagnostic_report

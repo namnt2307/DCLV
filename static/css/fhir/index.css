@@ -2,8 +2,11 @@
     padding: 0;
     margin: 0;
     box-sizing: border-box;
+    font-family: 'Times New Roman', Times, serif;
 }
-
+p {
+    font-size: 18px;
+}
 .header {
     display: flex;
     height: 150px;

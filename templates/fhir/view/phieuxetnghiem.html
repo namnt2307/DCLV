@@ -1,0 +1,98 @@
+{% extends 'fhir/view/base.html' %}
+{% block right-body %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/fhir/phieuxetnghiem.css' %}">
+<div>
+    <table>
+        <thead>
+            <th>ID xét nghiệm</th>
+            <th>Tên xét nghiệm</th>
+            <th>Tình trạng xét nghiệm</th>
+            <th>Ngày dự kiến thực hiện xét nghiệm</th>
+            <th>Ngày yêu cầu xét nghiệm</th>
+            <th>Bác sĩ yêu cầu xét nghiệm</th>
+            <th>Ghi chú cho xét nghiệm</th>
+        </thead>
+        <tbody>
+        {% if services %}
+            {% for service in services %}
+            <tr onclick="displayToggle('{{service.service_identifier}}')">
+                <td>{{service.service_identifier}}</td>
+                <td>{{service.service_code}}</td>
+                <td>{{service.service_status}}</td>
+                <td>{{service.service_occurrence|date:"d-m-Y"}}</td>
+                <td>{{service.service_authored|date:"d-m-Y"}}</td>
+                <td>{{service.service_requester}}</td>
+                <td>{{service.service_note}}</td>
+            </tr>
+            {% endfor %}
+        {% else %}
+            <tr>
+                <td colspan="7">Không có xét nghiệm được thực hiện</td>
+            </tr>
+        {% endif %}
+        </tbody>
+    </table>
+    <div class="display-data" id="display-data" style="display: none;">
+        <div class="">
+            <h1>PHIẾU KẾT QUẢ XÉT NGHIỆM</h1>
+            <div>
+                <p>HỌ TÊN: {{patient.name}}</p>
+                <p>GIỚI: {{patient.gender}}</p>
+                <p>NGÀY SINH: {{patient.birthdate|date:'d-m-Y'}}</p>
+                <p>ĐỊA CHỈ: {{patient.home_address}}</p>
+                <p>BS CHỈ ĐỊNH: {{encounter.encounter_participant}}</p>
+                <p>NGÀY GIỜ CÓ KẾT QUẢ: </p>
+            </div>
+        </div>
+        {% for service in services %}
+            <div id="display-data__{{service.service_identifier}}">
+                <table>
+                    <thead>
+                        <th>Tên xét nghiệm</th>
+                        <th>Kết quả</th>
+                        <th>Trị số bình thường</th>
+                        <th>Đơn vị</th>
+                    </thead>
+                    <tr>
+                        <td colspan="4"><b>{{service.service_code}}</b></td>
+                    </tr>
+                    <tbody>
+                        {%for observation in service.observationmodel_set.all %}
+                        <tr>
+                            <td>{{observation.observation_code}}</td>
+                            <td>{{observation.observation_valuequantity}}</td>
+                            <td>{{observation.observation_reference_range}}</td>
+                            <td>{{observation.observation_valueunit}}</td>
+                        </tr>
+                        {%endfor%}
+                    </tbody>
+                </table>
+                <h2>BÁC SĨ THỰC HIỆN: {{service.service_performer}}</h2>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+    function displayToggle(service_identifier){
+        container = document.getElementById('display-data');
+        dataGroups = document.querySelectorAll('[id^="display-data__"]');
+        if (container.style.display == 'none'){
+            container.style.display = 'block';
+            console.log(container)
+            for (let i = 0; i < dataGroups.length; i++){
+                if (dataGroups[i].id ==('display-data__'+service_identifier)) {
+                    dataGroups[i].style.display = "block";
+                }
+                else{
+                    dataGroups[i].style.display = 'none';
+                }
+            }
+        }
+        else {
+            container.style.display = 'none';
+        }
+    }
+</script>
+{% endblock %}
