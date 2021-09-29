@@ -42,11 +42,11 @@ class ConditionForm(forms.ModelForm):
 
     class Meta:
         model = ConditionModel
-        fields = ('condition_code', 'condition_clinicalstatus',
+        fields = ('condition_code', 'condition_clinical_status',
                   'condition_onset', 'condition_severity')
         labels = {
             'condition_code': 'Vấn đề lâm sàng',
-            'condition_clinicalstatus': 'Tình trạng',
+            'condition_clinical_status': 'Tình trạng',
             'condition_onset': 'Dấu hiệu bắt đầu từ ngày',
             'condition_severity': 'Mức độ',
         }
@@ -212,4 +212,26 @@ class DiagnosticReportForm(forms.ModelForm):
         }
         widgets = {
             'diagnostic_conclusion': forms.Textarea()
+        }
+
+class AllergyForm(forms.ModelForm):
+    class Meta:
+        model = AllergyModel
+        fields = (
+            'allergy_clinical_status', 'allergy_category', 'allergy_code', 'allergy_criticality', 'allergy_onset', 'allergy_last_occurrence', 'allergy_reaction_substance', 'allergy_reaction_manifestation', 'allergy_reaction_severity'
+        )
+        labels = {
+            'allergy_clinical_status': 'tình trạng dị ứng',
+            'allergy_category': 'phân loại dị ứng',
+            'allergy_code': 'dị ứng',
+            'allergy_criticality': 'mức độ nghiêm trọng',
+            'allergy_onset': 'thời điểm phát hiện',
+            'allergy_last_occurrence': 'thời điểm tái phát gần nhất',
+            'allergy_reaction_substance': 'thành phần dị ứng',
+            'allergy_reaction_manifestation': 'phản ứng',
+            'allergy_reaction_severity': 'mức độ phản ứng'
+        }
+        widgets = {
+            'allergy_onset': DateInput(),
+            'allergy_last_occurrence': DateInput()
         }

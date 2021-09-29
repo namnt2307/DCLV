@@ -12,7 +12,7 @@ from lib import dttype as dt
 from login.forms import UserCreationForm
 from handlers import handlers
 from fhir.forms import EHRCreationForm
-from .models import EncounterModel, MedicationModel, ServiceRequestModel, UserModel, ConditionModel, ObservationModel, ProcedureModel, DiagnosticReportModel
+from .models import EncounterModel, MedicationModel, ServiceRequestModel, UserModel, ConditionModel, ObservationModel, ProcedureModel, DiagnosticReportModel, AllergyModel
 from .forms import EncounterForm, ConditionForm, ObservationForm, ProcedureForm, ProcedureDetailForm, MedicationForm, RequestForProcedureForm, ServiceRequestForm, RequestForImageForm, DiagnosticReportForm
 from django.shortcuts import get_object_or_404
 from datetime import datetime
@@ -393,13 +393,9 @@ class search(LoginRequiredMixin, View):
                     user_identifier=instance.identifier)
             except patient.DoesNotExist:
                 data['Patient'] = dt.query_patient(request.POST['identifier'])
-                print(data['Patient'])
                 if data['Patient']:
-                    print(data['Patient'])
-                    create_data = data['Patient']
-                    create_data.pop('id', None)
                     new_patient = patient.objects.create_user(
-                        **create_data, username=data['Patient']['identifier'], email='123@gmail.com', password='123')
+                        **data['Patient'], username=data['Patient']['identifier'], email='123@gmail.com', password='123')
                     get_encounter = requests.get(fhir_server + "/Encounter?subject.identifier=urn:trinhcongminh|" +
                                                  request.POST['identifier'], headers={'Content-type': 'application/xml'})
                     if get_encounter.status_code == 200 and 'entry' in get_encounter.content.decode('utf-8'):
@@ -413,38 +409,39 @@ class search(LoginRequiredMixin, View):
                                 'd:Encounter', ns)
                             identifier = encounter_resource.find(
                                 'd:identifier', ns)
-                            encounter['encounter_identifier'] = identifier.find(
-                                'd:value', ns).attrib['value']
-                            encounter['encounter_status'] = encounter_resource.find(
-                                'd:status', ns).attrib['value']
-                            _class = encounter_resource.find('d:class', ns)
-                            encounter['encounter_class'] = _class.find(
-                                'd:code', ns).attrib['value']
-                            _type = encounter_resource.find('d:type', ns)
-                            encounter['encounter_type'] = _type.find(
-                                'd:text', ns).attrib['value']
-                            servicetype = encounter_resource.find(
-                                'd:serviceType', ns)
-                            encounter['encounter_service'] = servicetype.find(
-                                'd:text', ns).attrib['value']
-                            priority = encounter_resource.find(
-                                'd:priority', ns)
-                            priority_coding = priority.find('d:coding', ns)
-                            encounter['encounter_priority'] = priority_coding.find(
-                                'd:value', ns)
-                            period = encounter_resource.find('d:period', ns)
-                            encounter['encounter_start'] = dt.getdatetime(
-                                period.find('d:start', ns).attrib['value'])
-                            end_date = None
-                            if period.find('d:end', ns) != None:
-                                end_date = period.find(
-                                    'd:end', ns).attrib['value']
-                                encounter['encounter_end'] = dt.getdatetime(
-                                    end_date)
-                            reason = encounter_resource.find(
-                                'd:reasonCode', ns)
-                            encounter['encounter_reason'] = reason.find(
-                                'd:text', ns).attrib['value']
+                            encounter = dt.query_encounter(identifier.find('d:value', ns).attrib['value'], get_id=False)
+                            # encounter['encounter_identifier'] = identifier.find(
+                            #     'd:value', ns).attrib['value']
+                            # encounter['encounter_status'] = encounter_resource.find(
+                            #     'd:status', ns).attrib['value']
+                            # _class = encounter_resource.find('d:class', ns)
+                            # encounter['encounter_class'] = _class.find(
+                            #     'd:code', ns).attrib['value']
+                            # _type = encounter_resource.find('d:type', ns)
+                            # encounter['encounter_type'] = _type.find(
+                            #     'd:text', ns).attrib['value']
+                            # servicetype = encounter_resource.find(
+                            #     'd:serviceType', ns)
+                            # encounter['encounter_service'] = servicetype.find(
+                            #     'd:text', ns).attrib['value']
+                            # priority = encounter_resource.find(
+                            #     'd:priority', ns)
+                            # priority_coding = priority.find('d:coding', ns)
+                            # encounter['encounter_priority'] = priority_coding.find(
+                            #     'd:value', ns)
+                            # period = encounter_resource.find('d:period', ns)
+                            # encounter['encounter_start'] = dt.getdatetime(
+                            #     period.find('d:start', ns).attrib['value'])
+                            # end_date = None
+                            # if period.find('d:end', ns) != None:
+                            #     end_date = period.find(
+                            #         'd:end', ns).attrib['value']
+                            #     encounter['encounter_end'] = dt.getdatetime(
+                            #         end_date)
+                            # reason = encounter_resource.find(
+                            #     'd:reasonCode', ns)
+                            # encounter['encounter_reason'] = reason.find(
+                            #     'd:text', ns).attrib['value']
                             encounter['encounter_submitted'] = True
                             EncounterModel.objects.create(
                                 **encounter, user_identifier=new_patient)
@@ -508,22 +505,23 @@ class hanhchinh(LoginRequiredMixin, View):
                             'd:id', ns).attrib['value'])
                         condition_identifier = condition_resource.find(
                             'd:identifier', ns)
-                        condition['condition_identifier'] = condition_identifier.find(
-                            'd:value', ns).attrib['value']
-                        clinicalstatus = condition_resource.find(
-                            'd:clinicalStatus', ns)
-                        clinicalstatus_coding = clinicalstatus.find(
-                            'd:coding', ns)
-                        condition['condition_clinicalstatus'] = clinicalstatus_coding.find(
-                            'd:code', ns).attrib['value']
-                        severity = condition_resource.find('d:severity', ns)
-                        condition['condition_severity'] = severity.find(
-                            'd:text', ns).attrib['value']
-                        code = condition_resource.find('d:code', ns)
-                        condition['condition_code'] = code.find(
-                            'd:text', ns).attrib['value']
-                        onset = condition_resource.find('d:onsetDateTime', ns)
-                        condition['condition_onset'] = onset.attrib['value']
+                        condition = dt.query_condition(condition_identifier.find('d:value', ns).attrib['value'], get_id=False)
+                        # condition['condition_identifier'] = condition_identifier.find(
+                        #     'd:value', ns).attrib['value']
+                        # clinical_status = condition_resource.find(
+                        #     'd:clinicalStatus', ns)
+                        # clinical_status_coding = clinical_status.find(
+                        #     'd:coding', ns)
+                        # condition['condition_clinical_status'] = clinical_status_coding.find(
+                        #     'd:code', ns).attrib['value']
+                        # severity = condition_resource.find('d:severity', ns)
+                        # condition['condition_severity'] = severity.find(
+                        #     'd:text', ns).attrib['value']
+                        # code = condition_resource.find('d:code', ns)
+                        # condition['condition_code'] = code.find(
+                        #     'd:text', ns).attrib['value']
+                        # onset = condition_resource.find('d:onsetDateTime', ns)
+                        # condition['condition_onset'] = onset.attrib['value']
                         ConditionModel.objects.create(
                             **condition, encounter_identifier=encounter_instance)
             services = ServiceRequestModel.objects.all().filter(
@@ -543,30 +541,30 @@ class hanhchinh(LoginRequiredMixin, View):
                             'd:ServiceRequest', ns)
                         service_identifier = service_resource.find(
                             'd:identifier', ns)
-                        service['service_identifier'] = service_identifier.find(
-                            'd:value', ns).attrib['value']
-                        service['service_status'] = service_resource.find(
-                            'd:status', ns).attrib['value']
-                        category = service_resource.find('d:category', ns)
-                        service['service_category'] = category.find(
-                            'd:text', ns).attrib['value']
-                        code = service_resource.find('d:code', ns)
-                        service['service_code'] = code.find(
-                            'd:text', ns).attrib['value']
-                        service['service_occurrence'] = service_resource.find(
-                            'd:occurrenceDateTime', ns).attrib['value']
-                        service['service_authored'] = service_resource.find(
-                            'd:authoredOn', ns).attrib['value']
-                        note = service_resource.find('d:note', ns)
-                        if note:
-                            service['service_note'] = note.find(
-                                'd:text', ns).attrib['value']
+                        service = dt.query_service(service_identifier.find('d:value', ns).attrib['value'], get_id=False)
+                        # service['service_identifier'] = service_identifier.find(
+                        #     'd:value', ns).attrib['value']
+                        # service['service_status'] = service_resource.find(
+                        #     'd:status', ns).attrib['value']
+                        # category = service_resource.find('d:category', ns)
+                        # service['service_category'] = category.find(
+                        #     'd:text', ns).attrib['value']
+                        # code = service_resource.find('d:code', ns)
+                        # service['service_code'] = code.find(
+                        #     'd:text', ns).attrib['value']
+                        # service['service_occurrence'] = service_resource.find(
+                        #     'd:occurrenceDateTime', ns).attrib['value']
+                        # service['service_authored'] = service_resource.find(
+                        #     'd:authoredOn', ns).attrib['value']
+                        # note = service_resource.find('d:note', ns)
+                        # if note:
+                        #     service['service_note'] = note.find(
+                        #         'd:text', ns).attrib['value']
                         ServiceRequestModel.objects.create(
                             **service, encounter_identifier=encounter_instance)
                         service_instance = ServiceRequestModel.objects.get(service_identifier=service['service_identifier'])
                         service_observations = requests.get(fhir_server + "/Observation?based-on.identifier=urn:trinhcongminh|" +
                                                             service['service_identifier'], headers={'Content-type': 'application/xml'})
-                        print(service_observations.content)
                         if service_observations.status_code == 200 and 'entry' in service_observations.content.decode('utf-8'):
                             get_root = ET.fromstring(
                                 service_observations.content.decode('utf-8'))
@@ -577,28 +575,29 @@ class hanhchinh(LoginRequiredMixin, View):
                                     'd:Observation', ns)
                                 observation_identifier = observation_resource.find(
                                     'd:identifier', ns)
-                                observation['observation_identifier'] = observation_identifier.find(
-                                    'd:value', ns).attrib['value']
-                                observation['observation_status'] = observation_resource.find(
-                                    'd:status', ns).attrib['value']
-                                category = observation_resource.find(
-                                    'd:category', ns)
-                                observation['observation_category'] = category.find(
-                                    'd:text', ns).attrib['value']
-                                code = observation_resource.find('d:code', ns)
-                                observation['observation_code'] = code.find(
-                                    'd:text', ns).attrib['value']
-                                effective = observation_resource.find(
-                                    'd:effectiveDateTime', ns).attrib['value']
-                                observation['observation_effective'] = dt.getdatetime(
-                                    effective)
-                                value_quantity = observation_resource.find(
-                                    'd:valueQuantity', ns)
-                                observation['observation_value_quantity'] = value_quantity.find(
-                                    'd:value', ns).attrib['value']
-                                unit = value_quantity.find('d:unit', ns)
-                                if unit is not None:
-                                    observation['observation_value_unit'] = unit.attrib['value']
+                                observation = dt.query_observation(observation_identifier.find('d:value', ns).attrib['value'], get_id=False)
+                                # observation['observation_identifier'] = observation_identifier.find(
+                                #     'd:value', ns).attrib['value']
+                                # observation['observation_status'] = observation_resource.find(
+                                #     'd:status', ns).attrib['value']
+                                # category = observation_resource.find(
+                                #     'd:category', ns)
+                                # observation['observation_category'] = category.find(
+                                #     'd:text', ns).attrib['value']
+                                # code = observation_resource.find('d:code', ns)
+                                # observation['observation_code'] = code.find(
+                                #     'd:text', ns).attrib['value']
+                                # effective = observation_resource.find(
+                                #     'd:effectiveDateTime', ns).attrib['value']
+                                # observation['observation_effective'] = dt.getdatetime(
+                                #     effective)
+                                # value_quantity = observation_resource.find(
+                                #     'd:valueQuantity', ns)
+                                # observation['observation_value_quantity'] = value_quantity.find(
+                                #     'd:value', ns).attrib['value']
+                                # unit = value_quantity.find('d:unit', ns)
+                                # if unit is not None:
+                                #     observation['observation_value_unit'] = unit.attrib['value']
 
                                 observation['service_identifier'] = service['service_identifier']
                                 ObservationModel.objects.create(
@@ -616,37 +615,36 @@ class hanhchinh(LoginRequiredMixin, View):
                                     'd:Procedure', ns)
                                 procedure_identifier = procedure_resource.find(
                                     'd:identifier', ns)
-                                procedure['procedure_identifier'] = procedure_identifier.find(
-                                    'd:value', ns).attrib['value']
-                                procedure['procedure_status'] = procedure_resource.find(
-                                    'd:status', ns).attrib['value']
-                                category = procedure_resource.find('d:category', ns)
-                                procedure['procedure_category'] = category.find(
-                                    'd:text', ns).attrib['value']
-                                code = procedure_resource.find('d:code', ns)
-                                procedure['procedure_code'] = code.find(
-                                    'd:text', ns).attrib['value']
-                                performedDateTime = procedure_resource.find(
-                                    'd:performedDateTime', ns)
-                                procedure['procedure_performed_datetime'] = dt.getdatetime(
-                                    performedDateTime.attrib['value'])
-                                reasonCode = procedure_resource.find(
-                                    'd:reasonCode', ns)
-                                procedure['procedure_reason_code'] = reasonCode.find(
-                                    'd:text', ns).attrib['value']
-                                outcome = procedure_resource.find('d:outcome', ns)
-                                procedure['procedure_outcome'] = outcome.find(
-                                    'd:text', ns).attrib['value']
-                                complication = procedure_resource.find(
-                                    'd:complication', ns)
-                                procedure['procedure_complication'] = complication.find(
-                                    'd:text', ns).attrib['value']
-                                followUp = procedure_resource.find('d:followUp', ns)
-                                procedure['procedure_follow_up'] = followUp.find(
-                                    'd:text', ns).attrib['value']
-                                note = procedure_resource.find('d:note', ns)
-                                procedure['procedure_note'] = note.find(
-                                    'd:text', ns).attrib['value']
+                                procedure = dt.query_procedure(procedure_identifier.find('d:value', ns).attrib['value'], get_id=False)
+                                # procedure['procedure_status'] = procedure_resource.find(
+                                #     'd:status', ns).attrib['value']
+                                # category = procedure_resource.find('d:category', ns)
+                                # procedure['procedure_category'] = category.find(
+                                #     'd:text', ns).attrib['value']
+                                # code = procedure_resource.find('d:code', ns)
+                                # procedure['procedure_code'] = code.find(
+                                #     'd:text', ns).attrib['value']
+                                # performedDateTime = procedure_resource.find(
+                                #     'd:performedDateTime', ns)
+                                # procedure['procedure_performed_datetime'] = dt.getdatetime(
+                                #     performedDateTime.attrib['value'])
+                                # reasonCode = procedure_resource.find(
+                                #     'd:reasonCode', ns)
+                                # procedure['procedure_reason_code'] = reasonCode.find(
+                                #     'd:text', ns).attrib['value']
+                                # outcome = procedure_resource.find('d:outcome', ns)
+                                # procedure['procedure_outcome'] = outcome.find(
+                                #     'd:text', ns).attrib['value']
+                                # complication = procedure_resource.find(
+                                #     'd:complication', ns)
+                                # procedure['procedure_complication'] = complication.find(
+                                #     'd:text', ns).attrib['value']
+                                # followUp = procedure_resource.find('d:followUp', ns)
+                                # procedure['procedure_follow_up'] = followUp.find(
+                                #     'd:text', ns).attrib['value']
+                                # note = procedure_resource.find('d:note', ns)
+                                # procedure['procedure_note'] = note.find(
+                                #     'd:text', ns).attrib['value']
                                 procedure['service_identifier'] = service_instance
                                 ProcedureModel.objects.create(
                                     **procedure, encounter_identifier=encounter_instance)
@@ -658,18 +656,19 @@ class hanhchinh(LoginRequiredMixin, View):
                                 resource = entry.find('d:resource', ns)
                                 diagnostic_report_resource = resource.find('d:DiagnosticReport' ,ns)
                                 identifier = diagnostic_report_resource.find('d:identifier', ns)
-                                diagnostic_report['diagnostic_identifier'] = identifier.find('d:value', ns).attrib['value']
-                                status = diagnostic_report_resource.find('d:status', ns)
-                                diagnostic_report['diagnostic_status'] = status.attrib['value']
-                                category = diagnostic_report_resource.find('d:category', ns)
-                                diagnostic_report['diagnostic_category'] = category.find('d:text', ns).attrib['value']
-                                code = diagnostic_report_resource.find('d:code', ns)
-                                diagnostic_report['diagnotic_code'] = code.find('d:text', ns).attrib['value']
-                                effective = diagnostic_report_resource.find('d:effectiveDateTime', ns)
-                                diagnostic_report['diagnostic_effective'] = dt.getdatetime(effective.attrib['value'])
-                                conclusion = diagnostic_report_resource.find('d:conclusion', ns)
-                                diagnostic_report['diagnostic_conclusion'] = conclusion.attrib['value']
-                                diagnostic_report['service_identifier'] = service_instance
+                                diagnostic_report = dt.query_diagnostic_report(identifier.find('d:value', ns).attrib['value'], get_id=False)
+                                # diagnostic_report['diagnostic_identifier'] = identifier.find('d:value', ns).attrib['value']
+                                # status = diagnostic_report_resource.find('d:status', ns)
+                                # diagnostic_report['diagnostic_status'] = status.attrib['value']
+                                # category = diagnostic_report_resource.find('d:category', ns)
+                                # diagnostic_report['diagnostic_category'] = category.find('d:text', ns).attrib['value']
+                                # code = diagnostic_report_resource.find('d:code', ns)
+                                # diagnostic_report['diagnotic_code'] = code.find('d:text', ns).attrib['value']
+                                # effective = diagnostic_report_resource.find('d:effectiveDateTime', ns)
+                                # diagnostic_report['diagnostic_effective'] = dt.getdatetime(effective.attrib['value'])
+                                # conclusion = diagnostic_report_resource.find('d:conclusion', ns)
+                                # diagnostic_report['diagnostic_conclusion'] = conclusion.attrib['value']
+                                # diagnostic_report['service_identifier'] = service_instance
                                 DiagnosticReportModel.objects.create(**diagnostic_report, encounter_identifier=encounter_instance)
                 else:
                     pass
@@ -973,8 +972,9 @@ class hoibenh_(LoginRequiredMixin,View):
         encounter_instance = EncounterModel.objects.get(encounter_identifier=encounter_identifier)
         admission_conditions = ConditionModel.objects.all().filter(encounter_identifier=encounter_instance, condition_use='admission', condition_asserter=patient_identifier).exclude(condition_clinicalstatus='resolved')
         resolved_conditions = ConditionModel.objects.all().filter(encounter_identifier=encounter_identifier, condition_clinicalstatus='resolved')
-        allergies = None
+        allergies = AllergyModel.objects.all().filter(encounter_identifier=encounter_instance)
         family_histories = None
+        condition_form = ConditionForm()
         print(admission_conditions)
         context = {
             'group_name': group_name,
@@ -983,7 +983,8 @@ class hoibenh_(LoginRequiredMixin,View):
             'admission_conditions': admission_conditions,
             'resolved_conditions': resolved_conditions,
             'allergies': allergies,
-            'family_histories': family_histories
+            'family_histories': family_histories,
+            'condition_form': condition_form
         }
         return render(request, 'fhir/hoibenh.html', context)
 
@@ -1067,6 +1068,7 @@ class khambenh(LoginRequiredMixin, View):
         encounter_instance = EncounterModel.objects.get(encounter_identifier=encounter_identifier)
         observation_instances = ObservationModel.objects.filter(encounter_identifier=encounter_instance, observation_category='vital-signs')
         observation_objects = {}
+        condition_form = ConditionForm()
         for instance in observation_instances:
             if instance.observation_code.lower() == 'mạch':
                 observation_objects['mach'] = instance
@@ -1182,7 +1184,8 @@ class khambenh(LoginRequiredMixin, View):
             'group_name': group_name,
             'user_name': user_name,
             'observations': observation_objects,
-            'conditions': condition_objects
+            'conditions': condition_objects,
+            'condition_form': condition_form,
         }
         return render(request, 'fhir/toanthan.html', context)
     
@@ -1635,7 +1638,7 @@ class thuoc(LoginRequiredMixin, View):
         medications = MedicationModel.objects.all().filter(
             encounter_identifier=encounter_instance)
         medication_form = MedicationForm()
-        return render(request, 'fhir/thuoc.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'medications': medications, 'form': medication_form})
+        return render(request, 'fhir/thuoc.html', {'data': data, 'group_name': group_name, 'user_name': user_name, 'medications': medications, 'form': medication_form, 'when': DOSAGE_WHEN_CHOICES})
 
 
 class chitietxetnghiem(LoginRequiredMixin, View):
@@ -1914,6 +1917,7 @@ class save(LoginRequiredMixin, View):
             post_encounter = requests.post(fhir_server + "/Encounter/", headers={
                 'Content-type': 'application/xml'}, data=encounter_data.decode('utf-8'))
         encounter = dt.query_encounter(encounter_identifier)
+
         if encounter:
             condition_instances = ConditionModel.objects.all().filter(
                 encounter_identifier=encounter_identifier)

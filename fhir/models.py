@@ -103,7 +103,7 @@ class ConditionModel(models.Model):
         EncounterModel, on_delete=models.CASCADE)
     condition_identifier = models.CharField(max_length=100, primary_key=True)
     condition_code = models.CharField(max_length=100, default='')
-    condition_clinicalstatus = models.CharField(
+    condition_clinical_status = models.CharField(
         max_length=100, choices=CLINICAL_CHOICES)
     condition_category = models.CharField(max_length=100, null=True)
     condition_use = models.CharField(max_length=100,null=True)
@@ -112,6 +112,7 @@ class ConditionModel(models.Model):
     condition_severity = models.CharField(
         choices=SEVERITY_CHOICES, max_length=100)
     condition_asserter = models.CharField(max_length=100, null=True)
+    condition_version = models.IntegerField(null=True)
 
 
 class ServiceRequestModel(models.Model):
@@ -126,6 +127,7 @@ class ServiceRequestModel(models.Model):
     service_occurrence = models.DateField(max_length=100)
     service_authored = models.DateField(max_length=100)
     service_performer = models.CharField(max_length=100, default='')
+    service_version = models.IntegerField(null=True)
 
 
 class ObservationModel(models.Model):
@@ -143,6 +145,7 @@ class ObservationModel(models.Model):
     observation_performer = models.CharField(default='', max_length=100)
     observation_note = models.CharField(default='', max_length=300, null=True)
     observation_reference_range = models.CharField(max_length=100, null=True)
+    observation_version = models.IntegerField(null=True)
 
 
 class ProcedureModel(models.Model):
@@ -173,18 +176,44 @@ class ProcedureModel(models.Model):
     procedure_follow_up = models.CharField(max_length=100, null=True)
     procedure_used = models.CharField(max_length=100, null=True)
     procedure_note = models.CharField(max_length=100, null=True)
+    procedure_version = models.IntegerField(null=True)
 
 
 class AllergyModel(models.Model):
-    patient_identifier = models.ForeignKey(myUser, on_delete=models.CASCADE)
+    CATEGORY_CHOICES = (
+        ('food', 'thức ăn'),
+        ('medication', 'thuốc'),
+        ('environment', 'môi trường'),
+        ('biologic', 'sinh vật')
+    )
+    CLINICAL_CHOICES = (
+        ('active', 'đang hoạt động'),
+        ('inactive', 'không hoạt động'),
+        ('resolved', 'đã khỏi')
+    )
+    CRITICALITY_CHOICES = (
+        ('low', 'mức độ thấp'),
+        ('high', 'mức độ cao'),
+        ('unable-to-assess', 'không đánh giá được')
+    )
+    SEVERITY_CHOICES = (
+        ('mild', 'nhẹ'),
+        ('moderate', 'vừa phải'),
+        ('severe', 'dữ dội')
+    )
+    encounter_identifier = models.ForeignKey(EncounterModel, on_delete=CASCADE)
+    allergy_identifier = models.CharField(max_length=100,primary_key=True)
     allergy_clinical_status = models.CharField(max_length=100)
-    allergy_type = models.CharField(max_length=100)
-    allergy_category = models.CharField(max_length=100)
+    allergy_type = models.CharField(max_length=100, default='allergy')
+    allergy_category = models.CharField(max_length=100, choices=CATEGORY_CHOICES)
     allergy_code = models.CharField(max_length=100)
-    allergy_criticality = models.CharField(max_length=100)
+    allergy_criticality = models.CharField(max_length=100, choices=CRITICALITY_CHOICES)
     allergy_onset = models.DateField(null=True)
     allergy_last_occurrence = models.DateField(null=True)
-    allergy_reaction = models.CharField(max_length=100, null=True)
+    allergy_reaction_substance = models.CharField(max_length=100, null=True, blank=True)
+    allergy_reaction_manifestation = models.CharField(max_length=100, null=True)
+    allergy_reaction_severity = models.CharField(max_length=100, choices=SEVERITY_CHOICES, blank=True)
+    allergy_reaction_note = models.CharField(max_length=100, null=True, blank=True)
 
 
 class MedicationModel(models.Model):
@@ -220,6 +249,7 @@ class MedicationModel(models.Model):
     dosage_quantity = models.CharField(max_length=100)
     dosage_when = models.CharField(choices=DOSAGE_WHEN_CHOICES, max_length=100, blank=True)
     dosage_offset = models.CharField(max_length=100,default=0)
+    medication_version = models.IntegerField(null=True)
 
 
 class DiagnosticReportModel(models.Model):
@@ -236,6 +266,7 @@ class DiagnosticReportModel(models.Model):
     diagnostic_effective = models.DateTimeField(null = True)
     diagnostic_performer = models.CharField(max_length=100)
     diagnostic_conclusion = models.CharField(max_length=1000)
+    diagnostic_version = models.IntegerField(null=True)
 
     
 

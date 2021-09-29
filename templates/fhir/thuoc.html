@@ -27,7 +27,7 @@
             <td>{{medication.medication_medication}}</td>
             <td>{{medication.medication_reason_code}}</td>
             <td>{{medication.medication_effective|date:"d-m-Y"}}</td>
-            <td>{{medication.dosage_frequency}}</td>
+            <td>{{medication.dosage_frequency}}/{{medication.dosage_period}}</td>
             <td>{{medication.dosage_quantity}}</td>
             <td>{{medication.dosage_duration}}</td>
             <td>{{medication.dosage_route}}</td>
@@ -35,7 +35,8 @@
         </tr>
         <tr>
             <td colspan="8">
-                <p>Hướng dẫn sử dụng: {{when|get_item:medication.dosage_when}} {%if medication.dosage_offset != '0'%}{{medication.dosage_offset}} phút {%endif%}, {{medication.dosage_additional_instruction}}</p>
+                <p>Hướng dẫn sử dụng:Dùng {{medication.dosage_frequency}}/{{medication.dosage_period}}, {{when|get_item:medication.dosage_when}} {%if medication.dosage_offset != '0'%}{{medication.dosage_offset}} phút{%endif%}</p>
+                <p>Hướng dẫn thêm: {{medication.dosage_additional_instruction}}</p>
                 <p>Hướng dẫn đặc biệt: {{medication.dosage_patient_instruction}}</p>
             </td>
         </tr>
