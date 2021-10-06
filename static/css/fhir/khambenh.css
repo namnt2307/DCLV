@@ -211,3 +211,7 @@ table th,td {
     border: 1px solid black;
 }
 
+input{
+    max-width: 100px;
+    height: 20px;
+}

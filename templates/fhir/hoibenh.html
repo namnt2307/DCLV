@@ -75,13 +75,14 @@
         </form>
     {%endif%}
 {% endcomment %}
+{% comment %}
 {% if admission_conditions %}
 <div>
-    <div>
+    <div id="data">
         <div>
             <h2>1. Quá trình bệnh lý</h2>
             {% for condition in admission_conditions %}
-                <p>{{condition.condition_code}}; {{condition.condition_clinicalstatus}}; {{condition.condition_onset|date:'d-m-Y'}}; {{condition.condition_severity}}</p>
+                <p>{{condition.condition_code}}; {{condition.condition_clinical_status}}; {{condition.condition_onset|date:'d-m-Y'}}; {{severity|get_item:condition.condition_severity}}</p>
             {% endfor %}
         </div>
         <div>
@@ -89,11 +90,33 @@
             <div>
                 <h3>+ Bản thân</h3>
                 {% for condition in resolved_conditions %}
-                    <p>{{condition.condition_code}}; {{condition.condition_onset}}; {{condition.condition_abatement}}; {{condition.condition_severity}}</p>
+                    <p>{{condition.condition_code}}; {{condition.condition_onset|date:'d-m-Y'}}; {{condition.condition_abatement|date:'d-m-Y'}}; {{severity|get_item:condition.condition_severity}}</p>
                 {% endfor %}
             </div>
         </div>
     </div>
+    <div>
+        <form action="" method="POST" id="form" style="display: none;"> 
+            {% csrf_token %}
+                <div>
+                    <h2>1. Quá trình bệnh lý</h2>
+                    <textarea name="" id="" cols="30" rows="10">{% for condition in admission_conditions %}
+{{condition.condition_code}}; {{condition.condition_clinical_status}}; {{condition.condition_onset|date:'Y-m-d'}}; {{severity|get_item:condition.condition_severity}}{% endfor %}</textarea>
+                </div>
+                <div>
+                    <h2>2. Tiền sử bệnh</h2>
+                    <div>
+                        <h3>+ Bản thân</h3>
+                        <textarea name="" id="" cols="30" rows="10">{% for condition in resolved_conditions %}
+{{condition.condition_code}}; {{condition.condition_clinical_status}}; {{condition.condition_onset|date:'Y-m-d'}}; {{severity|get_item:condition.condition_severity}}{% endfor %}</textarea>
+                    </div>
+                </div>
+            <button type="submit">Lưu lại</button>
+        </form>
+    </div>
+</div>
+<div class="button">
+    <button id="clickButton" onclick="changeDisplay()">Chỉnh sửa</button>
 </div>
 {% else %}
 <div>
@@ -108,39 +131,6 @@
             <h3>+ Bản thân</h3>
             <textarea type="text" name="tiensubanthan" id=""></textarea>
             <h3>+ Dị ứng</h3>
-            <!-- <div>
-                <select name="allergy_stat" id="allergy_stat">
-                    <option value="">-----</option>
-                    <option value="active">Đang hoạt động</option>
-                    <option value="inactive">Không hoạt động</option>
-                    <option value="resolved">Đã khỏi</option>
-                </select>
-                <select name="allergy_category" id="allergy_category">
-                    <option value="">-----</option>
-                    <option value="food">Thức ăn</option>
-                    <option value="medication">Thuốc</option>
-                    <option value="environment">Môi trường</option>
-                    <option value="biologic">Sinh vật</option>
-                </select>
-                <input type="text" name="allergy_code" id="allergy_code" placeholder="Dị ứng">
-                <select name="allergy_critical" id="allergy_critical">
-                    <option value="">-----</option>
-                    <option value="low">Mức độ thấp</option>
-                    <option value="high">Mức độ cao</option>
-                    <option value="unable-to-assess">Không đánh giá được</option>
-                </select>
-                <input type="date" name="allergy_onset" id="allergy_onset">
-                <input type="date" name="allergy_last_occurrence" id="allergy_lastoccurrence">
-                <input type="text" name="allergy_reaction_substance" id="allergy_reaction_substance" placeholder="Thành phần dị ứng">
-                <input type="text" name="allergy_reaction_manifestation" id="allergy_reaction_manifestation" placeholder="Phản ứng">
-                <select name="allergy_reaction_severity" id="allergy_reaction_severity">
-                    <option value="">-----</option>
-                    <option value="mild">Nhẹ</option>
-                    <option value="moderate">Vừa phải</option>
-                    <option value="severe">Nặng</option>
-                </select>
-                <input type="text" name="allergy_reaction_note" id="allergy_reaction_note" placeholder="Ghi chú thêm cho phản ứng">
-            </div> -->
             <textarea type="text" name="diung" id=""></textarea>
             <h3>+ Gia đình</h3>
             <textarea type="text" name="tiensugiadinh" id=""></textarea>
@@ -149,4 +139,136 @@
     </form>
 </div>
 {% endif %}
+{% endcomment %}
+<div>
+    <h1>THÔNG TIN HỎI BỆNH</h1>
+    <div>
+        <h2>1. Quá trình bệnh lý</h2>
+            <table>
+                <th>Tên triệu chứng</th>
+                <th>Ngày xuất hiện triệu chứng</th>
+                <th>Ngày hết</th>
+                <th>Mức độ</th>
+                {% for condition in admission_conditions %}
+                    <tr id="{{condition.condition_identifier}}-data">
+                        <td>{{condition.condition_code}}</td>
+                        <td>{{condition.condition_onset|date:'d-m-Y'}}</td>
+                        <td>{{condition.condition_abatement|date:'d-m-Y'}}</td>
+                        <td>{{severity|get_item:condition.condition_severity}}</td>
+                        <td><button type="button" onclick="toggleDisplay('{{condition.condition_identifier}}')">Chỉnh sửa</button></td>
+                    </tr>
+                    <tr style="display: none;" id="{{condition.condition_identifier}}-form">
+                        <form action="" method="POST">
+                            <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+                            <input type="hidden" name="classifier" id="" value="benhly">
+                            <input type="hidden" name="condition_identifier" value="{{condition.condition_identifier}}">
+                            {%with 'value:'|add:condition.condition_code as code%}
+                                <td>{{condition_form.condition_code|attr:code}}</td>
+                            {%endwith%}
+                            {%with condition.condition_onset|date:'Y-m-d' as condition_date%}
+                            {%with 'value:'|add:condition_date as code%}
+                                <td>{{condition_form.condition_onset|attr:code}}</td>
+                            {%endwith%}
+                            {%endwith%}
+                            {%with condition.condition_abatement|date:'Y-m-d' as condition_date%}
+                            {%with 'value:'|add:condition_date as code%}
+                                <td>{{condition_form.condition_abatement|attr:code}}</td>
+                            {%endwith%}
+                            {%endwith%}                            
+                            {%with 'value:'|add:condition.condition_severity as code%}
+                                <td>{{condition_form.condition_severity|attr:code}}</td>
+                            {%endwith%}
+                            <td><button type="submit">Lưu</button></td>
+                            <td><button type="button" onclick="toggleDisplay('{{condition.condition_identifier}}')">Hủy</button></td>
+                        </form>
+                    </tr>
+                {% endfor %}
+                <tr>
+                    <form action="" method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="classifier" id="" value="benhly">
+                        <td>{{condition_form.condition_code}}</td>
+                        <td>{{condition_form.condition_onset}}</td>
+                        <td>{{condition_form.condition_abatement}}</td>
+                        <td>{{condition_form.condition_severity}}</td>
+                        <td><button type="submit">Thêm</button></td>
+                    </form>
+                </tr>
+            </table>
+    </div>
+    <div>
+        <h2>2. Tiền sử bệnh</h2>
+        <div>
+            <h3>+ Bản thân</h3>
+                <table>
+                    <th>Tên bệnh</th>
+                    <th>Ngày mắc bệnh</th>
+                    <th>Ngày hết</th>
+                    <th>Mức độ</th>
+                    {% for condition in resolved_conditions %}
+                        <tr id="{{condition.condition_identifier}}-data">
+                            <td>{{condition.condition_code}}</td>
+                            <td>{{condition.condition_onset|date:'d-m-Y'}}</td>
+                            <td>{{condition.condition_abatement|date:'d-m-Y'}}</td>
+                            <td>{{severity|get_item:condition.condition_severity}}</td>
+                        </tr>
+                        <tr style="display: none;" id="{{condition.condition_identifier}}-form">
+                            <form action="" method="POST">
+                                <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+                                <input type="hidden" name="classifier" id="" value="tiensubanthan">
+                                <input type="hidden" name="condition_identifier" value="{{condition.condition_identifier}}">
+                                {%with 'value:'|add:condition.condition_code as code%}
+                                    <td>{{condition_form.condition_code|attr:code}}</td>
+                                {%endwith%}
+                                {%with condition.condition_onset|date:'Y-m-d' as condition_date%}
+                                {%with 'value:'|add:condition_date as code%}
+                                    <td>{{condition_form.condition_onset|attr:code}}</td>
+                                {%endwith%}
+                                {%endwith%}
+                                {%with condition.condition_abatement|date:'Y-m-d' as condition_date%}
+                                {%with 'value:'|add:condition_date as code%}
+                                    <td>{{condition_form.condition_abatement|attr:code}}</td>
+                                {%endwith%}
+                                {%endwith%}                            
+                                {%with 'value:'|add:condition.condition_severity as code%}
+                                    <td>{{condition_form.condition_severity|attr:code}}</td>
+                                {%endwith%}
+                            </form>
+                        </tr>
+                    {% endfor %}
+                    <tr>
+                        <form action="" method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="classifier" id="" value="tiensubanthan">
+                            <td>{{condition_form.condition_code}}</td>
+                            <td>{{condition_form.condition_onset}}</td>
+                            <td>{{condition_form.condition_abatement}}</td>
+                            <td>{{condition_form.condition_severity}}</td>
+                            <td><button type="submit">Thêm</button></td>
+                        </form>
+                    </tr>
+                </table>
+        </div>
+        <div>
+            <h3>+ Dị ứng</h3>
+        </div>
+        <div>
+            <h3>+ Gia đình</h3>
+        </div>
+    </div>    
+</div>
+<script>
+    function toggleDisplay(elementId){
+        data = document.getElementById(elementId + '-data');
+        form = document.getElementById(elementId + '-form');
+        if (data.style.display == 'none'){
+            data.style.display = "table-row";
+            form.style.display = "none";
+        }
+        else{
+            data.style.display = "none";
+            form.style.display = "table-row";
+        }
+    }
+</script>
 {%endblock%}

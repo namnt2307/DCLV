@@ -8,7 +8,7 @@
 {%block url6%}'{%url 'fhir:hinhanh' group_name user_name data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
 {% load widget_tweaks %}
 {%block function%}
-    {%if data.Encounter_Info.encounter_submitted%}
+    {%if data.Encounter_Info %}
     <div id='data'>
         <h1>THÔNG TIN ĐĂNG KÝ KHÁM</h1>
         <p>Loại hình thăm khám: {{class|get_item:data.Encounter_Info.encounter_class}}</p>

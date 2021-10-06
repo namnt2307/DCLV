@@ -43,7 +43,7 @@ class ConditionForm(forms.ModelForm):
     class Meta:
         model = ConditionModel
         fields = ('condition_code', 'condition_clinical_status',
-                  'condition_onset', 'condition_severity')
+                  'condition_onset',  'condition_abatement','condition_severity')
         labels = {
             'condition_code': 'Vấn đề lâm sàng',
             'condition_clinical_status': 'Tình trạng',
@@ -51,7 +51,8 @@ class ConditionForm(forms.ModelForm):
             'condition_severity': 'Mức độ',
         }
         widgets = {
-            'condition_onset': DateInput()
+            'condition_onset': DateInput(),
+            'condition_abatement': DateInput()
         }
 
 
@@ -116,7 +117,7 @@ class MedicationForm(forms.ModelForm):
         )
         model = MedicationModel
         fields = (
-            'medication_medication', 'medication_reason_code', 'medication_effective', 'dosage_frequency', 'dosage_period', 'dosage_duration', 'dosage_route', 'dosage_quantity', 'dosage_when', 'dosage_offset', 'dosage_additional_instruction', 'dosage_patient_instruction'
+            'medication_medication', 'medication_reason_code', 'medication_effective', 'dosage_frequency', 'dosage_period', 'dosage_period_unit', 'dosage_duration', 'dosage_duration_unit', 'dosage_route', 'dosage_quantity', 'dosage_when', 'dosage_offset', 'dosage_additional_instruction', 'dosage_patient_instruction'
         )
         labels = {
             'medication_medication': 'Thuốc chỉ định',
@@ -124,7 +125,9 @@ class MedicationForm(forms.ModelForm):
             'medication_effective': 'Ngày bắt đầu dùng thuốc',
             'dosage_frequency': 'Tần suất dùng thuốc',
             'dosage_period': 'Chu kì dùng thuốc',
+            'dosage_period_unit': '',
             'dosage_duration': 'Khoảng thời gian dùng thuốc',
+            'dosage_duration_unit': '',
             'dosage_route': 'Đường dùng thuốc',
             'dosage_quantity': 'Số lượng mỗi lần dùng',
             'dosage_when': 'Thời điểm dùng thuốc (thời điểm)',

@@ -3,36 +3,87 @@
 {% load static %}
 <link rel="stylesheet" href="{% static 'css/fhir/phieuxetnghiem.css' %}">
 <div>
-    <table>
-        <thead>
-            <th>ID xét nghiệm</th>
-            <th>Tên xét nghiệm</th>
-            <th>Tình trạng xét nghiệm</th>
-            <th>Ngày dự kiến thực hiện xét nghiệm</th>
-            <th>Ngày yêu cầu xét nghiệm</th>
-            <th>Bác sĩ yêu cầu xét nghiệm</th>
-            <th>Ghi chú cho xét nghiệm</th>
-        </thead>
-        <tbody>
-        {% if services %}
-            {% for service in services %}
-            <tr onclick="displayToggle('{{service.service_identifier}}')">
-                <td>{{service.service_identifier}}</td>
-                <td>{{service.service_code}}</td>
-                <td>{{service.service_status}}</td>
-                <td>{{service.service_occurrence|date:"d-m-Y"}}</td>
-                <td>{{service.service_authored|date:"d-m-Y"}}</td>
-                <td>{{service.service_requester}}</td>
-                <td>{{service.service_note}}</td>
-            </tr>
+    {% if services_history %}
+        <div class="history-container">
+            {% for service in services %}   
+                <div class="history" id="{{service.service_identifier}}-history" style="display: none;">
+                    <div class="history-header">
+                        <h1>Lịch sử chỉnh sửa</h1>
+                        <i class="fa fa-times" aria-hidden="true" onclick="displayHistory('{{service.service_identifier}}-history')"></i>
+                    </div>
+                    {% for service_history in services_history|get_item:service.service_identifier %}
+                        <div>
+                            <h2>Chỉnh sửa ngày: {{service_history.last_updated}}</h2>
+                            <p>Tên xét nghiệm: {{service_history.service_code}}</p>
+                            <p>Ngày dự kiến: {{service_history.service_occurrence}}</p>
+                            <p>Ngày yêu cầu: {{service_history.service_authored}}</p>
+                            <p>Bác sĩ yêu cầu: {{service_history.service_requester}}</p>
+                            <p>Ghi chú: {{service_history.service_note}}</p>
+                        </div>
+                    {% endfor %}
+                </div>
             {% endfor %}
-        {% else %}
-            <tr>
-                <td colspan="7">Không có xét nghiệm được thực hiện</td>
-            </tr>
-        {% endif %}
-        </tbody>
-    </table>
+        </div>
+    {% endif %}
+    <div>
+        <table>
+            <thead>
+                <th>ID xét nghiệm</th>
+                <th>Tên xét nghiệm</th>
+                <th>Tình trạng xét nghiệm</th>
+                <th>Ngày dự kiến thực hiện xét nghiệm</th>
+                <th>Ngày yêu cầu xét nghiệm</th>
+                <th>Bác sĩ yêu cầu xét nghiệm</th>
+                <th>Ghi chú cho xét nghiệm</th>
+            </thead>
+            <tbody>
+            {% if encounter.encounter_storage == 'local' %}
+                {% if services %}
+                    {% for service in services %}
+                    <tr onclick="displayToggle('{{service.service_identifier}}')">
+                        <td>{{service.service_identifier}}</td>
+                        <td>{{service.service_code}}</td>
+                        <td>{{service.service_status}}</td>
+                        <td>{{service.service_occurrence|date:"d-m-Y"}}</td>
+                        <td>{{service.service_authored|date:"d-m-Y"}}</td>
+                        <td>{{service.service_requester}}</td>
+                        <td>{{service.service_note}}</td>
+                    </tr>
+                    {% endfor %}
+                    {% if services_history|get_item:service.service_identifier %}
+                        <button onclick="displayHistory('{{service.service_identifier}}-history')">xem lịch sử</button>
+                    {% endif %}
+                {% else %}
+                
+                <tr>
+                    <td colspan="7">Không có xét nghiệm được thực hiện</td>
+                </tr>
+                {% endif %}
+            {% elif encounter.encounter_storage == 'hapi' %}
+                {% if services %}
+                    {% for service in services %}
+                    <tr onclick="displayToggle('{{service.service_identifier}}')">
+                        <td>{{service.service_identifier}}</td>
+                        <td>{{service.service_code}}</td>
+                        <td>{{service.service_status}}</td>
+                        <td>{{service.service_occurrence}}</td>
+                        <td>{{service.service_authored}}</td>
+                        <td>{{service.service_requester}}</td>
+                        <td>{{service.service_note}}</td>
+                    </tr>
+                    {% endfor %}
+                    {% if services_history|get_item:service.service_identifier %}
+                        <button onclick="displayHistory('{{service.service_identifier}}-history')">xem lịch sử</button>
+                    {% endif %}
+                {% else %}
+                    <tr>
+                        <td colspan="7">Không có xét nghiệm được thực hiện</td>
+                    </tr>        
+                {% endif %}    
+            {% endif %}
+            </tbody>
+        </table>
+    </div>
     <div class="display-data" id="display-data" style="display: none;">
         <div class="">
             <h1>PHIẾU KẾT QUẢ XÉT NGHIỆM</h1>
@@ -47,6 +98,26 @@
         </div>
         {% for service in services %}
             <div id="display-data__{{service.service_identifier}}">
+                <div class="history-container">
+                    {% if observations_history %}
+                        {% for observation in observations|get_item:service.service_identifier %}   
+                            <div class="history" id="{{observation.observation_identifier}}-history" style="display: none;">
+                                <div class="history-header">
+                                    <h1>Lịch sử chỉnh sửa</h1>
+                                    <i class="fa fa-times" aria-hidden="true" onclick="displayHistory('{{observation.observation_identifier}}-history')"></i>
+                                </div>
+                                {% for observation_history in observations_history|get_item:observation.observation_identifier %}
+                                    <div>
+                                        <p>Tên xét nghiệm: {{observation_history.observation_code}}</p>
+                                        <p>Kết quả: {{observation_history.observation_value_quantity}}</p>
+                                        <p>Trị số bình thường: {{observation_history.observation_reference_range}}</p>
+                                        <p>Đơn vị: {{observation_history.observation_value_unit}}</p>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
                 <table>
                     <thead>
                         <th>Tên xét nghiệm</th>
@@ -58,17 +129,20 @@
                         <td colspan="4"><b>{{service.service_code}}</b></td>
                     </tr>
                     <tbody>
-                        {%for observation in service.observationmodel_set.all %}
+                        {%for observation in observations|get_item:service.service_identifier %}
                         <tr>
                             <td>{{observation.observation_code}}</td>
-                            <td>{{observation.observation_valuequantity}}</td>
+                            <td>{{observation.observation_value_quantity}}</td>
                             <td>{{observation.observation_reference_range}}</td>
-                            <td>{{observation.observation_valueunit}}</td>
+                            <td>{{observation.observation_value_unit}}</td>
+                            {% if observations_history|get_item:observation.observation_identifier %}
+                                <td><button onclick="displayHistory('{{observation.observation_identifier}}-history')">xem lịch sử</button></td>
+                            {% endif %}
                         </tr>
                         {%endfor%}
                     </tbody>
                 </table>
-                <h2>BÁC SĨ THỰC HIỆN: {{service.service_performer}}</h2>
+                <p>BÁC SĨ THỰC HIỆN: {{service.service_performer}}</p>
             </div>
         {% endfor %}
     </div>
@@ -92,6 +166,16 @@
         }
         else {
             container.style.display = 'none';
+        }
+    }
+
+    function displayHistory(element_id) {
+        getElement = document.getElementById(element_id);
+        if (getElement.style.display == 'none') {
+            getElement.style.display = 'block';
+        }
+        else {
+            getElement.style.display = 'none';
         }
     }
 </script>

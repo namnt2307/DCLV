@@ -18,7 +18,9 @@
     margin: 12px 12px 12px 30px;
     flex:1;
 }
-
+.right-body__body-section{
+    position: relative;
+}
 .right-body__body-section__flexcontainer{
     display: flex;
     width: 100%;
@@ -80,4 +82,25 @@
 .signature__content{
     text-align: center;
     margin-bottom: 50px;
+}
+.history-container{
+    position: relative;
+}
+.history{
+    background-color: white;
+    border: 1px solid black;
+    padding: 12px;
+    position: absolute;
+    width: 80%;
+    margin: 0px auto;
+    top: 20px;
+    left: 0;
+    right: 0;
+    height: 300px;
+    overflow: scroll;
+    z-index: 1;
+}
+.history-header{
+    display: flex;
+    justify-content: space-between;
 }

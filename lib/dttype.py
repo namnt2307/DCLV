@@ -7,6 +7,7 @@ ns = {'d': "http://hl7.org/fhir"}
 
 fhir_server = "http://10.0.0.16:8080/fhir"
 
+
 def identifier_type(resource, system, value, use="usual", _type=None, period=None, assigner=None):
     ET.SubElement(resource, 'use value=\"{}\"'.format(use))
     if _type:
@@ -219,25 +220,33 @@ def get_observation(encounter_id):
 
 def getdatetime(datetime_str):
     get_datetime = datetime_str.split('+')[0]
+    if '.' in get_datetime:
+        get_datetime = get_datetime.split('.')[0]
+    # print(get_datetime)
     datetime_obj = datetime.strptime(get_datetime, '%Y-%m-%dT%H:%M:%S')
     return datetime.strftime(datetime_obj, "%Y-%m-%d %H:%M:%S")
 
 
-def get_encounter(encounter_id):
-    encounter = {}
-    get_encounter = requests.get(fhir_server + "/Encounter/" + str(
-        encounter_id), headers={'Content-type': 'application/xml'})
-    print(get_encounter.status_code)
-    print(get_encounter.content)
-    if get_encounter.status_code == 200:
-        get_root = ET.fromstring(get_encounter.content.decode('utf-8'))
-        encounter['id'] = get_root.find('d:id', ns).attrib['value']
-        period = get_root.find('d:period', ns)
-        encounter['start_date'] = period.find('d:start', ns).attrib['value']
-        encounter['id'] = encounter_id
-        return encounter
-    else:
-        return None
+def get_date(date_str):
+    date = datetime.strptime(date_str, '%Y-%m-%d')
+    return datetime.strftime(date, "%d-%m-%Y")
+
+
+# def get_encounter(encounter_id):
+#     encounter = {}
+#     get_encounter = requests.get(fhir_server + "/Encounter/" + str(
+#         encounter_id), headers={'Content-type': 'application/xml'})
+#     print(get_encounter.status_code)
+#     print(get_encounter.content)
+#     if get_encounter.status_code == 200:
+#         get_root = ET.fromstring(get_encounter.content.decode('utf-8'))
+#         encounter['id'] = get_root.find('d:id', ns).attrib['value']
+#         period = get_root.find('d:period', ns)
+#         encounter['start_date'] = period.find('d:start', ns).attrib['value']
+#         encounter['id'] = encounter_id
+#         return encounter
+#     else:
+#         return None
 
 
 def get_patient_upload_data(excel_file):
@@ -300,7 +309,7 @@ def get_patient_upload_data(excel_file):
                             '=')[0]] = tag_2_content[i].split('=')[1]
                     _observation['valueQuantity'] = cell.value
                     data['Observation'].append(_observation)
-    print(data)
+    # print(data)
     return data
 
 
@@ -368,13 +377,13 @@ def create_encounter_resource(encounter, patient_id, patient_name, practitioner_
     if encounter.get('type'):
         _type = ET.SubElement(root, 'type')
         codeable_concept(_type, text=encounter['type'])
-    if encounter.get('serviceType'):
-        serviceType = ET.SubElement(root, 'serviceType')
-        codeable_concept(serviceType, text=encounter['serviceType'])
+    if encounter.get('service_type'):
+        service_type = ET.SubElement(root, 'serviceType')
+        codeable_concept(service_type, text=encounter['service_type'])
     if encounter.get('priority'):
         priority = ET.SubElement(root, 'priority')
         codeable_concept(priority, 1, [
-                         {'system': 'http://terminology.hl7.org/CodeSystem/v3-ActPriority', 'code': encounter['priority'], 'version':'2018-08-12'}])
+                         {'system': 'http://terminology.hl7.org/CodeSystem/v3-ActPriority', 'code': encounter['priority'], 'version':'2018-08-12'}], text=encounter['priority'])
     subject = ET.SubElement(root, 'subject')
     reference_type(subject, 'Patient/' + patient_id,
                    'Patient', display=patient_name)
@@ -389,94 +398,13 @@ def create_encounter_resource(encounter, patient_id, patient_name, practitioner_
         length = ET.SubElement(root, 'length')
         duration_type(length, encounter['length'],
                       'days', 'http://unitsofmeasure.org', 'd')
-    if encounter.get('reasonCode'):
+    if encounter.get('reason_code'):
         reason = ET.SubElement(root, 'reasonCode')
-        codeable_concept(reason, text=encounter['reasonCode'])
-    if encounter.get('conditions'):
-        for condition in encounter['conditions']:
-            diagnosis = ET.SubElement(root, 'diagnosis')
-            condition_ref = ET.SubElement(diagnosis, 'condition')
-            reference_type(condition_ref, 'Condition/' +
-                           condition['id'], 'Condition')
-            condition_use = ET.SubElement(diagnosis, 'use')
-            code = None
-            if condition['use'] == 'admission':
-                code = {'system': 'http://terminology.hl7.org/CodeSystem/diagnosis-role',
-                        'code': 'AD', 'display': 'admission diagnosis'}
-            elif condition['use'] == 'discharge':
-                code = {'system': 'http://terminology.hl7.org/CodeSystem/diagnosis-role',
-                        'code': 'DD', 'display': 'discharge diagnosis'}
-            codeable_concept(condition_use, 1, [code])
+        codeable_concept(reason, text=encounter['reason_code'])
     # if data['Encounter'].get('location'):
     #     location = ET.SubElement(root, 'location')
     if encounter.get('serviceProvider'):
         serviceProvider = ET.SubElement(root, 'serviceProvider')
-    return ET.tostring(root, encoding="us-ascii", method="xml", xml_declaration=None, default_namespace=None, short_empty_elements=True)
-
-
-def create_observation_resource(observation, patient_name, patient_id, encounter_id):
-    root = ET.Element('Observation')
-    tree = ET.ElementTree(root)
-    root.set('xmlns', 'http://hl7.org/fhir')
-    if observation.get('status'):
-        status = ET.SubElement(root, 'status')
-        status.set('value', observation['status'])
-    if observation.get('category'):
-        category = ET.SubElement(root, 'category')
-        coding = ET.SubElement(category, 'coding')
-        coding_type(
-            coding, 'http://terminology.hl7.org/CodeSystem/observation-category', observation['category'])
-    if observation.get('code'):
-        code = ET.SubElement(root, 'code')
-        if patient_id:
-            subject = ET.SubElement(root, 'subject')
-            reference_type(subject, 'Patient/' + patient_id,
-                           'Patient', display=patient_name)
-        if encounter_id:
-            encounter = ET.SubElement(root, 'encounter')
-            reference_type(encounter, 'Encounter/'+encounter_id, 'Encounter')
-        if observation['code'] == '8867-4':
-            coding = ET.SubElement(code, 'coding')
-            coding_type(coding, 'http://loinc.org',
-                        '8867-4', display='Heart rate')
-            valueQuantity = ET.SubElement(root, 'valueQuantity')
-            quantity_type(valueQuantity, observation['valueQuantity'],
-                          'beats/minute', 'http://unitsofmeasure.org', '{Beats}/min')
-        elif observation['code'] == '8310-5':
-            coding = ET.SubElement(code, 'coding')
-            coding_type(coding, 'http://loinc.org',
-                        '8867-4', display='Body temperature')
-            valueQuantity = ET.SubElement(root, 'valueQuantity')
-            quantity_type(
-                valueQuantity, observation['valueQuantity'], 'Cel', 'http://unitsofmeasure.org', 'Cel')
-        elif observation['code'] == '8480-6':
-            coding = ET.SubElement(code, 'coding')
-            coding_type(coding, 'http://loinc.org', '8480-6',
-                        display='Systolic blood pressure')
-            valueQuantity = ET.SubElement(root, 'valueQuantity')
-            quantity_type(
-                valueQuantity, observation['valueQuantity'], 'mmHg', 'http://unitsofmeasure.org', 'mm[Hg]')
-        elif observation['code'] == '8462-4':
-            coding = ET.SubElement(code, 'coding')
-            coding_type(coding, 'http://loinc.org', '8462-4',
-                        display='Diastolic blood pressure')
-            valueQuantity = ET.SubElement(root, 'valueQuantity')
-            quantity_type(
-                valueQuantity, observation['valueQuantity'], 'mmHg', 'http://unitsofmeasure.org', 'mm[Hg]')
-        elif observation['code'] == '9279-1':
-            coding = ET.SubElement(code, 'coding')
-            coding_type(coding, 'http://loinc.org',
-                        '9279-1', display='Respiratory rate')
-            valueQuantity = ET.SubElement(root, 'valueQuantity')
-            quantity_type(valueQuantity, observation['valueQuantity'],
-                          'breaths/minute', 'http://unitsofmeasure.org', '{Breaths}/min')
-        elif observation['code'] == '29463-7':
-            coding = ET.SubElement(code, 'coding')
-            coding_type(coding, 'http://loinc.org',
-                        '29463-7', display='Body weight')
-            valueQuantity = ET.SubElement(root, 'valueQuantity')
-            quantity_type(
-                valueQuantity, observation['valueQuantity'], 'kg', 'http://unitsofmeasure.org', 'kg')
     return ET.tostring(root, encoding="us-ascii", method="xml", xml_declaration=None, default_namespace=None, short_empty_elements=True)
 
 
@@ -491,19 +419,21 @@ def create_condition_resource(condition, patient_id, patient_name, encounter_id)
         identifier = ET.SubElement(root, 'identifier')
         identifier_type(identifier, 'urn:trinhcongminh',
                         condition['identifier'], 'usual')
-    if condition.get('clinicalStatus'):
+    if condition.get('clinical_status'):
         clinical = ET.SubElement(root, 'clinicalStatus')
         codeable_concept(clinical, 1, [{'system': 'http://terminology.hl7.org/CodeSystem/condition-clinical',
-                         'code': condition['clinicalStatus'], 'version':'2018-08-12'}], text=condition['clinicalStatus'])
-    if condition.get('verificationStatus'):
+                         'code': condition['clinical_status'], 'version':'4.0.1'}], text=condition['clinical_status'])
+    if condition.get('verification_status'):
         verify = ET.SubElement(root, 'verificationStatus')
-        codeable_concept(verify, text=condition['verificationStatus'])
+        codeable_concept(verify, 1, [{'system': 'http://terminology.hl7.org/CodeSystem/condition-ver-status',
+                                  'code': 'confirmed', 'version': '4.0.1'}], text='confirmed')
     if condition.get('category'):
         category = ET.SubElement(root, 'category')
         codeable_concept(category, text=condition['category'])
     if condition.get('severity'):
         severity = ET.SubElement(root, 'severity')
-        codeable_concept(severity, text=condition['severity'])
+        codeable_concept(severity, [{'system': 'http://snomed.info/sct',
+                         'code': condition['severity'], 'version': '4.0.1'}], text=condition['severity'])
     if condition.get('code'):
         code = ET.SubElement(root, 'code')
         codeable_concept(code, text=condition['code'])
@@ -515,6 +445,12 @@ def create_condition_resource(condition, patient_id, patient_name, encounter_id)
     if condition.get('onset'):
         onset = ET.SubElement(root, 'onsetDateTime')
         onset.set('value', condition['onset'])
+    if condition.get('abatement'):
+        abatement = ET.SubElement(root, 'abatementDateTime')
+        abatement.set('value', condition['abatement'])
+    if condition.get('note'):
+        note = ET.SubElement(root, 'note')
+        annotation_type(note, text=condition['note'])
     return ET.tostring(root, encoding="us-ascii", method="xml", xml_declaration=None, default_namespace=None, short_empty_elements=True)
 
 
@@ -554,7 +490,8 @@ def create_service_resource(service, patient_id, patient_name, encounter_id):
         authoredOn.set('value', service['authoredOn'])
     if service.get('requester'):
         requester = ET.SubElement(root, 'requester')
-        reference_type(requester, 'Practitioner/' + service['requester'], 'Practitioner')
+        reference_type(requester, 'Practitioner/' +
+                       service['requester'], 'Practitioner')
     if service.get('note'):
         note = ET.SubElement(root, 'note')
         annotation_type(note, text=service['note'])
@@ -565,20 +502,24 @@ def create_observation_resource(observation, patient_id, patient_name, encounter
     root = ET.Element('Observation')
     tree = ET.ElementTree(root)
     root.set('xmlns', 'http://hl7.org/fhir')
+    if observation.get('id'):
+        id_ = ET.SubElement(root, 'id')
+        id_.set('value', observation['id'])
     if observation.get('identifier'):
         identifier = ET.SubElement(root, 'identifier')
         identifier_type(identifier, 'urn:trinhcongminh',
                         observation['identifier'], 'usual')
     if service_id:
-        basedOn = ET.SubElement(root, 'basedOn')
-        reference_type(basedOn, 'ServiceRequest/' +
+        based_on = ET.SubElement(root, 'basedOn')
+        reference_type(based_on, 'ServiceRequest/' +
                        service_id, 'ServiceRequest')
     if observation.get('status'):
         status = ET.SubElement(root, 'status')
         status.set('value', observation['status'])
     if observation.get('category'):
         category = ET.SubElement(root, 'category')
-        codeable_concept(category, text=observation['category'])
+        codeable_concept(category, 1, [{'system': 'http://terminology.hl7.org/CodeSystem/observation-category',
+                                        'code': observation['category'], 'version': '4.0.1'}], text=observation['category'])
     if observation.get('code'):
         code = ET.SubElement(root, 'code')
         codeable_concept(code, text=observation['code'])
@@ -592,11 +533,19 @@ def create_observation_resource(observation, patient_id, patient_name, encounter
         effectiveDateTime.set('value', observation['effective'])
     if observation.get('performer'):
         performer = ET.SubElement(root, 'performer')
-        reference_type(performer, 'Practitioner/' + observation['performer'], 'Practitioner')
-    if observation.get('valuequantity'):
+        reference_type(performer, 'Practitioner/' +
+                       observation['performer'], 'Practitioner')
+    if observation.get('value_quantity'):
         valueQuantity = ET.SubElement(root, 'valueQuantity')
         quantity_type(
-            valueQuantity, observation['valuequantity'], observation['valueunit'])
+            valueQuantity, observation['value_quantity'], observation['value_unit'])
+    if observation.get('note'):
+        note = ET.SubElement(root, 'note')
+        annotation_type(note, text=observation['note'])
+    if observation.get('reference_range'):
+        reference_range = ET.SubElement(root, 'referenceRange')
+        reference_range_text = ET.SubElement(reference_range, 'text')
+        reference_range_text.set('value', observation['reference_range'])
     return ET.tostring(root, encoding="us-ascii", method="xml", xml_declaration=None, default_namespace=None, short_empty_elements=True)
 
 
@@ -604,13 +553,16 @@ def create_procedure_resource(procedure, patient_id, patient_name, encounter_id,
     root = ET.Element('Procedure')
     tree = ET.ElementTree(root)
     root.set('xmlns', 'http://hl7.org/fhir')
+    if procedure.get('id'):
+        id_ = ET.SubElement(root, 'id')
+        id_.set('value', procedure['id'])
     if procedure.get('identifier'):
         identifier = ET.SubElement(root, 'identifier')
         identifier_type(identifier, 'urn:trinhcongminh',
                         procedure['identifier'], 'usual')
     if service_id:
-        basedOn = ET.SubElement(root, 'basedOn')
-        reference_type(basedOn, 'ServiceRequest/' +
+        based_on = ET.SubElement(root, 'basedOn')
+        reference_type(based_on, 'ServiceRequest/' +
                        service_id, 'ServiceRequest')
     if procedure.get('status'):
         status = ET.SubElement(root, 'status')
@@ -626,10 +578,9 @@ def create_procedure_resource(procedure, patient_id, patient_name, encounter_id,
                    'Patient', display=patient_name)
     encounter = ET.SubElement(root, 'encounter')
     reference_type(encounter, 'Encounter/' + encounter_id, 'Encounter')
-    if procedure.get('performedDateTime'):
-        performeddateTime = ET.SubElement(root, 'performedDateTime')
-        performeddateTime.set('value', procedure['performedDateTime'])
-        print(procedure['performedDateTime'])
+    if procedure.get('performed_datetime'):
+        performed_dateTime = ET.SubElement(root, 'performedDateTime')
+        performed_dateTime.set('value', procedure['performed_datetime'])
     if procedure.get('asserter'):
         asserter = ET.SubElement(root, 'asserter')
         reference_type(asserter, 'Practitioner/' +
@@ -638,7 +589,7 @@ def create_procedure_resource(procedure, patient_id, patient_name, encounter_id,
         performer = ET.SubElement(root, 'performer')
         reference_type(performer, 'Practitioner/' +
                        procedure['performer'], 'Practitioner')
-    if procedure.get('reasonCode'):
+    if procedure.get('reason_code'):
         reasonCode = ET.SubElement(root, 'reasonCode')
         codeable_concept(reasonCode, text=procedure['reasonCode'])
     if procedure.get('outcome'):
@@ -647,12 +598,15 @@ def create_procedure_resource(procedure, patient_id, patient_name, encounter_id,
     if procedure.get('complication'):
         complication = ET.SubElement(root, 'complication')
         codeable_concept(complication, text=procedure['complication'])
-    if procedure.get('followUp'):
+    if procedure.get('follow_up'):
         followUp = ET.SubElement(root, 'followUp')
-        codeable_concept(followUp, text=procedure['followUp'])
+        codeable_concept(followUp, text=procedure['follow_up'])
     if procedure.get('note'):
         note = ET.SubElement(root, 'note')
         annotation_type(note, text=procedure['note'])
+    if procedure.get('used'):
+        used = ET.SubElement(root, 'usedCode')
+        codeable_concept(used, text=procedure['used'])
     return ET.tostring(root, encoding="us-ascii", method="xml", xml_declaration=None, default_namespace=None, short_empty_elements=True)
 
 
@@ -660,6 +614,9 @@ def create_medication_resource(medication, patient_id, patient_name, encounter_i
     root = ET.Element('MedicationStatement')
     tree = ET.ElementTree(root)
     root.set('xmlns', 'http://hl7.org/fhir')
+    if medication.get('id'):
+        id_ = ET.SubElement(root, 'id')
+        id_.set('value', medication['id'])
     if medication.get('identifier'):
         identifier = ET.SubElement(root, 'identifier')
         identifier_type(identifier, 'urn:trinhcongminh',
@@ -678,22 +635,22 @@ def create_medication_resource(medication, patient_id, patient_name, encounter_i
     if medication.get('effective'):
         effective = ET.SubElement(root, 'effectiveDateTime')
         effective.set('value', medication['effective'])
-        print(medication['effective'])
-    if medication.get('dateAsserted'):
+        # print(medication['effective'])
+    if medication.get('date_asserted'):
         dateAsserted = ET.SubElement(root, 'dateAsserted')
-        dateAsserted.set('value', medication['dateAsserted'])
-        print(medication['dateAsserted'])
-    if medication.get('reasonCode'):
+        dateAsserted.set('value', medication['date_asserted'])
+  
+    if medication.get('reason_code'):
         reasonCode = ET.SubElement(root, 'reasonCode')
-        codeable_concept(reasonCode, text=medication['reasonCode'])
+        codeable_concept(reasonCode, text=medication['reason_code'])
     dosage = ET.SubElement(root, 'dosage')
-    if medication.get('additionalInstruction'):
+    if medication.get('additional_instruction'):
         additionalInstruction = ET.SubElement(dosage, 'additionalInstruction')
         codeable_concept(additionalInstruction,
-                         text=medication['additionalInstruction'])
-    if medication.get('patientInstruction'):
+                         text=medication['additional_instruction'])
+    if medication.get('patient_instruction'):
         patientInstruction = ET.SubElement(dosage, 'patientInstruction')
-        patientInstruction.set('value', medication['patientInstruction'])
+        patientInstruction.set('value', medication['patient_instruction'])
     timing = ET.SubElement(dosage, 'timing')
     if medication.get('frequency') and medication.get('period') and medication.get('duration') and medication.get('when'):
         timing_type(timing, medication['duration'], medication['frequency'],
@@ -720,7 +677,7 @@ def create_diagnostic_report_resource(diagnostic_report, patient_id, patient_nam
     if diagnostic_report.get('identifier'):
         identifier = ET.SubElement(root, 'identifier')
         identifier_type(identifier, 'urn:trinhcongminh',
-                        diagnostic_report['identifier'], 'usual' )
+                        diagnostic_report['identifier'], 'usual')
     based_on = ET.SubElement(root, 'basedOn')
     reference_type(based_on, 'ServiceRequest/' + service_id, 'ServiceRequest')
     if diagnostic_report.get('status'):
@@ -733,7 +690,8 @@ def create_diagnostic_report_resource(diagnostic_report, patient_id, patient_nam
         code = ET.SubElement(root, 'code')
         codeable_concept(code, text=diagnostic_report['code'])
     subject = ET.SubElement(root, 'subject')
-    reference_type(subject, 'Patient/' + patient_id, 'Patient', display=patient_name)
+    reference_type(subject, 'Patient/' + patient_id,
+                   'Patient', display=patient_name)
     encounter = ET.SubElement(root, 'encounter')
     reference_type(encounter, 'Encounter/' + encounter_id, 'Encounter')
     if diagnostic_report.get('effective'):
@@ -741,17 +699,20 @@ def create_diagnostic_report_resource(diagnostic_report, patient_id, patient_nam
         effective_datetime.set('value', diagnostic_report['effective'])
     if diagnostic_report.get('performer'):
         performer = ET.SubElement(root, 'performer')
-        reference_type(performer, 'Practitioner/' + diagnostic_report['performer'], 'Practitioner')
+        reference_type(performer, 'Practitioner/' +
+                       diagnostic_report['performer'], 'Practitioner')
     if diagnostic_report.get('conclusion'):
         conclusion = ET.SubElement(root, 'conclusion')
         conclusion.set('value', diagnostic_report['conclusion'])
     return ET.tostring(root, encoding="us-ascii", method="xml", xml_declaration=None, default_namespace=None, short_empty_elements=True)
 
 
-def query_patient(patient_identifier,get_id):
+def query_patient(patient_identifier, get_id):
     patient = {}
     get_req = requests.get(fhir_server + "/Patient?identifier=urn:trinhcongminh|" +
                            patient_identifier, headers={'Content-type': 'application/xml'})
+    # print(get_req.status_code)
+    # print(get_req.content.decode('utf-8'))
     if get_req.status_code == 200 and 'entry' in get_req.content.decode('utf-8'):
         get_root = ET.fromstring(get_req.content.decode('utf-8'))
         entry = get_root.find('d:entry', ns)
@@ -768,13 +729,13 @@ def query_patient(patient_identifier,get_id):
         if telecom:
             patient['telecom'] = telecom.find('d:value', ns).attrib['value']
         gender = patient_resource.find('d:gender', ns)
-        if gender:
+        if gender != None:
             if gender.attrib['value'] == 'male':
                 patient['gender'] = 'Nam'
             elif gender.attrib['value'] == 'female':
                 patient['gender'] = 'Nữ'
         birthdate = patient_resource.find('d:birthDate', ns)
-        if birthdate:
+        if birthdate != None:
             patient['birthdate'] = birthdate.attrib['value']
         for address in patient_resource.findall('d:address', ns):
             addr_type = address.find('d:use', ns).attrib['value']
@@ -785,55 +746,69 @@ def query_patient(patient_identifier,get_id):
                 patient['work_address'] = address.find('d:line', ns).attrib['value'] + ', ' + address.find(
                     'd:district', ns).attrib['value'] + ', ' + address.find('d:city', ns).attrib['value']
         patient['identifier'] = patient_identifier
+        # print(patient)
         return patient
     else:
         return None
 
 
-def query_encounter(encounter_identifier, get_id):
+def query_encounter(encounter_identifier, query_type):
     encounter = {}
     get_encounter = requests.get(fhir_server + "/Encounter?identifier=urn:trinhcongminh|" +
                                  encounter_identifier, headers={'Content-type': 'application/xml'})
+  
     if get_encounter.status_code == 200 and 'entry' in get_encounter.content.decode('utf-8'):
         get_root = ET.fromstring(get_encounter.content.decode('utf-8'))
         entry = get_root.find('d:entry', ns)
         resource = entry.find('d:resource', ns)
         encounter_resource = resource.find('d:Encounter', ns)
-        if get_id == True:
-            encounter['id'] = encounter_resource.find('d:id', ns).attrib['value']
-        encounter['encounter_identifier'] = encounter_identifier
-        status = encounter_resource.find('d:status', ns)
-        if status:
-            encounter['encounter_status'] = status.attrib['value']
-        _class = encounter_resource.find('d:class', ns)
-        if _class:
-            encounter['encounter_class'] = _class.find('d:code', ns).attrib['value']
-        _type = encounter_resource.find('d:type', ns)
-        if _type:
-            encounter['encounter_type'] = _type.find('d:text', ns).attrib['value']
-        service_type = encounter_resource.find('d:serviceType', ns)
-        if service_type:
-            encounter['encounter_service'] = service_type.find(
-                'd:text', ns).attrib['value']
-        priority = encounter_resource.find('d:priority', ns)
-        if priority:
-            priority_coding = priority.find('d:coding', ns)
-            encounter['encounter_priority'] = priority_coding.find(
-                'd:value', ns)
-        period = encounter_resource.find('d:period', ns)
-        if period:
-            encounter['encounter_start'] = period.find('d:start', ns).attrib['value']
-            end_date = None
-            if period.find('d:end', ns) != None:
-                end_date = period.find('d:end', ns).attrib['value']
-                encounter['encounter_end'] = getdatetime(end_date)
-        reason_code = encounter_resource.find('d:reasonCode', ns)
-        if reason_code:
-            encounter['encounter_reason'] = reason_code.find('d:text', ns).attrib['value']
+        if query_type == 'meta' or query_type == 'all':
+            meta = encounter_resource.find('d:meta', ns)
+            encounter['version'] = meta.find('d:versionId', ns).attrib['value']
+            encounter['last_updated'] = meta.find('d:lastUpdated', ns).attrib['value']
+        if query_type == 'id' or query_type == 'all':
+            encounter['id'] = encounter_resource.find(
+                'd:id', ns).attrib['value']
+        if query_type == 'data' or query_type == 'all':
+            encounter['encounter_identifier'] = encounter_identifier
+            status = encounter_resource.find('d:status', ns)
+            if status != None:
+                encounter['encounter_status'] = status.attrib['value']
+            _class = encounter_resource.find('d:class', ns)
+            if _class:
+                encounter['encounter_class'] = _class.find(
+                    'd:code', ns).attrib['value']
+            _type = encounter_resource.find('d:type', ns)
+            if _type:
+                encounter['encounter_type'] = _type.find(
+                    'd:text', ns).attrib['value']
+            service_type = encounter_resource.find('d:serviceType', ns)
+            if service_type:
+                encounter['encounter_service'] = service_type.find(
+                    'd:text', ns).attrib['value']
+            # priority = encounter_resource.find('d:priority', ns)
+            # if priority:
+            #     encounter['encounter_priority'] = priority.find('d:text', ns).attrib['value']
+            period = encounter_resource.find('d:period', ns)
+            if period:
+                encounter['encounter_start'] = period.find(
+                    'd:start', ns).attrib['value']
+                end_date = None
+                if period.find('d:end', ns) != None:
+                    end_date = period.find('d:end', ns).attrib['value']
+                    encounter['encounter_end'] = getdatetime(end_date)
+            length = encounter_resource.find('d:length', ns)
+            if length:
+                encounter['encounter_length'] = length.find('d:value', ns).attrib['value']
+            reason_code = encounter_resource.find('d:reasonCode', ns)
+            if reason_code:
+                encounter['encounter_reason'] = reason_code.find(
+                    'd:text', ns).attrib['value']
+    
     return encounter
 
 
-def query_service(service_identifier, get_id):
+def query_service(service_identifier, query_type):
     service = {}
     get_service = requests.get(fhir_server + "/ServiceRequest?identifier=urn:trinhcongminh|" +
                                service_identifier, headers={'Content-type': 'application/xml'})
@@ -842,61 +817,91 @@ def query_service(service_identifier, get_id):
         entry = get_root.find('d:entry', ns)
         resource = entry.find('d:resource', ns)
         service_resource = resource.find('d:ServiceRequest', ns)
-        if get_id == True:
+        if query_type == 'meta' or query_type == 'all':
+            meta = service_resource.find('d:meta', ns)
+            service['version'] = meta.find('d:versionId', ns).attrib['value']
+            service['last_updated'] = meta.find('d:lastUpdated', ns).attrib['value']
+        if query_type == 'id' or query_type == 'all':
             service['id'] = service_resource.find('d:id', ns).attrib['value']
-        service['service_identifier'] = service_identifier
-        status = service_resource.find('d:status', ns)
-        if status:
-            service['service_status'] = status.attrib['value']
-        category = service_resource.find('d:category', ns)
-        if category:
-            service['service_category'] = category.find(
-                'd:text', ns).attrib['value']
-        code = service_resource.find('d:code', ns)
-        if code:
-            service['service_code'] = code.find('d:text', ns).attrib['value']
-        occurrence = service_resource.find('d:occurrenceDateTime', ns)
-        if occurrence:
-            service['service_occurrence'] = occurrence.attrib['value']
-        authored_on = service_resource.find('d:authoredOn', ns)
-        if authored_on:
-            service['service_authored'] = authored_on.attrib['value']
-        note = service_resource.find('d:note', ns)
-        if note:
-            service['service_note'] = note.find('d:text', ns).attrib['value']
+        if query_type == 'data' or query_type == 'all':
+            service['service_identifier'] = service_identifier
+            status = service_resource.find('d:status', ns)
+            if status != None:
+                service['service_status'] = status.attrib['value']
+            intent = service_resource.find('d:intent', ns)
+            if intent != None:
+                service['service_intent'] = intent.attrib['value']
+            category = service_resource.find('d:category', ns)
+            if category:
+                service['service_category'] = category.find(
+                    'd:text', ns).attrib['value']
+            code = service_resource.find('d:code', ns)
+            if code:
+                service['service_code'] = code.find('d:text', ns).attrib['value']
+            occurrence = service_resource.find('d:occurrenceDateTime', ns)
+            if occurrence != None:
+                service['service_occurrence'] = get_date(occurrence.attrib['value'])
+            authored_on = service_resource.find('d:authoredOn', ns)
+            if authored_on != None:
+                service['service_authored'] = get_date(authored_on.attrib['value'])
+            note = service_resource.find('d:note', ns)
+            if note:
+                service['service_note'] = note.find('d:text', ns).attrib['value']
     return service
 
 
-def query_condition(condition_identifier, get_id):
+def query_condition(condition_identifier, query_type):
     condition = {}
     get_condition = requests.get(fhir_server + "/Condition?identifier=urn:trinhcongminh|" +
                                  condition_identifier, headers={'Content-type': 'application/xml'})
+                                   
     if get_condition.status_code == 200 and 'entry' in get_condition.content.decode('utf-8'):
         get_root = ET.fromstring(get_condition.content.decode('utf-8'))
         entry = get_root.find('d:entry', ns)
         resource = entry.find('d:resource', ns)
         condition_resource = resource.find('d:Condition', ns)
-        if get_id == True:
-            condition['id'] = condition_resource.find('d:id', ns).attrib['value']
-        condition['condition_identifier'] = condition_identifier
-        clinical_status = condition_resource.find('d:clinicalStatus', ns)
-        if clinical_status:
-            condition['condition_clinical_status'] = clinical_status.find(
-                'd:text', ns).attrib['value']
-        severity = condition_resource.find('d:severity', ns)
-        if severity:
-            condition['condition_severiy'] = severity.find(
-                'd:text', ns).attrib['value']
-        code = condition_resource.find('d:code', ns)
-        if code:
-            condition['condition_code'] = code.find('d:text', ns).attrib['value']
-        onset = condition_resource.find('d:onsetDateTime', ns)
-        if onset:
-            condition['condition_onset'] = getdatetime(onset.attrib['value'])
-    return(condition)
+        if query_type == 'meta' or query_type == 'all':
+            meta = condition_resource.find('d:meta', ns)
+            condition['version'] = meta.find('d:versionId', ns).attrib['value']
+            condition['last_updated'] = meta.find('d:lastUpdated', ns).attrib['value']
+        if query_type == 'id' or query_type == 'all':
+            condition['id'] = condition_resource.find(
+                'd:id', ns).attrib['value']
+        if query_type == 'data' or query_type == 'all':
+            condition['condition_identifier'] = condition_identifier
+            clinical_status = condition_resource.find('d:clinicalStatus', ns)
+            if clinical_status != None:
+                condition['condition_clinical_status'] = clinical_status.find(
+                    'd:text', ns).attrib['value']
+            verification_status = condition_resource.find('d:verificationStatus', ns)
+            if verification_status:
+                condition['condition_verification_status'] = verification_status.find('d:text', ns).attrib['value']
+            category = condition_resource.find('d:category', ns)
+            if category:
+                condition['condition_category'] = category.find('d:text', ns).attrib['value']
+            severity = condition_resource.find('d:severity', ns)
+            if severity:
+                condition['condition_severity'] = severity.find(
+                    'd:text', ns).attrib['value']
+            code = condition_resource.find('d:code', ns)
+            if code:
+                condition['condition_code'] = code.find(
+                    'd:text', ns).attrib['value']
+            onset = condition_resource.find('d:onsetDateTime', ns)
+            if onset != None:
+                condition['condition_onset'] = onset.attrib['value']
+            abatement = condition_resource.find('d:abatementDateTime', ns)
+            if abatement != None:
+                condition['condition_abatement'] = abatement.attrib['value']
+            note = condition_resource.find('d:note', ns)
+            if note:
+                condition['condition_note'] = note.find(
+                    'd:text', ns).attrib['value']
+            
+    return condition
 
 
-def query_observation(observation_identifier, get_id):
+def query_observation(observation_identifier, query_type):
     observation = {}
     get_observation = requests.get(fhir_server + "/Observation?identifier=urn:trinhcongminh|" +
                                    observation_identifier, headers={'Content-type': 'application/xml'})
@@ -905,12 +910,826 @@ def query_observation(observation_identifier, get_id):
         entry = get_root.find('d:entry', ns)
         resource = entry.find('d:resource', ns)
         observation_resource = resource.find('d:Observation', ns)
-        if get_id == True:
+        if query_type == 'meta' or query_type == 'all':
+            meta = observation_resource.find('d:meta', ns)
+            observation['version'] = meta.find('d:versionId', ns).attrib['value']
+            observation['last_updated'] = meta.find('d:lastUpdated', ns).attrib['value']
+        if query_type == 'id' or query_type == 'all':
             observation['id'] = observation_resource.find(
                 'd:id', ns).attrib['value']
-        observation['observation_identifier'] = observation_identifier
+        if query_type == 'data' or query_type == 'all':
+            observation['observation_identifier'] = observation_identifier
+            status = observation_resource.find('d:status', ns)
+            if status != None:
+                observation['observation_status'] = status.attrib['value']
+            category = observation_resource.find('d:category', ns)
+            if category:
+                observation['observation_category'] = category.find(
+                    'd:text', ns).attrib['value']
+            code = observation_resource.find('d:code', ns)
+            if code:
+                observation['observation_code'] = code.find(
+                    'd:text', ns).attrib['value']
+            effective = observation_resource.find('d:effectiveDateTime', ns)
+            if effective != None:
+                observation['observation_effective'] = getdatetime(
+                    effective.attrib['value'])
+            value_quantity = observation_resource.find('d:valueQuantity', ns)
+            if value_quantity:
+                observation['observation_value_quantity'] = value_quantity.find(
+                    'd:value', ns).attrib['value']
+                unit = value_quantity.find('d:unit', ns)
+                if unit != None:
+                    observation['observation_value_unit'] = unit.attrib['value']
+            reference_range = observation_resource.find('d:referenceRange', ns)
+            if reference_range:
+                observation['observation_reference_range'] = reference_range.find('d:text', ns).attrib['value']
+    return observation
+
+
+def query_procedure(procedure_identifier, query_type):
+    procedure = {}
+    get_procedure = requests.get(fhir_server + "/Procedure?identifier=urn:trinhcongminh|" +
+                                 procedure_identifier, headers={'Content-type': 'application/xml'})
+    if get_procedure.status_code == 200 and 'entry' in get_procedure.content.decode('utf-8'):
+        get_root = ET.fromstring(get_procedure.content.decode('utf-8'))
+        entry = get_root.find('d:entry', ns)
+        resource = entry.find('d:resource', ns)
+        procedure_resource = resource.find('d:Procedure', ns)
+        if query_type == 'meta' or query_type == 'all':
+            meta = procedure_resource.find('d:meta', ns)
+            procedure['version'] = meta.find('d:versionId', ns).attrib['value']
+            procedure['last_updated'] = meta.find('d:lastUpdated', ns).attrib['value']
+        if query_type == 'id' or query_type == 'all':
+            procedure['id'] = procedure_resource.find(
+                'd:id', ns).attrib['value']
+        if query_type == 'data' or query_type == 'all':
+            procedure['procedure_identifier'] = procedure_identifier
+            status = procedure_resource.find('d:status', ns)
+            if status != None:
+                procedure['procedure_status'] = status.attrib['value']
+            category = procedure_resource.find('d:category', ns)
+            if category:
+                procedure['procedure_category'] = category.find(
+                    'd:text', ns).attrib['value']
+            code = procedure_resource.find('d:code', ns)
+            if code:
+                procedure['procedure_code'] = code.find(
+                    'd:text', ns).attrib['value']
+            performed_datetime = procedure_resource.find('d:performedDateTime', ns)
+            if performed_datetime != None:
+                procedure['procedure_performed_datetime'] = getdatetime(
+                    performed_datetime.attrib['value'])
+            reason_code = procedure_resource.find('d:reasonCode', ns)
+            if reason_code:
+                procedure['procedure_reason_code'] = reason_code.find(
+                    'd:text', ns).attrib['value']
+            outcome = procedure_resource.find('d:outcome', ns)
+            if outcome:
+                procedure['procedure_outcome'] = outcome.find(
+                    'd:text', ns).attrib['value']
+            complication = procedure_resource.find('d:complication', ns)
+            if complication:
+                procedure['procedure_complication'] = complication.find(
+                    'd:text', ns).attrib['value']
+            follow_up = procedure_resource.find('d:followUp', ns)
+            if follow_up:
+                procedure['procedure_follow_up'] = follow_up.find(
+                    'd:text', ns).attrib['value']
+            note = procedure_resource.find('d:note', ns)
+            if note:
+                procedure['procedure_note'] = note.find(
+                    'd:text', ns).attrib['value']
+    return procedure
+
+
+def query_medication(medication_identifier, query_type):
+    medication_statement = {}
+    get_medication = requests.get(fhir_server + "/MedicationStatement?identifier=urn:trinhcongminh|" +
+                                  medication_identifier, headers={'Content-type': 'application/xml'})
+    if get_medication.status_code == 200 and 'entry' in get_medication.content.decode('utf-8'):
+        get_root = ET.fromstring(get_medication.content.decode('utf-8'))
+        entry = get_root.find('d:entry', ns)
+        resource = entry.find('d:resource', ns)
+        medication_resource = resource.find('d:MedicationStatement', ns)
+        if query_type == 'meta' or query_type == 'all':
+            meta = medication_resource.find('d:meta', ns)
+            medication_statement['version'] = meta.find('d:versionId', ns).attrib['value']
+            medication_statement['last_updated'] = meta.find('d:lastUpdated', ns).attrib['value']
+        if query_type == 'id' or query_type == 'all':
+            medication_statement['id'] = medication_resource.find(
+                'd:id', ns).attrib['value']
+        if query_type == 'data' or query_type == 'all':
+            medication_statement['medication_identifier'] = medication_identifier
+            medication = medication_resource.find(
+                'd:medicationCodeableConcept', ns)
+            if medication:
+                medication_statement['medication_medication'] = medication.find(
+                    'd:text', ns).attrib['value']
+            effective = medication_resource.find('d:effectiveDateTime', ns)
+            if effective != None:
+                medication_statement['medication_effective'] = get_date(effective.attrib['value'])
+            date_asserted = medication_resource.find('d:dateAsserted', ns)
+            if date_asserted != None:
+                medication_statement['medication_date_asserted'] = get_date(date_asserted.attrib['value'])
+            reason_code = medication_resource.find('d:reasonCode', ns)
+            if reason_code:
+                medication_statement['medication_reason_code'] = reason_code.find(
+                    'd:text', ns).attrib['value']
+            dosage = medication_resource.find('d:dosage', ns)
+            if dosage:
+                additional_instruction = dosage.find('d:additionalInstruction', ns)
+                if additional_instruction:
+                    medication_statement['dosage_additional_instruction'] = additional_instruction.find(
+                        'd:text', ns).attrib['value']
+                patient_instruction = dosage.find('d:patientInstruction', ns)
+                if patient_instruction:
+                    medication_statement['dosage_patient_instruction'] = patient_instruction.find(
+                        'd:text', ns).attrib['value']
+                timing = dosage.find('d:timing', ns)
+                if timing:
+                    repeat = timing.find('d:repeat', ns)
+                    if repeat:
+                        duration = repeat.find('d:duration', ns)
+                        if duration != None:
+                            duration_value = duration.attrib['value']
+                            duration_max = repeat.find('d:durationMax', ns)
+                            if duration_max != None:
+                                duration_value = duration.attrib['value'] + \
+                                    '-' + duration_max.attrib['value']
+                            duration_unit = repeat.find(
+                                'd:durationUnit', ns).attrib['value']
+                            medication_statement['dosage_duration'] = duration_value
+                            medication_statement['dosage_duration_unit'] = duration_unit
+                        frequency = repeat.find('d:frequency', ns)
+                        if frequency != None:
+                            medication_statement['dosage_frequency'] = frequency.attrib['value'] + ' lần'
+                        period = repeat.find('d:period', ns)
+                        if period != None:
+                            period_value = period.attrib['value']
+                            period_max = repeat.find('d:periodMax', ns)
+                            if period_max != None:
+                                period_value = period.attrib['value'] + \
+                                    '-' + period_max.attrib['value']
+                            period_unit = repeat.find('d:periodUnit', ns)
+                            medication_statement['dosage_period'] = period_value
+                            medication_statement['dosage_period_value'] = period_unit
+                        when = repeat.find('d:when', ns)
+                        if when != None:
+                            medication_statement['dosage_when'] = when.attrib['value']
+                        offset = repeat.find('d:offset', ns)
+                        if offset != None:
+                            medication_statement['dosage_offset'] = offset.attrib['value']
+                route = dosage.find('d:route', ns)
+                if route:
+                    medication_statement['dosage_route'] = route.find(
+                        'd:text', ns).attrib['value']
+                dose_and_rate = dosage.find('d:doseAndRate', ns)
+                if dose_and_rate:
+                    dose_quantity = dose_and_rate.find('d:doseQuantity', ns)
+                    quantity = dose_quantity.find('d:value', ns).attrib['value']
+                    unit = dose_quantity.find('d:unit', ns).attrib['value']
+                    medication_statement['dosage_quantity'] = quantity + ' ' + unit
+    return medication_statement
+
+
+def query_practitioner(practitioner_identifier, query_type):
+    practitioner = {}
+    get_practitioner = requests.get(fhir_server + '/Practitioner?identifier=urn:trinhcongminh|' +
+                                    practitioner_identifier, headers={'Content-type': 'application/xml'})
+    # print(get_practitioner.content.decode('utf-8'))
+    if get_practitioner.status_code == 200 and 'entry' in get_practitioner.content.decode('utf-8'):
+        get_root = ET.fromstring(get_practitioner.content.decode('utf-8'))
+        entry = get_root.find('d:entry', ns)
+        resource = entry.find('d:resource', ns)
+        practitioner_resource = resource.find('d:Practitioner', ns)
+        if query_type == 'meta' or query_type == 'all':
+            meta = practitioner_resource.find('d:meta', ns)    
+            practitioner['version'] = meta.find('d:versionId', ns).attrib['value']
+            practitioner['last_updated'] = meta.find('d:lastUpdated', ns).attrib['value']
+        if query_type == 'id' or query_type == 'all':
+            practitioner['id'] = practitioner_resource.find(
+                'd:id', ns).attrib['value']
+        if query_type == 'data' or query_type == 'all':
+            practitioner['identifier'] = practitioner_identifier
+            practitioner_name = practitioner_resource.find('d:name', ns)
+            if practitioner_name:
+                practitioner['name'] = practitioner_name.find(
+                    'd:family', ns).attrib['value'] + ' ' + practitioner_name.find('d:given', ns).attrib['value']
+            practitioner_telecom = practitioner_resource.find('d:telecom', ns)
+            if practitioner_telecom:
+                practitioner['telecom'] = practitioner_telecom.find(
+                    'd:value', ns).attrib['value']
+            practitioner_gender = practitioner_resource.find('d:gender', ns)
+            if practitioner_gender != None:
+                if practitioner_gender.attrib['value'] == 'male':
+                    practitioner['gender'] = 'Nam'
+                else:
+                    practitioner['gender'] = 'Nữ'
+            practitioner_birthdate = practitioner_resource.find('d:birthDate', ns)
+            if practitioner_birthdate != None:
+                practitioner['birthdate'] = practitioner_birthdate.attrib['value']
+            practitioner_qualification = practitioner_resource.find(
+                'd:qualification', ns)
+            if practitioner_qualification:
+                practitioner_qualification_code = practitioner_qualification.find(
+                    'd:code', ns)
+                practitioner['qualification'] = practitioner_qualification_code.find(
+                    'd:text', ns).attrib['value']
+    return practitioner
+
+
+def query_diagnostic_report(diagnostic_report_identifier, query_type):
+    diagnostic_report = {}
+    get_diagnostic_report = requests.get(fhir_server + '/DiagnosticReport?identifier=urn:trinhcongminh|' +
+                                         diagnostic_report_identifier, headers={'Content-type': 'application/xml'})
+    if get_diagnostic_report.status_code == 200 and 'entry' in get_diagnostic_report.content.decode('utf-8'):
+        get_root = ET.fromstring(get_diagnostic_report.content.decode('utf-8'))
+        entry = get_root.find('d:entry', ns)
+        resource = entry.find('d:resource', ns)
+        diagnostic_report_resource = resource.find('d:DiagnosticReport', ns)
+        if query_type == 'meta' or query_type == 'all':
+            meta = diagnostic_report_resource.find('d:meta', ns)
+            diagnostic_report['version'] = meta.find('d:versionId', ns).attrib['value']
+            diagnostic_report['last_updated'] = getdatetime(meta.find('d:lastUpdated', ns).attrib['value'])
+        if query_type == 'id' or query_type == 'all':
+            id_ = diagnostic_report_resource.find('d:id', ns)
+            diagnostic_report['id'] = id_.attrib['value']
+        if query_type == 'data' or query_type == 'all':
+            diagnostic_report['diagnostic_identifier'] = diagnostic_report_identifier
+            status = diagnostic_report_resource.find('d:status', ns)
+            if status != None:
+                diagnostic_report['diagnostic_status'] = status.attrib['value']
+            category = diagnostic_report_resource.find('d:category', ns)
+            if category:
+                diagnostic_report['diagnostic_category'] = category.find(
+                    'd:text', ns).attrib['value']
+
+            code = diagnostic_report_resource.find('d:code', ns)
+            if code:
+                diagnostic_report['diagnostic_code'] = code.find('d:text', ns).attrib['value']
+            effective = diagnostic_report_resource.find('d:effectiveDateTime', ns)
+            if effective != None:
+                diagnostic_report['diagnostic_effective'] = effective.attrib['value']
+            conclusion = diagnostic_report_resource.find('d:conclusion', ns)
+            if conclusion != None:
+                diagnostic_report['diagnostic_conclusion'] = conclusion.attrib['value']
+    return diagnostic_report
+
+
+def query_encounter_history(encounter_id, version, query_type):
+    encounter = {}
+    get_encounter = requests.get(fhir_server + "/Encounter/" + encounter_id + "/_history/" + version, headers={'Content-type': 'application/xml'})
+    if get_encounter.status_code == 200:
+        # get_root = ET.fromstring(get_encounter.content.decode('utf-8'))
+        # entry = get_root.find('d:entry', ns)
+        # resource = entry.find('d:resource', ns)
+        encounter_resource = ET.fromstring(get_encounter.content.decode('utf-8'))
+        if query_type == 'meta' or query_type == 'all':
+            meta = encounter_resource.find('d:meta', ns)
+            encounter['version'] = meta.find('d:versionId', ns).attrib['value']
+            encounter['last_updated'] = getdatetime(meta.find('d:lastUpdated', ns).attrib['value'])
+        if query_type == 'id' or query_type == 'all':
+            encounter['id'] = encounter_resource.find(
+                'd:id', ns).attrib['value']
+        if query_type == 'data' or query_type == 'all':
+            # encounter['encounter_identifier'] = encounter_identifier
+            status = encounter_resource.find('d:status', ns)
+            if status != None:
+                encounter['encounter_status'] = status.attrib['value']
+            _class = encounter_resource.find('d:class', ns)
+            if _class:
+                encounter['encounter_class'] = _class.find(
+                    'd:code', ns).attrib['value']
+            _type = encounter_resource.find('d:type', ns)
+            if _type:
+                encounter['encounter_type'] = _type.find(
+                    'd:text', ns).attrib['value']
+            service_type = encounter_resource.find('d:serviceType', ns)
+            if service_type:
+                encounter['encounter_service'] = service_type.find(
+                    'd:text', ns).attrib['value']
+            # priority = encounter_resource.find('d:priority', ns)
+            # if priority:
+            #     encounter['encounter_priority'] = priority.find('d:text', ns).attrib['value']
+            period = encounter_resource.find('d:period', ns)
+            if period:
+                start_date = period.find(
+                    'd:start', ns).attrib['value']
+                encounter['encounter_start'] = getdatetime(start_date)
+                end_date = None
+                if period.find('d:end', ns) != None:
+                    end_date = period.find('d:end', ns).attrib['value']
+                    encounter['encounter_end'] = getdatetime(end_date)
+            length = encounter_resource.find('d:length', ns)
+            if length:
+                encounter['encounter_length'] = length.find('d:value', ns).attrib['value']
+            reason_code = encounter_resource.find('d:reasonCode', ns)
+            if reason_code:
+                encounter['encounter_reason'] = reason_code.find(
+                    'd:text', ns).attrib['value']
+    return encounter
+
+
+
+def query_service_history(service_id, version, query_type):
+    service = {}
+    get_service = requests.get(fhir_server + "/ServiceRequest/" + service_id + "/_history" + version, headers={'Content-type': 'application/xml'})
+    if get_service.status_code == 200:
+        # get_root = ET.fromstring(get_service.content.decode('utf-8'))
+        # entry = get_root.find('d:entry', ns)
+        # resource = entry.find('d:resource', ns)
+        service_resource = ET.fromstring(get_service.content.decode('utf-8'))
+        if query_type == 'meta' or query_type == 'all':
+            meta = service_resource.find('d:meta', ns)
+            service['version'] = meta.find('d:versionId', ns).attrib['value']
+            service['last_updated'] = getdatetime(meta.find('d:lastUpdated', ns).attrib['value'])
+        if query_type == 'id' or query_type == 'all':
+            service['id'] = service_resource.find('d:id', ns).attrib['value']
+        if query_type == 'data' or query_type == 'all':
+            # service['service_identifier'] = service_identifier
+            status = service_resource.find('d:status', ns)
+            if status != None:
+                service['service_status'] = status.attrib['value']
+            intent = service_resource.find('d:intent', ns)
+            if intent != None:
+                service['service_intent'] = intent.attrib['value']
+            category = service_resource.find('d:category', ns)
+            if category:
+                service['service_category'] = category.find(
+                    'd:text', ns).attrib['value']
+            code = service_resource.find('d:code', ns)
+            if code:
+                service['service_code'] = code.find('d:text', ns).attrib['value']
+            occurrence = service_resource.find('d:occurrenceDateTime', ns)
+            if occurrence != None:
+                service['service_occurrence'] = get_date(occurrence.attrib['value'])
+            authored_on = service_resource.find('d:authoredOn', ns)
+            if authored_on != None:
+                service['service_authored'] = get_date(authored_on.attrib['value'])
+            note = service_resource.find('d:note', ns)
+            if note:
+                service['service_note'] = note.find('d:text', ns).attrib['value']
+    return service
+
+
+def query_condition_history(condition_id, version, query_type):
+    condition = {}
+    get_condition = requests.get(fhir_server + "/Condition/" + condition_id + "/_history/" + version, headers={'Content-type': 'application/xml'})
+    if get_condition.status_code == 200:
+        # get_root = ET.fromstring(get_condition.content.decode('utf-8'))
+        # entry = get_root.find('d:entry', ns)
+        # resource = entry.find('d:resource', ns)
+        condition_resource = ET.fromstring(get_condition.content.decode('utf-8'))
+        if query_type == 'meta' or query_type == 'all':
+            meta = condition_resource.find('d:meta', ns)
+            condition['version'] = meta.find('d:versionId', ns).attrib['value']
+            condition['last_updated'] = getdatetime(meta.find('d:lastUpdated', ns).attrib['value'])
+        if query_type == 'id' or query_type == 'all':
+            condition['id'] = condition_resource.find(
+                'd:id', ns).attrib['value']
+        if query_type == 'data' or query_type == 'all':
+            # condition['condition_identifier'] = condition_identifier
+            clinical_status = condition_resource.find('d:clinicalStatus', ns)
+            if clinical_status != None:
+                condition['condition_clinical_status'] = clinical_status.find(
+                    'd:text', ns).attrib['value']
+            verification_status = condition_resource.find('d:verificationStatus', ns)
+            if verification_status:
+                condition['condition_verification_status'] = verification_status.find('d:text', ns).attrib['value']
+            category = condition_resource.find('d:category', ns)
+            if category:
+                condition['condition_category'] = category.find('d:text', ns).attrib['value']
+            severity = condition_resource.find('d:severity', ns)
+            if severity:
+                condition['condition_severity'] = severity.find(
+                    'd:text', ns).attrib['value']
+            code = condition_resource.find('d:code', ns)
+            if code:
+                condition['condition_code'] = code.find(
+                    'd:text', ns).attrib['value']
+            onset = condition_resource.find('d:onsetDateTime', ns)
+            if onset != None:
+                condition['condition_onset'] = onset.attrib['value']
+            abatement = condition_resource.find('d:abatementDateTime', ns)
+            if abatement != None:
+                condition['condition_abatement'] = abatement.attrib['value']
+            note = condition_resource.find('d:note', ns)
+            if note:
+                condition['condition_note'] = note.find(
+                    'd:text', ns).attrib['value']
+            
+    return condition
+
+
+def query_observation_history(observation_id, version, query_type):
+    observation = {}
+    get_observation = requests.get(fhir_server + "/Observation/" + observation_id + "/_history/" + version, headers={'Content-type': 'application/xml'})
+    if get_observation.status_code == 200:
+        # get_root = ET.fromstring(get_observation.content.decode('utf-8'))
+        # entry = get_root.find('d:entry', ns)
+        # resource = entry.find('d:resource', ns)
+        observation_resource = ET.fromstring(get_observation.content.decode('utf-8'))
+        if query_type == 'meta' or query_type == 'all':
+            meta = observation_resource.find('d:meta', ns)
+            observation['version'] = meta.find('d:versionId', ns).attrib['value']
+            observation['last_updated'] = getdatetime(meta.find('d:lastUpdated', ns).attrib['value'])
+        if query_type == 'id' or query_type == 'all':
+            observation['id'] = observation_resource.find(
+                'd:id', ns).attrib['value']
+        if query_type == 'data' or query_type == 'all':
+            # observation['observation_identifier'] = observation_identifier
+            status = observation_resource.find('d:status', ns)
+            if status != None:
+                observation['observation_status'] = status.attrib['value']
+            category = observation_resource.find('d:category', ns)
+            if category:
+                observation['observation_category'] = category.find(
+                    'd:text', ns).attrib['value']
+            code = observation_resource.find('d:code', ns)
+            if code:
+                observation['observation_code'] = code.find(
+                    'd:text', ns).attrib['value']
+            effective = observation_resource.find('d:effectiveDateTime', ns)
+            if effective != None:
+                observation['observation_effective'] = getdatetime(
+                    effective.attrib['value'])
+            value_quantity = observation_resource.find('d:valueQuantity', ns)
+            if value_quantity:
+                observation['observation_value_quantity'] = value_quantity.find(
+                    'd:value', ns).attrib['value']
+                unit = value_quantity.find('d:unit', ns)
+                if unit != None:
+                    observation['observation_value_unit'] = unit.attrib['value']
+            reference_range = observation_resource.find('d:referenceRange', ns)
+            if reference_range:
+                observation['observation_reference_range'] = reference_range.find('d:text', ns).attrib['value']
+   
+    return observation
+
+
+def query_procedure_history(procedure_id, version, query_type):
+    procedure = {}
+    get_procedure = requests.get(fhir_server + "/Procedure/"+ procedure_id + "/_history/" + version, headers={'Content-type': 'application/xml'})
+    if get_procedure.status_code == 200:
+        # get_root = ET.fromstring(get_procedure.content.decode('utf-8'))
+        # entry = get_root.find('d:entry', ns)
+        # resource = entry.find('d:resource', ns)
+        procedure_resource = ET.fromstring(get_procedure.content.decode('utf-8'))
+        if query_type == 'meta' or query_type == 'all':
+            meta = procedure_resource.find('d:meta', ns)
+            procedure['version'] = meta.find('d:versionId', ns).attrib['value']
+            procedure['last_updated'] = getdatetime(meta.find('d:lastUpdated', ns).attrib['value'])
+        if query_type == 'id' or query_type == 'all':
+            procedure['id'] = procedure_resource.find(
+                'd:id', ns).attrib['value']
+        if query_type == 'data' or query_type == 'all':
+            # procedure['procedure_identifier'] = procedure_identifier
+            status = procedure_resource.find('d:status', ns)
+            if status != None:
+                procedure['procedure_status'] = status.attrib['value']
+            category = procedure_resource.find('d:category', ns)
+            if category:
+                procedure['procedure_category'] = category.find(
+                    'd:text', ns).attrib['value']
+            code = procedure_resource.find('d:code', ns)
+            if code:
+                procedure['procedure_code'] = code.find(
+                    'd:text', ns).attrib['value']
+            performed_datetime = procedure_resource.find('d:performedDateTime', ns)
+            if performed_datetime != None:
+                procedure['procedure_performed_datetime'] = getdatetime(
+                    performed_datetime.attrib['value'])
+            reason_code = procedure_resource.find('d:reasonCode', ns)
+            if reason_code:
+                procedure['procedure_reason_code'] = reason_code.find(
+                    'd:text', ns).attrib['value']
+            outcome = procedure_resource.find('d:outcome', ns)
+            if outcome:
+                procedure['procedure_outcome'] = outcome.find(
+                    'd:text', ns).attrib['value']
+            complication = procedure_resource.find('d:complication', ns)
+            if complication:
+                procedure['procedure_complication'] = complication.find(
+                    'd:text', ns).attrib['value']
+            follow_up = procedure_resource.find('d:followUp', ns)
+            if follow_up:
+                procedure['procedure_follow_up'] = follow_up.find(
+                    'd:text', ns).attrib['value']
+            note = procedure_resource.find('d:note', ns)
+            if note:
+                procedure['procedure_note'] = note.find(
+                    'd:text', ns).attrib['value']
+    return procedure
+
+
+def query_medication_history(medication_id, version, query_type):
+    medication_statement = {}
+    get_medication = requests.get(fhir_server + "/MedicationStatement/" + medication_id + "/_history/" + version, headers={'Content-type': 'application/xml'})
+    if get_medication.status_code == 200:
+        # get_root = ET.fromstring(get_medication.content.decode('utf-8'))
+        # entry = get_root.find('d:entry', ns)
+        # resource = entry.find('d:resource', ns)
+        medication_resource = ET.fromstring(get_medication.content.decode('utf-8'))
+        if query_type == 'meta' or query_type == 'all':
+            meta = medication_resource.find('d:meta', ns)
+            medication_statement['version'] = meta.find('d:versionId', ns).attrib['value']
+            medication_statement['last_updated'] = getdatetime(meta.find('d:lastUpdated', ns).attrib['value'])
+        if query_type == 'id' or query_type == 'all':
+            medication_statement['id'] = medication_resource.find(
+                'd:id', ns).attrib['value']
+        if query_type == 'data' or query_type == 'all':
+            # medication_statement['medication_identifier'] = medication_identifier
+            medication = medication_resource.find(
+                'd:medicationCodeableConcept', ns)
+            if medication:
+                medication_statement['medication_medication'] = medication.find(
+                    'd:text', ns).attrib['value']
+            effective = medication_resource.find('d:effectiveDateTime', ns)
+            if effective != None:
+                medication_statement['medication_effective'] = get_date(effective.attrib['value'])
+            date_asserted = medication_resource.find('d:dateAsserted', ns)
+            if date_asserted != None:
+                medication_statement['medication_date_asserted'] = get_date(date_asserted.attrib['value'])
+            reason_code = medication_resource.find('d:reasonCode', ns)
+            if reason_code:
+                medication_statement['medication_reason_code'] = reason_code.find(
+                    'd:text', ns).attrib['value']
+            dosage = medication_resource.find('d:dosage', ns)
+            if dosage:
+                additional_instruction = dosage.find('d:additionalInstruction', ns)
+                if additional_instruction:
+                    medication_statement['dosage_additional_instruction'] = additional_instruction.find(
+                        'd:text', ns).attrib['value']
+                patient_instruction = dosage.find('d:patientInstruction', ns)
+                if patient_instruction:
+                    medication_statement['dosage_patient_instruction'] = patient_instruction.find(
+                        'd:text', ns).attrib['value']
+                timing = dosage.find('d:timing', ns)
+                if timing:
+                    repeat = timing.find('d:repeat', ns)
+                    if repeat:
+                        duration = repeat.find('d:duration', ns)
+                        if duration != None:
+                            duration_value = duration.attrib['value']
+                            duration_max = repeat.find('d:durationMax', ns)
+                            if duration_max != None:
+                                duration_value = duration.attrib['value'] + \
+                                    '-' + duration_max.attrib['value']
+                            duration_unit = repeat.find(
+                                'd:durationUnit', ns).attrib['value']
+                            medication_statement['dosage_duration'] = duration_value
+                            medication_statement['dosage_duration_unit'] = duration_unit
+                        frequency = repeat.find('d:frequency', ns)
+                        if frequency != None:
+                            medication_statement['dosage_frequency'] = frequency.attrib['value'] + ' lần'
+                        period = repeat.find('d:period', ns)
+                        if period != None:
+                            period_value = period.attrib['value']
+                            period_max = repeat.find('d:periodMax', ns)
+                            if period_max != None:
+                                period_value = period.attrib['value'] + \
+                                    '-' + period_max.attrib['value']
+                            period_unit = repeat.find('d:periodUnit', ns)
+                            medication_statement['dosage_period'] = period_value
+                            medication_statement['dosage_period_value'] = period_unit
+                        when = repeat.find('d:when', ns)
+                        if when != None:
+                            medication_statement['dosage_when'] = when.attrib['value']
+                        offset = repeat.find('d:offset', ns)
+                        if offset != None:
+                            medication_statement['dosage_offset'] = offset.attrib['value']
+                route = dosage.find('d:route', ns)
+                if route:
+                    medication_statement['dosage_route'] = route.find(
+                        'd:text', ns).attrib['value']
+                dose_and_rate = dosage.find('d:doseAndRate', ns)
+                if dose_and_rate:
+                    dose_quantity = dose_and_rate.find('d:doseQuantity', ns)
+                    quantity = dose_quantity.find('d:value', ns).attrib['value']
+                    unit = dose_quantity.find('d:unit', ns).attrib['value']
+                    medication_statement['dosage_quantity'] = quantity + ' ' + unit
+    return medication_statement
+
+
+def query_practitioner_history(practitioner_identifier, query_type):
+    practitioner = {}
+    get_practitioner = requests.get(fhir_server + '/Practitioner?identifier=urn:trinhcongminh|' +
+                                    practitioner_identifier, headers={'Content-type': 'application/xml'})
+    if get_practitioner.status_code == 200:
+        # get_root = ET.fromstring(get_practitioner.content.decode('utf-8'))
+        # entry = get_root.find('d:entry', ns)
+        # resource = entry.find('d:resource', ns)
+        practitioner_resource = ET.fromstring(get_practitioner.content.decode('utf-8'))
+        if query_type == 'meta' or query_type == 'all':
+            meta = practitioner_resource.find('d:meta', ns)    
+            practitioner['version'] = meta.find('d:versionId', ns).attrib['value']
+            practitioner['last_updated'] = getdatetime(meta.find('d:lastUpdated', ns).attrib['value'])
+        if query_type == 'id' or query_type == 'all':
+            practitioner['id'] = practitioner_resource.find(
+                'd:id', ns).attrib['value']
+        if query_type == 'data' or query_type == 'all':
+            practitioner['identifier'] = practitioner_identifier
+            practitioner_name = practitioner_resource.find('d:name', ns)
+            if practitioner_name:
+                practitioner['name'] = practitioner_name.find(
+                    'd:family', ns).attrib['value'] + ' ' + practitioner_name.find('d:given', ns).attrib['value']
+            practitioner_telecom = practitioner_resource.find('d:telecom', ns)
+            if practitioner_telecom:
+                practitioner['telecom'] = practitioner_telecom.find(
+                    'd:value', ns).attrib['value']
+            practitioner_gender = practitioner_resource.find('d:gender', ns)
+            if practitioner_gender != None:
+                if practitioner_gender.attrib['value'] == 'male':
+                    practitioner['gender'] = 'Nam'
+                else:
+                    practitioner['gender'] = 'Nữ'
+            practitioner_birthdate = practitioner_resource.find('d:birthDate', ns)
+            if practitioner_birthdate != None:
+                practitioner['birthdate'] = practitioner_birthdate.attrib['value']
+            practitioner_qualification = practitioner_resource.find(
+                'd:qualification', ns)
+            if practitioner_qualification:
+                practitioner_qualification_code = practitioner_qualification.find(
+                    'd:code', ns)
+                practitioner['qualification'] = practitioner_qualification_code.find(
+                    'd:text', ns).attrib['value']
+    return practitioner
+
+
+def query_diagnostic_report_history(diagnostic_report_id, version, query_type):
+    diagnostic_report = {}
+    get_diagnostic_report = requests.get(fhir_server + '/DiagnosticReport/' + diagnostic_report_id + '/_history/' + version, headers={'Content-type': 'application/xml'})
+    if get_diagnostic_report.status_code == 200:
+        # get_root = ET.fromstring(get_diagnostic_report.content.decode('utf-8'))
+        # entry = get_root.find('d:entry', ns)
+        # resource = entry.find('d:resource', ns)
+        diagnostic_report_resource = ET.fromstring(get_diagnostic_report.content.decode('utf-8'))
+        if query_type == 'meta' or query_type == 'all':
+            meta = diagnostic_report_resource.find('d:meta', ns)
+            diagnostic_report['version'] = meta.find('d:versionId', ns).attrib['value']
+            diagnostic_report['last_updated'] = getdatetime(meta.find('d:lastUpdated', ns).attrib['value'])
+        if query_type == 'id' or query_type == 'all':
+            id_ = diagnostic_report_resource.find('d:id', ns)
+            diagnostic_report['id'] = id_.attrib['value']
+        if query_type == 'data' or query_type == 'all':
+            # diagnostic_report['diagnostic_identifier'] = diagnostic_report_identifier
+            status = diagnostic_report_resource.find('d:status', ns)
+            if status != None:
+                diagnostic_report['diagnostic_status'] = status.attrib['value']
+            category = diagnostic_report_resource.find('d:category', ns)
+            if category:
+                diagnostic_report['diagnostic_category'] = category.find(
+                    'd:text', ns).attrib['value']
+            code = diagnostic_report_resource.find('d:code', ns)
+            if code:
+                diagnostic_report['diagnostic_code'] = code.find('d:text', ns).attrib['value']
+            effective = diagnostic_report_resource.find('d:effectiveDateTime', ns)
+            if effective != None:
+                diagnostic_report['diagnostic_effective'] = effective.attrib['value']
+            conclusion = diagnostic_report_resource.find('d:conclusion', ns)
+            if conclusion != None:
+                diagnostic_report['diagnostic_conclusion'] = conclusion.attrib['value']
+    return diagnostic_report
+
+
+def get_encounter(encounter_resource, query_type):
+    encounter = {}
+    if query_type == 'meta' or query_type == 'all':
+        meta = encounter_resource.find('d:meta', ns)
+        encounter['version'] = meta.find('d:versionId', ns).attrib['value']
+        encounter['last_updated'] = meta.find('d:lastUpdated', ns).attrib['value']
+    if query_type == 'id' or query_type == 'all':
+        encounter['id'] = encounter_resource.find(
+            'd:id', ns).attrib['value']
+    if query_type == 'data' or query_type == 'all':
+        # encounter['encounter_identifier'] = encounter_identifier
+        status = encounter_resource.find('d:status', ns)
+        if status != None:
+            encounter['encounter_status'] = status.attrib['value']
+        _class = encounter_resource.find('d:class', ns)
+        if _class:
+            encounter['encounter_class'] = _class.find(
+                'd:code', ns).attrib['value']
+        _type = encounter_resource.find('d:type', ns)
+        if _type:
+            encounter['encounter_type'] = _type.find(
+                'd:text', ns).attrib['value']
+        service_type = encounter_resource.find('d:serviceType', ns)
+        if service_type:
+            encounter['encounter_service'] = service_type.find(
+                'd:text', ns).attrib['value']
+        # priority = encounter_resource.find('d:priority', ns)
+        # if priority:
+        #     encounter['encounter_priority'] = priority.find('d:text', ns).attrib['value']
+        period = encounter_resource.find('d:period', ns)
+        if period:
+            encounter['encounter_start'] = period.find(
+                'd:start', ns).attrib['value']
+            end_date = None
+            if period.find('d:end', ns) != None:
+                end_date = period.find('d:end', ns).attrib['value']
+                encounter['encounter_end'] = getdatetime(end_date)
+        length = encounter_resource.find('d:length', ns)
+        if length:
+            encounter['encounter_length'] = length.find('d:value', ns).attrib['value']
+        reason_code = encounter_resource.find('d:reasonCode', ns)
+        if reason_code:
+            encounter['encounter_reason'] = reason_code.find(
+                'd:text', ns).attrib['value']
+    return encounter
+
+
+def get_service(service_resource, query_type):
+    service = {}
+    if query_type == 'meta' or query_type == 'all':
+        meta = service_resource.find('d:meta', ns)
+        service['version'] = meta.find('d:versionId', ns).attrib['value']
+        service['last_updated'] = meta.find('d:lastUpdated', ns).attrib['value']
+    if query_type == 'id' or query_type == 'all':
+        service['id'] = service_resource.find('d:id', ns).attrib['value']
+    if query_type == 'data' or query_type == 'all':
+        # service['service_identifier'] = service_identifier
+        status = service_resource.find('d:status', ns)
+        if status != None:
+            service['service_status'] = status.attrib['value']
+        intent = service_resource.find('d:intent', ns)
+        if intent != None:
+            service['service_intent'] = intent.attrib['value']
+        category = service_resource.find('d:category', ns)
+        if category:
+            service['service_category'] = category.find(
+                'd:text', ns).attrib['value']
+        code = service_resource.find('d:code', ns)
+        if code:
+            service['service_code'] = code.find('d:text', ns).attrib['value']
+        occurrence = service_resource.find('d:occurrenceDateTime', ns)
+        if occurrence != None:
+            service['service_occurrence'] = get_date(occurrence.attrib['value'])
+        authored_on = service_resource.find('d:authoredOn', ns)
+        if authored_on != None:
+            service['service_authored'] = get_date(authored_on.attrib['value'])
+        note = service_resource.find('d:note', ns)
+        if note:
+            service['service_note'] = note.find('d:text', ns).attrib['value']
+    return service
+
+
+def get_condition(condition_resource, query_type):
+    condition = {}
+    if query_type == 'meta' or query_type == 'all':
+        meta = condition_resource.find('d:meta', ns)
+        condition['version'] = meta.find('d:versionId', ns).attrib['value']
+        condition['last_updated'] = meta.find('d:lastUpdated', ns).attrib['value']
+    if query_type == 'id' or query_type == 'all':
+        condition['id'] = condition_resource.find(
+            'd:id', ns).attrib['value']
+    if query_type == 'data' or query_type == 'all':
+        # condition['condition_identifier'] = condition_identifier
+        clinical_status = condition_resource.find('d:clinicalStatus', ns)
+        if clinical_status != None:
+            condition['condition_clinical_status'] = clinical_status.find(
+                'd:text', ns).attrib['value']
+        verification_status = condition_resource.find('d:verificationStatus', ns)
+        if verification_status:
+            condition['condition_verification_status'] = verification_status.find('d:text', ns).attrib['value']
+        category = condition_resource.find('d:category', ns)
+        if category:
+            condition['condition_category'] = category.find('d:text', ns).attrib['value']
+        severity = condition_resource.find('d:severity', ns)
+        if severity:
+            condition['condition_severity'] = severity.find(
+                'd:text', ns).attrib['value']
+        code = condition_resource.find('d:code', ns)
+        if code:
+            condition['condition_code'] = code.find(
+                'd:text', ns).attrib['value']
+        onset = condition_resource.find('d:onsetDateTime', ns)
+        if onset != None:
+            condition['condition_onset'] = onset.attrib['value']
+        abatement = condition_resource.find('d:abatementDateTime', ns)
+        if abatement != None:
+            condition['condition_abatement'] = abatement.attrib['value']
+        note = condition_resource.find('d:note', ns)
+        if note:
+            condition['condition_note'] = note.find(
+                'd:text', ns).attrib['value']
+    return condition
+
+
+def get_observation(observation_resource, query_type):
+    observation = {}
+    if query_type == 'meta' or query_type == 'all':
+        meta = observation_resource.find('d:meta', ns)
+        observation['version'] = meta.find('d:versionId', ns).attrib['value']
+        observation['last_updated'] = meta.find('d:lastUpdated', ns).attrib['value']
+    if query_type == 'id' or query_type == 'all':
+        observation['id'] = observation_resource.find(
+            'd:id', ns).attrib['value']
+    if query_type == 'data' or query_type == 'all':
+        # observation['observation_identifier'] = observation_identifier
         status = observation_resource.find('d:status', ns)
-        if status:
+        if status != None:
             observation['observation_status'] = status.attrib['value']
         category = observation_resource.find('d:category', ns)
         if category:
@@ -921,31 +1740,35 @@ def query_observation(observation_identifier, get_id):
             observation['observation_code'] = code.find(
                 'd:text', ns).attrib['value']
         effective = observation_resource.find('d:effectiveDateTime', ns)
-        if effective:
-            observation['observation_effective'] = getdatetime(effective.attrib['value'])
+        if effective != None:
+            observation['observation_effective'] = getdatetime(
+                effective.attrib['value'])
         value_quantity = observation_resource.find('d:valueQuantity', ns)
         if value_quantity:
             observation['observation_value_quantity'] = value_quantity.find(
                 'd:value', ns).attrib['value']
-            observation['observation_value_unit'] = value_quantity.find(
-                'd:unit', ns).attrib['value']
+            unit = value_quantity.find('d:unit', ns)
+            if unit != None:
+                observation['observation_value_unit'] = unit.attrib['value']
+        reference_range = observation_resource.find('d:referenceRange', ns)
+        if reference_range:
+            observation['observation_reference_range'] = reference_range.find('d:text', ns).attrib['value']
     return observation
 
 
-def query_procedure(procedure_identifier, get_id):
+def get_procedure(procedure_resource, query_type):
     procedure = {}
-    get_procedure = requests.get(fhir_server + "/Procedure?identifier=urn:trinhcongminh|" +
-                                 procedure_identifier, headers={'Content-type': 'application/xml'})
-    if get_procedure.status_code == 200 and 'entry' in get_procedure.content.decode('utf-8'):
-        get_root = ET.fromstring(get_procedure.content.decode('utf-8'))
-        entry = get_root.find('d:entry', ns)
-        resource = entry.find('d:resource', ns)
-        procedure_resource = resource.find('d:Procedure', ns)
-        if get_id:
-            procedure['id'] = procedure_resource.find('d:id', ns).attrib['value']
-        procedure['procedure_identifier'] = procedure_identifier
+    if query_type == 'meta' or query_type == 'all':
+        meta = procedure_resource.find('d:meta', ns)
+        procedure['version'] = meta.find('d:versionId', ns).attrib['value']
+        procedure['last_updated'] = meta.find('d:lastUpdated', ns).attrib['value']
+    if query_type == 'id' or query_type == 'all':
+        procedure['id'] = procedure_resource.find(
+            'd:id', ns).attrib['value']
+    if query_type == 'data' or query_type == 'all':
+        # procedure['procedure_identifier'] = procedure_identifier
         status = procedure_resource.find('d:status', ns)
-        if status:
+        if status != None:
             procedure['procedure_status'] = status.attrib['value']
         category = procedure_resource.find('d:category', ns)
         if category:
@@ -953,10 +1776,12 @@ def query_procedure(procedure_identifier, get_id):
                 'd:text', ns).attrib['value']
         code = procedure_resource.find('d:code', ns)
         if code:
-            procedure['procedure_code'] = code.find('d:text', ns).attrib['value']
+            procedure['procedure_code'] = code.find(
+                'd:text', ns).attrib['value']
         performed_datetime = procedure_resource.find('d:performedDateTime', ns)
-        if performed_datetime:
-            procedure['procedure_performed_datetime'] = getdatetime(performed_datetime.attrib['value'])
+        if performed_datetime != None:
+            procedure['procedure_performed_datetime'] = getdatetime(
+                performed_datetime.attrib['value'])
         reason_code = procedure_resource.find('d:reasonCode', ns)
         if reason_code:
             procedure['procedure_reason_code'] = reason_code.find(
@@ -975,34 +1800,33 @@ def query_procedure(procedure_identifier, get_id):
                 'd:text', ns).attrib['value']
         note = procedure_resource.find('d:note', ns)
         if note:
-            procedure['procedure_note'] = note.find('d:text', ns).attrib['value']
+            procedure['procedure_note'] = note.find(
+                'd:text', ns).attrib['value']
     return procedure
 
 
-def query_medication(medication_identifier, get_id):
+def get_medication(medication_resource, query_type):
     medication_statement = {}
-    get_medication = requests.get(fhir_server + "/MedicationStatement?identifier=urn:trinhcongminh|" +
-                                  medication_identifier, headers={'Content-type': 'application/xml'})
-    if get_medication.status_code == 200 and 'entry' in get_medication.content.decode('utf-8'):
-        get_root = ET.fromstring(get_medication.content.decode('utf-8'))
-        entry = get_root.find('d:entry', ns)
-        resource = entry.find('d:resource', ns)
-        medication_resource = resource.find('d:MedicationStatement', ns)
-        if get_id == True:
-            medication_statement['id'] = medication_resource.find(
-                'd:id', ns).attrib['value']
-        medication_statement['medication_identifier'] = medication_identifier
+    if query_type == 'meta' or query_type == 'all':
+        meta = medication_resource.find('d:meta', ns)
+        medication_statement['version'] = meta.find('d:versionId', ns).attrib['value']
+        medication_statement['last_updated'] = meta.find('d:lastUpdated', ns).attrib['value']
+    if query_type == 'id' or query_type == 'all':
+        medication_statement['id'] = medication_resource.find(
+            'd:id', ns).attrib['value']
+    if query_type == 'data' or query_type == 'all':
+        # medication_statement['medication_identifier'] = medication_identifier
         medication = medication_resource.find(
             'd:medicationCodeableConcept', ns)
         if medication:
             medication_statement['medication_medication'] = medication.find(
                 'd:text', ns).attrib['value']
         effective = medication_resource.find('d:effectiveDateTime', ns)
-        if effective:
-            medication_statement['medication_effective'] = effective.attrib['value']
+        if effective != None:
+            medication_statement['medication_effective'] = get_date(effective.attrib['value'])
         date_asserted = medication_resource.find('d:dateAsserted', ns)
-        if date_asserted:
-            medication_statement['medication_date_asserted'] = date_asserted.attrib['value']
+        if date_asserted != None:
+            medication_statement['medication_date_asserted'] = get_date(date_asserted.attrib['value'])
         reason_code = medication_resource.find('d:reasonCode', ns)
         if reason_code:
             medication_statement['medication_reason_code'] = reason_code.find(
@@ -1022,29 +1846,34 @@ def query_medication(medication_identifier, get_id):
                 repeat = timing.find('d:repeat', ns)
                 if repeat:
                     duration = repeat.find('d:duration', ns)
-                    if duration:
+                    if duration != None:
+                        duration_value = duration.attrib['value']
                         duration_max = repeat.find('d:durationMax', ns)
-                        if duration_max:
-                            duration_value = duration.attrib['value'] + '-' + duration_max.attrib['value']
-                        duration_unit = repeat.find('d:durationUnit', ns).attrib['value']
-                        duration = duration_value + ' ' + duration_unit
+                        if duration_max != None:
+                            duration_value = duration.attrib['value'] + \
+                                '-' + duration_max.attrib['value']
+                        duration_unit = repeat.find(
+                            'd:durationUnit', ns).attrib['value']
                         medication_statement['dosage_duration'] = duration_value
+                        medication_statement['dosage_duration_unit'] = duration_unit
                     frequency = repeat.find('d:frequency', ns)
-                    if frequency:
-                        medication_statement['dosage_frequency'] = frequency.attrib['value']
-                    period = repeat.find('d:period', ns).attrib['value']
-                    if period:
+                    if frequency != None:
+                        medication_statement['dosage_frequency'] = frequency.attrib['value'] + ' lần'
+                    period = repeat.find('d:period', ns)
+                    if period != None:
+                        period_value = period.attrib['value']
                         period_max = repeat.find('d:periodMax', ns)
-                        if period_max:
-                            period_value = period.attrib['value'] + '-' + period_max.attrib['value']
+                        if period_max != None:
+                            period_value = period.attrib['value'] + \
+                                '-' + period_max.attrib['value']
                         period_unit = repeat.find('d:periodUnit', ns)
-                        period = period_value + ' ' + period_unit.attrib['value']
-                        medication_statement['dosage_period'] = period
+                        medication_statement['dosage_period'] = period_value
+                        medication_statement['dosage_period_value'] = period_unit
                     when = repeat.find('d:when', ns)
-                    if when:
+                    if when != None:
                         medication_statement['dosage_when'] = when.attrib['value']
                     offset = repeat.find('d:offset', ns)
-                    if offset:
+                    if offset != None:
                         medication_statement['dosage_offset'] = offset.attrib['value']
             route = dosage.find('d:route', ns)
             if route:
@@ -1059,19 +1888,17 @@ def query_medication(medication_identifier, get_id):
     return medication_statement
 
 
-def query_practitioner(practitioner_identifier, get_id):
+def get_practitioner(practitioner_resource, query_type):
     practitioner = {}
-    get_practitioner = requests.get(fhir_server + '/Practitioner?identifier=urn:trinhcongminh|' +
-                                    practitioner_identifier, headers={'Content-type': 'application/xml'})
-    if get_practitioner.status_code == 200 and 'entry' in get_practitioner.content.decode('utf-8'):
-        get_root = ET.fromstring(get_practitioner.content.decode('utf-8'))
-        entry = get_root.find('d:entry', ns)
-        resource = entry.find('d:resource', ns)
-        practitioner_resource = resource.find('d:Practitioner', ns)
-        if get_id == True:
-            practitioner['id'] = practitioner_resource.find(
-                'd:id', ns).attrib['value']
-        practitioner['identifier'] = practitioner_identifier
+    if query_type == 'meta' or query_type == 'all':
+        meta = practitioner_resource.find('d:meta', ns)    
+        practitioner['version'] = meta.find('d:versionId', ns).attrib['value']
+        practitioner['last_updated'] = meta.find('d:lastUpdated', ns).attrib['value']
+    if query_type == 'id' or query_type == 'all':
+        practitioner['id'] = practitioner_resource.find(
+            'd:id', ns).attrib['value']
+    if query_type == 'data' or query_type == 'all':
+        # practitioner['identifier'] = practitioner_identifier
         practitioner_name = practitioner_resource.find('d:name', ns)
         if practitioner_name:
             practitioner['name'] = practitioner_name.find(
@@ -1081,13 +1908,13 @@ def query_practitioner(practitioner_identifier, get_id):
             practitioner['telecom'] = practitioner_telecom.find(
                 'd:value', ns).attrib['value']
         practitioner_gender = practitioner_resource.find('d:gender', ns)
-        if practitioner_gender:
+        if practitioner_gender != None:
             if practitioner_gender.attrib['value'] == 'male':
                 practitioner['gender'] = 'Nam'
             else:
                 practitioner['gender'] = 'Nữ'
         practitioner_birthdate = practitioner_resource.find('d:birthDate', ns)
-        if practitioner_birthdate:
+        if practitioner_birthdate != None:
             practitioner['birthdate'] = practitioner_birthdate.attrib['value']
         practitioner_qualification = practitioner_resource.find(
             'd:qualification', ns)
@@ -1099,32 +1926,33 @@ def query_practitioner(practitioner_identifier, get_id):
     return practitioner
 
 
-def query_diagnostic_report(diagnostic_report_identifier, get_id):
+def get_diagnostic_report(diagnostic_report_resource, query_type):
     diagnostic_report = {}
-    get_diagnostic_report = requests.get(fhir_server + '/DiagnosticReport?identifier=urn:trinhcongminh|' + diagnostic_report_identifier, headers={'Content-type': 'application/xml'})
-    if get_diagnostic_report.status_code == 200 and 'entry' in get_diagnostic_report.content.decode('utf-8'):
-        get_root = ET.fromstring(get_diagnostic_report.content.decode('utf-8'))
-        entry = get_root.find('d:entry', ns)
-        resource = entry.find('d:resource', ns)
-        diagnostic_report_resource = resource.find('d:DiagnosticReport', ns)
-        if get_id == True:
-            id_ = diagnostic_report_resource.find('d:id', ns)
-            diagnostic_report['id'] = id_.attrib['value']
-        diagnostic_report['diagnostic_identifier'] = diagnostic_report_identifier
+    
+    if query_type == 'meta' or query_type == 'all':
+        meta = diagnostic_report_resource.find('d:meta', ns)
+        diagnostic_report['version'] = meta.find('d:versionId', ns).attrib['value']
+        diagnostic_report['last_updated'] = getdatetime(meta.find('d:lastUpdated', ns).attrib['value'])
+    if query_type == 'id' or query_type == 'all':
+        id_ = diagnostic_report_resource.find('d:id', ns)
+        diagnostic_report['id'] = id_.attrib['value']
+    if query_type == 'data' or query_type == 'all':
+        # diagnostic_report['diagnostic_identifier'] = diagnostic_report_identifier
         status = diagnostic_report_resource.find('d:status', ns)
-        if status:
+        if status != None:
             diagnostic_report['diagnostic_status'] = status.attrib['value']
         category = diagnostic_report_resource.find('d:category', ns)
         if category:
-            diagnostic_report['diagnostic_category'] = category.find('d:text', ns).attrib['value']
-        
+            diagnostic_report['diagnostic_category'] = category.find(
+                'd:text', ns).attrib['value']
+
         code = diagnostic_report_resource.find('d:code', ns)
         if code:
-            diagnostic_report['diagnostic_code'] = code.find('d:text', ns)
+            diagnostic_report['diagnostic_code'] = code.find('d:text', ns).attrib['value']
         effective = diagnostic_report_resource.find('d:effectiveDateTime', ns)
-        if effective:
+        if effective != None:
             diagnostic_report['diagnostic_effective'] = effective.attrib['value']
         conclusion = diagnostic_report_resource.find('d:conclusion', ns)
-        if conclusion:
+        if conclusion != None:
             diagnostic_report['diagnostic_conclusion'] = conclusion.attrib['value']
     return diagnostic_report

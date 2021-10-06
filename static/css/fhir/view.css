@@ -13,6 +13,7 @@
 }
 .right-body{
     flex:5;
-    padding: 80px;
+    padding: 12px 80px;
     border: 1px solid black;
+    position: relative;
 }

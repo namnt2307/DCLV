@@ -66,9 +66,13 @@
             {%for encounter in data.Encounter%}
             <tr>
                 <td>{{encounter.encounter_start|date:"d-m-Y H:i:s"}}</td>
+                {% if encounter.encounter_storage == 'local' %}
                 <td><a
                         href="{% url 'fhir:hanhchinh' group_name user_name data.Patient.identifier encounter.encounter_identifier %}">{{encounter.encounter_identifier}}</a>
                 </td>
+                {% elif encounter.encounter_storage == 'hapi' %}
+                <td>{{encounter.encounter_identifier}}</td>
+                {% endif %}
                 <td>{{class|get_item:encounter.encounter_class}}</td>
                 {% if encounter.encounter_status == 'in-progress' %}
                 <td> Đang Khám</td>
@@ -80,7 +84,7 @@
                 {%else%}
                 <td></td>
                 {%endif%}
-                <td><a href="{% url 'fhir:view' group_name user_name data.Patient.identifier encounter.encounter_identifier %}">Xem</a></td>
+                <td><a href="{% url 'fhir:view_benhan' group_name user_name data.Patient.identifier encounter.encounter_identifier %}">Xem</a></td>
             </tr>
             {%endfor%}
 

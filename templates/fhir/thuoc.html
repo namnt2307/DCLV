@@ -8,6 +8,93 @@
 {%block url6%}'{%url 'fhir:hinhanh' group_name user_name data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
 {% load widget_tweaks %}
 {%block function%}
+<h1>KẾT QUẢ</h1>
+<div>
+    <h2>+ Bệnh chính</h2>
+        <div>
+            <table>
+                <th>Tên bệnh</th>
+                <th>Mức độ</th>
+                {% for condition in discharge_conditions %}
+                <tbody id="{{condition.condition_identifier}}-data">
+                    <tr>
+                        <td>{{condition.condition_code}}</td>
+                        <td>{{severity|get_item:condition.condition_severity}}</td>
+                        <td><button onclick="toggleDisplay('{{condition.condition_identifier}}')">Chỉnh sửa</button></td>
+                    </tr>
+                </tbody>
+                <tbody style="display: none;" id="{{condition.condition_identifier}}-form">
+                    <tr>
+                        <form action="" method="POST">
+                            <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+                            <input type="hidden" name="classifier" id="" value="discharge">
+                            <input type="hidden" name="condition_identifier" value="{{condition.condition_identifier}}">
+                            {%with 'value:'|add:condition.condition_code as code%}
+                                <td>{{condition_form.condition_code|attr:code}}</td>
+                            {%endwith%}
+                            {%with 'value:'|add:condition.condition_severity as code%}
+                                <td>{{condition_form.condition_severity|attr:code}}</td>
+                            {%endwith%}
+                            <td><button type="submit">Lưu</button></td>
+                            <td><button type="button" onclick="toggleDisplay('{{condition.condition_identifier}}')">Hủy</button></td>
+                        </form>
+                    </tr>
+                </tbody>
+                {% endfor %}
+                <tr>
+                    <form action="" method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="classifier" id="" value="discharge">
+                        <td>{{condition_form.condition_code}}</td>
+                        <td>{{condition_form.condition_severity}}</td>
+                        <td><button type="submit" onclick="toggleDisplay('{{condition.condition_identifier}}')">Thêm</button></td>
+                    </form>
+                </tr>
+            </table>
+        </div>
+    <h2>+ Bệnh kèm theo</h2>
+    <div>
+        <table>
+            <th>Tên bệnh</th>
+            <th>Mức độ</th>
+            {% for condition in comorbidity_conditions %}
+            <tbody id="{{condition.condition_identifier}}-data">
+                <tr>
+                    <td>{{condition.condition_code}}</td>
+                    <td>{{severity|get_item:condition.condition_severity}}</td>
+                    <td><button type="button" onclick="toggleDisplay('{{condition.condition_identifier}}')">Chỉnh sửa</button></td>
+                </tr>
+            </tbody>
+            <tbody style="display: none;" id="{{condition.condition_identifier}}-form">
+                <tr>
+                    <form action="" method="POST">
+                        <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+                        <input type="hidden" name="classifier" id="" value="comorbidity">
+                        <input type="hidden" name="condition_identifier" value="{{condition.condition_identifier}}">
+                        {%with 'value:'|add:condition.condition_code as code%}
+                            <td>{{condition_form.condition_code|attr:code}}</td>
+                        {%endwith%}
+                        {%with 'value:'|add:condition.condition_severity as code%}
+                            <td>{{condition_form.condition_severity|attr:code}}</td>
+                        {%endwith%}
+                        <td><button type="submit">Lưu</button></td>
+                        <td><button type="button" onclick="toggleDisplay('{{condition.condition_identifier}}')">Hủy</button></td>                        
+                    </form>
+                </tr>
+            </tbody>
+            {% endfor %}
+            <tr>
+                <form action="" method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="classifier" id="" value="comorbidity">
+                    <td>{{condition_form.condition_code}}</td>
+                    <td>{{condition_form.condition_severity}}</td>
+                    <td><button type="submit">Thêm</button></td>
+                </form>
+            </tr>
+        </table>
+    </div>
+</div>
 <h1>THUỐC</h1>
 <table>
     <thead>
@@ -20,128 +107,193 @@
         <th>Đường dùng</th>
         <th>Ngày chỉ định</th>
     </thead>
-    <tbody>
+    
     {% if medications %}
+    
         {% for medication in medications %}
-        <tr>
-            <td>{{medication.medication_medication}}</td>
-            <td>{{medication.medication_reason_code}}</td>
-            <td>{{medication.medication_effective|date:"d-m-Y"}}</td>
-            <td>{{medication.dosage_frequency}}/{{medication.dosage_period}}</td>
-            <td>{{medication.dosage_quantity}}</td>
-            <td>{{medication.dosage_duration}}</td>
-            <td>{{medication.dosage_route}}</td>
-            <td>{{medication.medication_date_asserted|date:"d-m-Y"}}</td>
-        </tr>
-        <tr>
-            <td colspan="8">
-                <p>Hướng dẫn sử dụng:Dùng {{medication.dosage_frequency}}/{{medication.dosage_period}}, {{when|get_item:medication.dosage_when}} {%if medication.dosage_offset != '0'%}{{medication.dosage_offset}} phút{%endif%}</p>
-                <p>Hướng dẫn thêm: {{medication.dosage_additional_instruction}}</p>
-                <p>Hướng dẫn đặc biệt: {{medication.dosage_patient_instruction}}</p>
-            </td>
-        </tr>
-    </tbody>
-        <div class="formPopup" id="{{medication.medication_identifier}}" style="display: none;">
-            <div class="formContainer">
-            <form action="" method="POST" class="formContainer">
-                {%csrf_token%}
-            {%with 'value:'|add:medication.medication_identifier as code%}
-            {{form.medication_identifier|attr:code|attr:'type:hidden'}}
-            {%endwith%}
-            {%with 'value:'|add:medication.medication_medication as code%}
-            <label for="id_medication_medication">Thuốc chỉ định:</label>
-            {{form.medication_medication|attr:code}}
-            {%endwith%}
-            <br>
-            {%with 'value:'|add:medication.medication_reason_code as code%}
-            <label for="id_medication_reasonCode">Lý do dùng thuốc:</label>
-            {{form.medication_reasonCode|attr:code}}
-            {%endwith%}
-            <br>
-            {%with medication.medication_effective|date:'Y-m-d' as effective_date%}
-            {%with 'value:'|add:effective_date as code%}
-           
-            <label for="id_medication_effective">Ngày bắt đầu dùng thuốc:</label>
-            {{form.medication_effective|attr:code}}
-            {%endwith%}
-            {%endwith%}
-            <br>
-            {%with 'value:'|add:medication.dosage_frequency as code%}
-            <label for="id_dosage_frequency">Tần suất dùng thuốc:</label>
-            {{form.dosage_frequency|attr:code}}
-            {%endwith%}
-            <br>
-            {%with 'value:'|add:medication.dosage_period as code%}
-            <label for="id_dosage_period">Chu kì dùng thuốc:</label>
-            {{form.dosage_period|attr:code}}
-            {%endwith%}
-            <br>
-            {%with 'value:'|add:medication.dosage_duration as code%}
-            <label for="id_dosage_duration">Khoảng thời gian dùng thuốc:</label>
-            {{form.dosage_duration|attr:code}}
-            {%endwith%}
-            <br>
-            {%with 'value:'|add:medication.dosage_route as code%}
-            <label for="id_dosage_route">Đường dùng thuốc:</label>
-            {{form.dosage_route|attr:code}}
-            {%endwith%}
-            <br>
-            {%with 'value:'|add:medication.dosage_quantity as code%}
-            <label for="id_dosage_quantity">Số lượng mỗi lần dùng:</label>
-            {{form.dosage_quantity|attr:code}}
-            {%endwith%}
-            <br>
-            {%with 'value:'|add:medication.dosage_when as code%}
-            <label for="id_dosage_when">Thời điểm dùng thuốc (thời điểm):</label>
-            {{form.dosage_when|attr:code}}
-            {%endwith%}
-            <br>
-            {%with 'value:'|add:medication.dosage_offset as code%}
-            <label for="id_dosage_offset">Thời điểm dùng thuốc (số phút từ/đến thời điểm dùng thuốc):</label>
-            {{form.dosage_offset|attr:code}}
-            {%endwith%}
-            <br>
-            {%with 'value:'|add:medication.dosage_additional_instruction as code%}
-            <label for="id_dosage_additional_instruction">Hướng dẫn thêm:</label>
-            {{form.dosage_additional_instruction|attr:code}}
-            {%endwith%}
-            <br>
-            {%with 'value:'|add:medication.dosage_patient_instruction as code%}
-            <label for="id_dosage_patient_instruction">Hướng dẫn đặc biệt:</label>
-            {{form.dosage_patient_instruction|attr:code}}
-            {%endwith%}
-            <br>
-            <button type="submit" class="btn">Lưu lại</button>
-            <button type="button" class="btn cancel" onclick="closeForm('{{medication.medication_identifier}}')">Close</button>
-        </form>
-    </div>
-    </div>
-        <td colspan="8"><button class="submit-button" onclick="openForm('{{medication.medication_identifier}}')">Chỉnh sửa</button></td>
+            <tbody id="{{medication.medication_identifier}}-data">
+                <tr>
+                    <td>{{medication.medication_medication}}</td>
+                    <td>{{medication.medication_reason_code}}</td>
+                    <td>{{medication.medication_effective|date:"d-m-Y"}}</td>
+                    <td>{{medication.dosage_frequency}}/{{medication.dosage_period}} {{unit|get_item:medication.dosage_period_unit}}</td>
+                    <td>{{medication.dosage_quantity}}</td>
+                    <td>{{medication.dosage_duration}} {{unit|get_item:medication.dosage_duration_unit}}</td>
+                    <td>{{medication.dosage_route}}</td>
+                    <td>{{medication.medication_date_asserted|date:"d-m-Y"}}</td>
+                </tr>
+                <tr>
+                    <td colspan="8">
+                        <p>Thời điểm sử dụng: {{when|get_item:medication.dosage_when|capfirst}} {%if medication.dosage_offset != '0'%}{{medication.dosage_offset}} phút{%endif%}</p>
+                        <p>Hướng dẫn thêm: {{medication.dosage_additional_instruction}}</p>
+                        <p>Hướng dẫn đặc biệt: {{medication.dosage_patient_instruction}}</p>
+                    </td>
+                </tr>
+                <td colspan="8"><button class="submit-button" onclick="toggleDisplay('{{medication.medication_identifier}}')">Chỉnh sửa</button></td>
+            </tbody>
+            <tbody id="{{medication.medication_identifier}}-form" style="display: none;">   
+                <form action="" method="POST" >
+                    <tr>
+                        <input type="hidden" name="classifier" id="" value="medication">
+                        <input type="hidden" name="medication_identifier" value="{{medication.medication_identifier}}">
+                        {%csrf_token%}
+
+                        {%with 'value:'|add:medication.medication_medication as code%}
+                            <td>{{medication_form.medication_medication|attr:code}}</td>
+                        {%endwith%}
+                    
+                        {%with 'value:'|add:medication.medication_reason_code as code%}   
+                            <td>{{medication_form.medication_reason_code|attr:code}}</td>
+                        {%endwith%}
+                    
+                        {%with medication.medication_effective|date:'Y-m-d' as effective_date%}
+                            {%with 'value:'|add:effective_date as code%}        
+                                <td>{{medication_form.medication_effective|attr:code}}</td>
+                            {%endwith%}
+                        {%endwith%}
+
+                        <td>
+                            {%with 'value:'|add:medication.dosage_frequency as code%}
+                        
+                                {{medication_form.dosage_frequency|attr:code}}
+                            
+                            {%endwith%}
+                                <br>
+                                /
+                                <br>
+                            {%with 'value:'|add:medication.dosage_period as code%}               
+                                {{medication_form.dosage_period|attr:code}}
+                                <br>
+                                {{medication_form.dosage_period_unit}}
+                            {%endwith%}
+                        </td>
+
+                        {%with 'value:'|add:medication.dosage_quantity as code%}
+                            <td>{{medication_form.dosage_quantity|attr:code}}</td>
+                        {%endwith%}
+
+                        {%with 'value:'|add:medication.dosage_duration as code%}         
+                            <td>
+                                {{medication_form.dosage_duration|attr:code}}
+                                <br>
+                                {{medication_form.dosage_duration_unit}}
+                            </td>
+                        {%endwith%}
+
+
+
+                        {%with 'value:'|add:medication.dosage_route as code%}
+                            <td>{{medication_form.dosage_route|attr:code}}</td>
+                        {%endwith%}
+                        <td><button type="submit">Lưu</button></td>
+                    </tr>
+                    <tr>
+                        <td colspan="7">
+                            {%with 'value:'|add:medication.dosage_when as code%}                
+                                <p>Thời điểm dùng thuốc: {{medication_form.dosage_when|attr:code}}
+                            {%endwith%}
+                
+                            {%with 'value:'|add:medication.dosage_offset as code%}               
+                                {{medication_form.dosage_offset|attr:code}} phút</p>
+                            {%endwith%}
+
+                            {%with 'value:'|add:medication.dosage_additional_instruction as code%}
+                                <p>Hướng dẫn thêm: {{medication_form.dosage_additional_instruction|attr:code}}</p>
+                            {%endwith%}
+
+                            {%with 'value:'|add:medication.dosage_patient_instruction as code%}
+                                <p>Hướng dẫn đặc biệt: {{medication_form.dosage_patient_instruction|attr:code}}</p>
+                            {%endwith%}
+                        </td>
+                        <td><button type="button" onclick="toggleDisplay('{{medication.medication_identifier}}')">Hủy</button></td>
+                    </tr>
+                </form>
+            </tbody>
         {% endfor %}
     {% endif %}
-
-    <div>
-        <div class="formPopup" id="thuocForm">
-            <div class="formContainer">
-        <form action="" method="POST">
-            {%csrf_token%}
-            {{form.as_p}}
-            <button type="submit" class="btn">Add</button>
-            <button type="button" class="btn cancel" onclick="closeForm('thuocForm')">Close</button>
-        </form>
-    </div>
-    </div>
-    </div>
-    <tr>
-        <td colspan="8"><button class="float-left submit-button" onclick="openForm('thuocForm')">Thêm thuốc</button></td>
-    </tr>
+    <form action="" method="POST">
+        <input type="hidden" name="classifier" id="" value="medication">
+        <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+        <tr>
+            <td>{{medication_form.medication_medication}}</td>
+            <td>{{medication_form.medication_reason_code}}</td>
+            <td>{{medication_form.medication_effective}}</td>
+            <td>
+            {{medication_form.dosage_frequency}}
+            <br>
+            / 
+            <br>
+            {{medication_form.dosage_period}} {{medication_form.dosage_period_unit}}
+            </td>
+            <td>{{medication_form.dosage_quantity}}</td>
+            <td>{{medication_form.dosage_duration}} {{medication_form.dosage_duration_unit}}</td>
+            <td>{{medication_form.dosage_route}}</td>
+            <td rowspan="2"><button type="submit">Thêm Thuốc</button></td>
+        </tr>
+        <tr>
+            <td colspan="7">
+                <p>Thời điểm dùng thuốc: {{medication_form.dosage_when}} {{medication_form.dosage_offset}} phút</p>
+                <p>Hướng dẫn thêm: {{medication_form.dosage_additional_instruction}}</p>
+                <p>Hướng dẫn đặc biệt: {{medication_form.dosage_patient_instruction}}</p>       
+            </td>
+        </tr>
+    </form>
 </table>
+{% comment %}
+<div>
+    <div class="formPopup" id="thuocForm">
+        <div class="formContainer">
+            <form action="" method="POST">
+                {%csrf_token%}
+                {{medication_form.medication_medication.label}}: {{medication_form.medication_medication}}
+                <br>
+                {{medication_form.medication_reason_code.label}}: {{medication_form.medication_reason_code}}
+                <br>
+                {{medication_form.medication_effective.label}}: {{medication_form.medication_effective}}
+                <br>
+                {{medication_form.dosage_frequency.label}}: {{medication_form.dosage_frequency}}
+                <br>
+                {{medication_form.dosage_period.label}}: {{medication_form.dosage_period}} {{medication_form.dosage_period_unit}}
+                <br>
+                {{medication_form.dosage_duration.label}}: {{medication_form.dosage_duration}} {{medication_form.dosage_duration_unit}}
+                <br>
+                {{medication_form.dosage_route.label}}: {{medication_form.dosage_route}}
+                <br>
+                {{medication_form.dosage_quantity.label}}: {{medication_form.dosage_quantity}}
+                <br>
+                {{medication_form.dosage_when.label}}: {{medication_form.dosage_when}}
+                <br>
+                {{medication_form.dosage_offset.label}}: {{medication_form.dosage_offset}}
+                <br>
+                {{medication_form.dosage_additional_instruction.label}}: {{medication_form.dosage_additional_instruction}}
+                <br>
+                {{medication_form.dosage_patient_instruction.label}}: {{medication_form.dosage_patient_instruction}}
+                <br>
+                <button type="submit" class="btn">Add</button>
+                <button type="button" class="btn cancel" onclick="closeForm('thuocForm')">Close</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endcomment %}
 <script>
     function whenFunction(){
         var select = document.getElementById('id_dosage_when');
         console.log(select);
         var value = select.getAttribute('value');
         console.log(value);
+    }
+    function toggleDisplay(elementId){
+        data = document.getElementById(elementId + '-data');
+        form = document.getElementById(elementId + '-form');
+        if (data.style.display == 'none'){
+            data.style.display = 'table-row-group';
+            form.style.display = 'none';
+        }
+        else {
+            data.style.display = 'none';
+            form.style.display = 'table-row-group';
+        }
     }
 </script>
 {%endblock%}

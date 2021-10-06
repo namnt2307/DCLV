@@ -1,7 +1,7 @@
 {% extends 'fhir/view/base.html' %}
 {% block right-body %}
 {% load static %}
-<link rel="stylesheet" href="">
+<link rel="stylesheet" href="{% static 'css/fhir/donthuoc.css' %}">
 <div>
     <div>
         <h1>ĐƠN THUỐC</h1>
@@ -10,7 +10,31 @@
         <p>NGÀY SINH: {{patient.birthdate|date:'d-m-Y'}}</p>
         <p>ĐỊA CHỈ: {{patient.home_address}}</p>
     </div>
-    <div>
+    <div class="right-body__body-section">
+    {% if medications_history %}
+        <div class="history-container">
+            {% for medication in medications %}
+                <div class="history" id="{{medication.medication_identifier}}-history" style="display: none;">
+                    <div class="history-header">
+                        <h2>Lịch sử chỉnh sửa</h2>
+                        <i class="fa fa-times" aria-hidden="true" onclick="displayHistory('{{medication.medication_identifier}}-history')"></i>
+                    </div>
+                    <div>
+                        {% for medication_history in medications_history|get_item:medication.medication_identifier %}
+                            <p>Thuốc: {{medication_history.medication_medication}} </p>
+                            <p>Lý do dùng thuốc: {{medication_history.medication_reason_code}}</p>
+                            <p>Bắt đầu dùng thuốc: {{medication_history.medication_effective}}</p>
+                            <p>Tần suất dùng thuốc: {{medication_history.dosage_frequency}}</p>
+                            <p>Liều dùng: {{medication_history.dosage_quantity}}</p>
+                            <p>Thời gian sử dụng: {{medication_history.dosage_duration}}</p>
+                            <p>Đường dùng: {{medication_history.dosage_route}}</p>
+                            <p>Ngày chỉ định: {{medication_history.medication_date_asserted}}</p>            
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
         <table>
             <thead>
                 <th>Thuốc</th>
@@ -23,28 +47,67 @@
                 <th>Ngày chỉ định</th>
             </thead>
             <tbody>
-            {% if medications %}
-                {% for medication in medications %}
-                <tr>
-                    <td>{{medication.medication_medication}}</td>
-                    <td>{{medication.medication_reasonCode}}</td>
-                    <td>{{medication.medication_effective|date:"d-m-Y"}}</td>
-                    <td>{{medication.dosage_frequency}}</td>
-                    <td>{{medication.dosage_quantity}}</td>
-                    <td>{{medication.dosage_duration}}</td>
-                    <td>{{medication.dosage_route}}</td>
-                    <td>{{medication.medication_dateAsserted|date:"d-m-Y"}}</td>
-                </tr>
-                <tr>
-                    <td colspan="8">
-                        <p>Hướng dẫn sử dụng: Dùng thuốc {{medication.dosage_when}} {%if medication.dosage_offset != '0'%}{{medication.dosage_offset}} phút {%endif%}, {{medication.dosage_additional_instruction}}</p>
-                        <p>Hướng dẫn đặc biệt: {{medication.dosage_patient_instruction}}</p>
-                    </td>
-                </tr>
-                {% endfor %}
+                {% if encounter.encounter_storage == 'local' %}
+                    {% if medications %}
+                        {% for medication in medications %}
+                            <tr>
+                                <td>{{medication.medication_medication}}</td>
+                                <td>{{medication.medication_reason_code}}</td>
+                                <td>{{medication.medication_effective|date:"d-m-Y"}}</td>
+                                <td>{{medication.dosage_frequency}}/{{medication.dosage_period}} {{unit|get_item:medication.dosage_period_unit}}</td>
+                                <td>{{medication.dosage_quantity}}</td>
+                                <td>{{medication.dosage_duration}} {{unit|get_item:medication.dosage_duration_unit}}</td>
+                                <td>{{medication.dosage_route}}</td>
+                                <td>{{medication.medication_date_asserted|date:"d-m-Y"}}</td>
+                                {% if medications_history|get_item:medication.medication_identifier %}
+                                    <td><button onclick="displayHistory('{{medication.medication_identifier}}-history')">xem lich su</button></td>
+                                {% endif %}
+                            </tr>
+                            <tr>
+                                <td colspan="8">
+                                    <p>Thời điểm sử dụng: {{when|get_item:medication.dosage_when}} {%if medication.dosage_offset != '0'%}{{medication.dosage_offset}} phút {%endif%}</p>
+                                    <p>Hướng dẫn thêm: {{medication.dosage_additional_instruction}}</p>
+                                    <p>Hướng dẫn đặc biệt: {{medication.dosage_patient_instruction}}</p>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% endif %}
+                {% elif encounter.encounter_storage == 'hapi' %}
+                    {% if medications %}
+                        {% for medication in medications %}
+                            <tr>
+                                <td>{{medication.medication_medication}}</td>
+                                <td>{{medication.medication_reason_code}}</td>
+                                <td>{{medication.medication_effective}}</td>
+                                <td>{{medication.dosage_frequency}}/ {{medication.dosage_period}} {{unit|get_item:medication.dosage_period_unit}}</td>
+                                <td>{{medication.dosage_quantity}}</td>
+                                <td>{{medication.dosage_duration}} {{unit|get_item:medication.dosage_duration_unit}}</td>
+                                <td>{{medication.dosage_route}}</td>
+                                <td>{{medication.medication_date_asserted}}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="8">
+                                    <p>Thời điểm sử dụng: {{medication.dosage_frequency}}  {{medication.dosage_period}} {{when|get_item:medication.dosage_when}} {%if medication.dosage_offset != '0'%}{{medication.dosage_offset}} phút{%endif%}</p>
+                                    <p>Hướng dẫn thêm: {{medication.dosage_additional_instruction}}</p>
+                                    <p>Hướng dẫn đặc biệt: {{medication.dosage_patient_instruction}}</p>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% endif %}                        
+                {% endif %}
             </tbody>
-            {% endif %}
         </table>
     </div>
 </div>
+<script>
+    function displayHistory(element_id) {
+        getElement = document.getElementById(element_id);
+        if (getElement.style.display == 'none') {
+            getElement.style.display = 'block';
+        }
+        else {
+            getElement.style.display = 'none';
+        }
+    }
+</script>
 {% endblock %}

@@ -4,7 +4,7 @@
 <link rel="stylesheet" href="{% static 'css/fhir/view.css' %}">
     <div class="left-body">
         <ul class="left-body__list">
-            <li class="left-body__list-item"><a href="{% url 'fhir:view' group_name user_name patient.identifier encounter.encounter_identifier %}">Bệnh án</a></li>
+            <li class="left-body__list-item"><a href="{% url 'fhir:view_benhan' group_name user_name patient.identifier encounter.encounter_identifier %}">Bệnh án</a></li>
             <li class="left-body__list-item"><a href="{% url 'fhir:view_xetnghiem' group_name user_name patient.identifier encounter.encounter_identifier %}">Phiếu xét nghiệm</a></li>
             <li class="left-body__list-item"><a href="{% url 'fhir:view_thuthuat' group_name user_name patient.identifier encounter.encounter_identifier %}">Phiếu xử lí hình ảnh</a></li>
             <li class="left-body__list-item"><a href="{% url 'fhir:view_donthuoc' group_name user_name patient.identifier encounter.encounter_identifier %}">Đơn thuốc</a></li>

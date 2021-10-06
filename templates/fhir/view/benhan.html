@@ -36,7 +36,26 @@
             <p>8. Nơi làm việc: {{patient.work_address}}</p>
             <p>9. Họ tên, địa chỉ người nhà khi cần báo tin, Điện thoại số</p>
         </div>
-        <div class="right-body__body-section">
+        <div class="right-body__body-section history-container">
+            {% if encounter_history %}
+                <div class="history" id="encounter-history" style="display: none;">
+                    <div class="right-body__body-section__flexcontainer">
+                        <h1>LỊCH SỬ CHỈNH SỬA THÔNG TIN KHÁM BỆNH</h1>
+                        <i class="fa fa-times" aria-hidden="true" onclick="displayToggle('encounter-history')"></i>
+                    </div>
+                    {% for encounter in encounter_history %}
+                        <h2>Chỉnh sửa ngày: {{encounter.last_updated}}</h2>
+                        <p>Loại hình thăm khám: {{encounter.encounter_class}} </p>
+                        <p>Loại bệnh án: {{encounter.encounter_type}} </p>
+                        <p>Dịch vụ khám bệnh: {{encounter.encounter_service}}</p>
+                        <p>Mức độ ưu tiên: {{encounter.encounter_priority}}</p>
+                        <p>Lý do đến khám: {{encounter.encounter_reason}}</p>
+                        <p>Ngày đến khám: {{encounter.encounter_start}}</p>
+                        <p>Ngày kết thúc: {{encounter.encounter_end}}</p>
+                    {% endfor %}
+                </div>
+                <button type="button" onclick="displayToggle('encounter-history')">xem lịch sử</button>
+            {% endif %}
             <h2>II. QUẢN LÝ NGƯỜI BỆNH</h2>
             <div class="right-body__body-section__item-content right-body__body-section__item-content--flex">
                 <div class="right-body__body-section__item-content--flex__item right-body__body-section__item-content--flex__item--with-border">
@@ -71,7 +90,13 @@
                     <div class="right-body__body-section__item-content--flex__item right-body__body-section__item-content--flex__item--with-border">
                         <p>23. Ra viện</p>
                         <p>+ Bệnh chính</p>
+                        {% for condition in discharge_conditions %}
+                            <p>- {{condition.condition_code}}: {{severity|get_item:condition.condition_severity}}</p>
+                        {% endfor %}
                         <p>+ Bệnh kèm theo</p>
+                        {% for condition in comorbidity_conditions %}
+                            <p>- {{condition.condition_code}}: {{severity|get_item:condition.condition_severity}}</p>
+                        {% endfor %}                        
                     </div>
                 </div>
         </div>
@@ -94,76 +119,331 @@
             <div class="right-body__body-section__part-1">
                 <h3>Lý do vào viện: {{encounter.encounter_reason}}</h3>
             </div>
-            <div class="right-body__body-section__part-2">         
-                
-                    
-                        <h3>Hỏi bệnh</h3>
-                            <h4>1. Quá trình bệnh lý</h4>
-                            <div class='right-body__body-section__item-content'>
-                                <p>{{ condition.condition_code }}</p>
+            <div class="right-body__body-section__part-2">               
+                <h3>Hỏi bệnh</h3>
+                    <h4>1. Quá trình bệnh lý</h4>
+                        <div class='right-body__body-section__item-content history-container'>
+                            {% for condition in admission_conditions.patient %}
+                                <p>- {{condition.condition_code}}: {{severity|get_item:condition.condition_severity}}</p>
+                                {% if conditions_history|get_item:condition.condition_identifier %}
+                                    <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
+                                        <div class="history-header">
+                                            <h2>LỊCH SỬ CHỈNH SỬA</h2>
+                                            <i class="fa fa-times" aria-hidden="true" onclick="displayToggle('{{condition.condition_identifier}}')"></i>
+                                        </div>
+                                        <div>
+                                            {% for condition_history in conditions_history|get_item:condition.condition_identifier %}
+                                            <h3>Ngày chỉnh sửa: {{condition_history.last_updated}}</h3>
+                                            <p>Tên triệu chứng: {{condition_history.condition_code}}</p>
+                                            <p>Mức độ: {{severity|get_item:condition_history.condition_severity}}</p>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <button type="button" onclick="displayToggle('{{condition.condition_identifier}}')">xem lịch sử</button>
+                                {% endif %}                                
+                            {% endfor %}                                
+                        </div>
+                    <h4>2. Tiền sử bệnh</h4>
+                        <h3>+ Bản thân</h3>
+                            <div class='right-body__body-section__item-content history-container'>
+                                {% for condition in resolved_conditions %}
+                                    <p>- {{condition.condition_code}}: {{severity|get_item:condition.condition_severity}}</p>
+                                    {% if conditions_history|get_item:condition.condition_identifier %}
+                                    <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
+                                        <div class="history-header">
+                                            <h2>LỊCH SỬ CHỈNH SỬA</h2>
+                                            <i class="fa fa-times" aria-hidden="true" onclick="displayToggle('{{condition.condition_identifier}}')"></i>
+                                        </div>
+                                        <div>
+                                            {% for condition_history in conditions_history|get_item:condition.condition_identifier %}
+                                            <h3>Ngày chỉnh sửa: {{condition_history.last_updated}}</h3>
+                                            <p>Tên triệu chứng: {{condition_history.condition_code}}</p>
+                                            <p>Mức độ: {{severity|get_item:condition_history.condition_severity}}</p>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <button type="button" onclick="displayToggle('{{condition.condition_identifier}}')">xem lịch sử</button>
+                                {% endif %}                                    
+                                {% endfor %}                                    
                             </div>
-                            <h4>2. Tiền sử bệnh</h4>
-                                <h3>+ Bản thân</h3>
-                                <div class='right-body__body-section__item-content'></div>
-                                <h3>+ Dị ứng</h3>
-                                <div class='right-body__body-section__item-content'></div>
-                                <h3>+ Gia đình</h3>
-                                <div class='right-body__body-section__item-content'></div>
-                 
+                        <h3>+ Dị ứng</h3>
+                            <div class='right-body__body-section__item-content'></div>
+                        <h3>+ Gia đình</h3>
+                            <div class='right-body__body-section__item-content'></div>
             </div>
             <div class="right-body__body-section__part-3">
                 <h3>Khám bệnh</h3>
                 <div class='right-body__body-section__item'>
                     <h4>1. Toàn thân</h4>
                     <div class="right-body__body-section__item-content right-body__body-section__item-content--flex right-body__body-section__item-content--flex--align-center">
-                        <p class="right-body__body-section__item-content--flex__item right-body__body-section__item-content--flex__item--with-border"></p>
+                        <div class="right-body__body-section__item-content--flex__item right-body__body-section__item-content--flex__item--with-border history-container">
+                            {% for condition in admission_conditions.doctor.toanthan %}
+                                <p>- {{condition.condition_code}}: {{severity|get_item:condition.condition_severity}}</p>
+                                {% if conditions_history|get_item:condition.condition_identifier %}
+                                    <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
+                                        <div class="history-header">
+                                            <h2>LỊCH SỬ CHỈNH SỬA</h2>
+                                            <i class="fa fa-times" aria-hidden="true" onclick="displayToggle('{{condition.condition_identifier}}')"></i>
+                                        </div>
+                                        <div>
+                                            {% for condition_history in conditions_history|get_item:condition.condition_identifier %}
+                                            <h3>Ngày chỉnh sửa: {{condition_history.last_updated}}</h3>
+                                            <p>Tên triệu chứng: {{condition_history.condition_code}}</p>
+                                            <p>Mức độ: {{severity|get_item:condition_history.condition_severity}}</p>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <button type="button" onclick="displayToggle('{{condition.condition_identifier}}')">xem lịch sử</button>
+                                {% endif %}                                
+                            {% endfor %}                            
+                        </div>
                         <div class="right-body__body-section__item-content--flex__item--with-border">                                   
-                            <p>Mạch: {{data.Observation.mach.observation_valuequantity}} lần/ph</p>                                                        
-                            <p>Nhiệt độ: {{data.Observation.nhietdo.observation_valuequantity}} độ C</p>                            
-                            <p>Huyết áp: {{data.Observation.tamthu.observation_valuequantity}}/{{data.Observation.tamtruong.observation_valuequantity}} mmHg</p>             
-                            <p>Nhịp thở: {{data.Observation.nhiptho.observation_valuequantity}} lần/ph</p>
-                            <p>Cân nặng: {{data.Observation.cannang.observation_valuequantity}} kg</p>
+                            <p>Mạch: {{data.Observation.mach.observation_value_quantity}} lần/ph</p>                                                        
+                            <p>Nhiệt độ: {{data.Observation.nhietdo.observation_value_quantity}} độ C</p>                            
+                            <p>Huyết áp: {{data.Observation.tamthu.observation_value_quantity}}/{{data.Observation.tamtruong.observation_value_quantity}} mmHg</p>             
+                            <p>Nhịp thở: {{data.Observation.nhiptho.observation_value_quantity}} lần/ph</p>
+                            <p>Cân nặng: {{data.Observation.cannang.observation_value_quantity}} kg</p>
                         </div>
                     </div>
                 </div class='right-body__body-section__item'>
                     <h4>2. Các cơ quan</h4>
                         <h5>+ Tuần hoàn</h5>
-                            <div class='right-body__body-section__item-content'></div>
+                            <div class='right-body__body-section__item-content history-container'>
+                                {% for condition in admission_conditions.doctor.tuanhoan %}
+                                    <p>- {{condition.condition_code}}: {{severity|get_item:condition.condition_severity}} </p>
+                                    {% if conditions_history|get_item:condition.condition_identifier %}
+                                        <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
+                                            <div class="history-header">
+                                                <h2>LỊCH SỬ CHỈNH SỬA</h2>
+                                                <i class="fa fa-times" aria-hidden="true" onclick="displayToggle('{{condition.condition_identifier}}')"></i>
+                                            </div>
+                                            <div>
+                                                {% for condition_history in conditions_history|get_item:condition.condition_identifier %}
+                                                <h3>Ngày chỉnh sửa: {{condition_history.last_updated}}</h3>
+                                                <p>Tên triệu chứng: {{condition_history.condition_code}}</p>
+                                                <p>Mức độ: {{severity|get_item:condition_history.condition_severity}}</p>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        <button type="button" onclick="displayToggle('{{condition.condition_identifier}}')">xem lịch sử</button>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
                                      
                         <h5>+ Hô hấp</h5>
-                          <div class='right-body__body-section__item-content'></div>
+                            <div class='right-body__body-section__item-content history-container'>
+                                {% for condition in admission_conditions.doctor.hohap %}
+                                    <p>- {{condition.condition_code}}: {{severity|get_item:condition.condition_severity}} </p>      
+                                    {% if conditions_history|get_item:condition.condition_identifier %}
+                                        <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
+                                            <div class="history-header">
+                                                <h2>LỊCH SỬ CHỈNH SỬA</h2>
+                                                <i class="fa fa-times" aria-hidden="true" onclick="displayToggle('{{condition.condition_identifier}}')"></i>
+                                            </div>
+                                            <div>
+                                                {% for condition_history in conditions_history|get_item:condition.condition_identifier %}
+                                                <h3>Ngày chỉnh sửa: {{condition_history.last_updated}}</h3>
+                                                <p>Tên triệu chứng: {{condition_history.condition_code}}</p>
+                                                <p>Mức độ: {{severity|get_item:condition_history.condition_severity}}</p>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        <button type="button" onclick="displayToggle('{{condition.condition_identifier}}')">xem lịch sử</button>
+                                    {% endif %}                                                                  
+                                {% endfor %}
+                            </div>
                          
                     
                         <h5>+ Tiêu hóa</h5>
-                        <div class='right-body__body-section__item-content'></div>
+                            <div class='right-body__body-section__item-content history-container'>
+                                {% for condition in admission_conditions.doctor.tieuhoa %}
+                                    <p>- {{condition.condition_code}}: {{severity|get_item:condition.condition_severity}} </p>
+                                    {% if conditions_history|get_item:condition.condition_identifier %}
+                                        <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
+                                            <div class="history-header">
+                                                <h2>LỊCH SỬ CHỈNH SỬA</h2>
+                                                <i class="fa fa-times" aria-hidden="true" onclick="displayToggle('{{condition.condition_identifier}}')"></i>
+                                            </div>
+                                            <div>
+                                                {% for condition_history in conditions_history|get_item:condition.condition_identifier %}
+                                                <h3>Ngày chỉnh sửa: {{condition_history.last_updated}}</h3>
+                                                <p>Tên triệu chứng: {{condition_history.condition_code}}</p>
+                                                <p>Mức độ: {{severity|get_item:condition_history.condition_severity}}</p>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        <button type="button" onclick="displayToggle('{{condition.condition_identifier}}')">xem lịch sử</button>
+                                    {% endif %}                                    
+                                {% endfor %}                                
+                            </div>
                     
                     
                         <h5>+ Thận - Tiết niệu - Sinh dục</h5>
-                        <div class='right-body__body-section__item-content'></div>
+                            <div class='right-body__body-section__item-content history-container'>
+                                {% for condition in admission_conditions.doctor.tts %}
+                                    <p>- {{condition.condition_code}}: {{severity|get_item:condition.condition_severity}} </p>
+                                    {% if conditions_history|get_item:condition.condition_identifier %}
+                                        <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
+                                            <div class="history-header">
+                                                <h2>LỊCH SỬ CHỈNH SỬA</h2>
+                                                <i class="fa fa-times" aria-hidden="true" onclick="displayToggle('{{condition.condition_identifier}}')"></i>
+                                            </div>
+                                            <div>
+                                                {% for condition_history in conditions_history|get_item:condition.condition_identifier %}
+                                                <h3>Ngày chỉnh sửa: {{condition_history.last_updated}}</h3>
+                                                <p>Tên triệu chứng: {{condition_history.condition_code}}</p>
+                                                <p>Mức độ: {{severity|get_item:condition_history.condition_severity}}</p>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        <button type="button" onclick="displayToggle('{{condition.condition_identifier}}')">xem lịch sử</button>
+                                    {% endif %}                                    
+                                {% endfor %}                                
+                            </div>
                     
                     
                         <h5>+ Thần kinh</h5>
-                        <div class='right-body__body-section__item-content'></div>
+                            <div class='right-body__body-section__item-content history-container'>
+                                {% for condition in admission_conditions.doctor.thankinh %}
+                                    <p>- {{condition.condition_code}}: {{severity|get_item:condition.condition_severity}} </p>
+                                    {% if conditions_history|get_item:condition.condition_identifier %}
+                                        <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
+                                            <div class="history-header">
+                                                <h2>LỊCH SỬ CHỈNH SỬA</h2>
+                                                <i class="fa fa-times" aria-hidden="true" onclick="displayToggle('{{condition.condition_identifier}}')"></i>
+                                            </div>
+                                            <div>
+                                                {% for condition_history in conditions_history|get_item:condition.condition_identifier %}
+                                                <h3>Ngày chỉnh sửa: {{condition_history.last_updated}}</h3>
+                                                <p>Tên triệu chứng: {{condition_history.condition_code}}</p>
+                                                <p>Mức độ: {{severity|get_item:condition_history.condition_severity}}</p>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        <button type="button" onclick="displayToggle('{{condition.condition_identifier}}')">xem lịch sử</button>
+                                    {% endif %}                                    
+                                {% endfor %}                                
+                            </div>
                     
                     
                         <h5>+ Cơ - Xương - Khớp</h5>
-                        <div class='right-body__body-section__item-content'></div>
+                            <div class='right-body__body-section__item-content history-container'>
+                                {% for condition in admission_conditions.doctor.cxk %}
+                                    <p>- {{condition.condition_code}}: {{severity|get_item:condition.condition_severity}} </p>
+                                    {% if conditions_history|get_item:condition.condition_identifier %}
+                                        <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
+                                            <div class="history-header">
+                                                <h2>LỊCH SỬ CHỈNH SỬA</h2>
+                                                <i class="fa fa-times" aria-hidden="true" onclick="displayToggle('{{condition.condition_identifier}}')"></i>
+                                            </div>
+                                            <div>
+                                                {% for condition_history in conditions_history|get_item:condition.condition_identifier %}
+                                                <h3>Ngày chỉnh sửa: {{condition_history.last_updated}}</h3>
+                                                <p>Tên triệu chứng: {{condition_history.condition_code}}</p>
+                                                <p>Mức độ: {{severity|get_item:condition_history.condition_severity}}</p>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        <button type="button" onclick="displayToggle('{{condition.condition_identifier}}')">xem lịch sử</button>
+                                    {% endif %}                                    
+                                {% endfor %}                                
+                            </div>
                    
                     
                         <h5>+ Tai - Mũi - Họng</h5>
-                        <div class='right-body__body-section__item-content'></div>
+                            <div class='right-body__body-section__item-content history-container'>
+                                {% for condition in admission_conditions.doctor.tmh %}
+                                    <p>- {{condition.condition_code}}: {{severity|get_item:condition.condition_severity}} </p>
+                                    {% if conditions_history|get_item:condition.condition_identifier %}
+                                        <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
+                                            <div class="history-header">
+                                                <h2>LỊCH SỬ CHỈNH SỬA</h2>
+                                                <i class="fa fa-times" aria-hidden="true" onclick="displayToggle('{{condition.condition_identifier}}')"></i>
+                                            </div>
+                                            <div>
+                                                {% for condition_history in conditions_history|get_item:condition.condition_identifier %}
+                                                <h3>Ngày chỉnh sửa: {{condition_history.last_updated}}</h3>
+                                                <p>Tên triệu chứng: {{condition_history.condition_code}}</p>
+                                                <p>Mức độ: {{severity|get_item:condition_history.condition_severity}}</p>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        <button type="button" onclick="displayToggle('{{condition.condition_identifier}}')">xem lịch sử</button>
+                                    {% endif %}                                    
+                                {% endfor %}                                
+                            </div>
                     
                     
                         <h5>+ Răng - Hàm - Mặt</h5>
-                        <div class='right-body__body-section__item-content'></div>
+                            <div class='right-body__body-section__item-content history-container'>
+                                {% for condition in admission_conditions.doctor.rhm %}
+                                    <p>- {{condition.condition_code}}: {{severity|get_item:condition.condition_severity}} </p>
+                                    {% if conditions_history|get_item:condition.condition_identifier %}
+                                        <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
+                                            <div class="history-header">
+                                                <h2>LỊCH SỬ CHỈNH SỬA</h2>
+                                                <i class="fa fa-times" aria-hidden="true" onclick="displayToggle('{{condition.condition_identifier}}')"></i>
+                                            </div>
+                                            <div>
+                                                {% for condition_history in conditions_history|get_item:condition.condition_identifier %}
+                                                <h3>Ngày chỉnh sửa: {{condition_history.last_updated}}</h3>
+                                                <p>Tên triệu chứng: {{condition_history.condition_code}}</p>
+                                                <p>Mức độ: {{severity|get_item:condition_history.condition_severity}}</p>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        <button type="button" onclick="displayToggle('{{condition.condition_identifier}}')">xem lịch sử</button>
+                                    {% endif %}                                    
+                                {% endfor %}                                
+                            </div>
                     
                     
                         <h5>+ Mắt</h5>
-                        <div class='right-body__body-section__item-content'></div>
+                            <div class='right-body__body-section__item-content history-container'>
+                                {% for condition in admission_conditions.doctor.mat %}
+                                    <p>- {{condition.condition_code}}: {{severity|get_item:condition.condition_severity}} </p>
+                                    {% if conditions_history|get_item:condition.condition_identifier %}
+                                        <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
+                                            <div class="history-header">
+                                                <h2>LỊCH SỬ CHỈNH SỬA</h2>
+                                                <i class="fa fa-times" aria-hidden="true" onclick="displayToggle('{{condition.condition_identifier}}')"></i>
+                                            </div>
+                                            <div>
+                                                {% for condition_history in conditions_history|get_item:condition.condition_identifier %}
+                                                <h3>Ngày chỉnh sửa: {{condition_history.last_updated}}</h3>
+                                                <p>Tên triệu chứng: {{condition_history.condition_code}}</p>
+                                                <p>Mức độ: {{severity|get_item:condition_history.condition_severity}}</p>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        <button type="button" onclick="displayToggle('{{condition.condition_identifier}}')">xem lịch sử</button>
+                                    {% endif %}                                    
+                                {% endfor %}                                
+                            </div>
                     
                     
                         <h5>+ Nội tiết, dinh dưỡng và các bệnh lý khác</h5>
-                        <div class='right-body__body-section__item-content'></div>
+                            <div class='right-body__body-section__item-content history-container'>
+                                {% for condition in admission_conditions.doctor.noitiet %}
+                                    <p>- {{condition.condition_code}}: {{severity|get_item:condition.condition_severity}} </p>
+                                    {% if conditions_history|get_item:condition.condition_identifier %}
+                                        <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
+                                            <div class="history-header">
+                                                <h2>LỊCH SỬ CHỈNH SỬA</h2>
+                                                <i class="fa fa-times" aria-hidden="true" onclick="displayToggle('{{condition.condition_identifier}}')"></i>
+                                            </div>
+                                            <div>
+                                                {% for condition_history in conditions_history|get_item:condition.condition_identifier %}
+                                                <h3>Ngày chỉnh sửa: {{condition_history.last_updated}}</h3>
+                                                <p>Tên triệu chứng: {{condition_history.condition_code}}</p>
+                                                <p>Mức độ: {{severity|get_item:condition_history.condition_severity}}</p>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        <button type="button" onclick="displayToggle('{{condition.condition_identifier}}')">xem lịch sử</button>
+                                    {% endif %}                                    
+                                {% endfor %}                                
+                            </div>
                     
                     <h4>3. Các xét nghiệm cận lâm sàng cần làm</h4>
                     <div class='right-body__body-section__item-content'></div>
@@ -173,9 +453,49 @@
             <div>
                 <h3>Chẩn đoán khi vào khoa điều trị</h3>
                         <h5>+ Bệnh chính</h5>
-                        <div class='right-body__body-section__item-content'></div>
+                        <div class='right-body__body-section__item-content history-container'>
+                            {% for condition in discharge_conditions %}
+                                <p>- {{condition.condition_code}}: {{severity|get_item:condition.condition_severity}} </p>
+                                {% if conditions_history|get_item:condition.condition_identifier %}
+                                    <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
+                                        <div class="history-header">
+                                            <h2>LỊCH SỬ CHỈNH SỬA</h2>
+                                            <i class="fa fa-times" aria-hidden="true" onclick="displayToggle('{{condition.condition_identifier}}')"></i>
+                                        </div>
+                                        <div>
+                                            {% for condition_history in conditions_history|get_item:condition.condition_identifier %}
+                                            <h3>Ngày chỉnh sửa: {{condition_history.last_updated}}</h3>
+                                            <p>Tên triệu chứng: {{condition_history.condition_code}}</p>
+                                            <p>Mức độ: {{severity|get_item:condition_history.condition_severity}}</p>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <button type="button" onclick="displayToggle('{{condition.condition_identifier}}')">xem lịch sử</button>
+                                {% endif %}                                    
+                            {% endfor %}   
+                        </div>
                         <h5>+ Bệnh kèm theo</h5>
-                        <div class='right-body__body-section__item-content'></div>
+                        <div class='right-body__body-section__item-content history-container'>
+                            {% for condition in comorbidity_conditions %}
+                                <p>- {{condition.condition_code}}: {{severity|get_item:condition.condition_severity}} </p>
+                                {% if conditions_history|get_item:condition.condition_identifier %}
+                                    <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
+                                        <div class="history-header">
+                                            <h2>LỊCH SỬ CHỈNH SỬA</h2>
+                                            <i class="fa fa-times" aria-hidden="true" onclick="displayToggle('{{condition.condition_identifier}}')"></i>
+                                        </div>
+                                        <div>
+                                            {% for condition_history in conditions_history|get_item:condition.condition_identifier %}
+                                            <h3>Ngày chỉnh sửa: {{condition_history.last_updated}}</h3>
+                                            <p>Tên triệu chứng: {{condition_history.condition_code}}</p>
+                                            <p>Mức độ: {{severity|get_item:condition_history.condition_severity}}</p>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <button type="button" onclick="displayToggle('{{condition.condition_identifier}}')">xem lịch sử</button>
+                                {% endif %}                                    
+                            {% endfor %}  
+                        </div>
                         <h5>+ Phân biệt</h5>
                         <div class='right-body__body-section__item-content'></div>
             </div>
@@ -210,13 +530,49 @@
                 <h3>4. Tình trạng người bệnh ra viện</h3>
                 <div class='right-body__body-section__item-content'>
                     <h4>+ Bệnh chính</h4>
-                    {% for condition in discharge_conditions %}
-                        <p>- {{ condition.condition_code }}</p>
-                    {% endfor %}
+                    <div class="history-container">
+                        {% for condition in discharge_conditions %}
+                            <p>- {{ condition.condition_code }}: {{severity|get_item:condition.condition_severity}}</p>
+                            {% if conditions_history|get_item:condition.condition_identifier %}
+                                <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
+                                    <div class="history-header">
+                                        <h2>LỊCH SỬ CHỈNH SỬA</h2>
+                                        <i class="fa fa-times" aria-hidden="true" onclick="displayToggle('{{condition.condition_identifier}}')"></i>
+                                    </div>
+                                    <div>
+                                        {% for condition_history in conditions_history|get_item:condition.condition_identifier %}
+                                        <h3>Ngày chỉnh sửa: {{condition_history.last_updated}}</h3>
+                                        <p>Tên triệu chứng: {{condition_history.condition_code}}</p>
+                                        <p>Mức độ: {{severity|get_item:condition_history.condition_severity}}</p>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <button type="button" onclick="displayToggle('{{condition.condition_identifier}}')">xem lịch sử</button>
+                            {% endif %}                          
+                        {% endfor %}
+                    </div>
                     <h4>+ Bệnh kèm theo</h4>
-                    {% for condition in comorbidity_conditions %}
-                        <p>- {{condition.condition_code}}</p>
-                    {% endfor %}
+                    <div class="history-container">                        
+                        {% for condition in comorbidity_conditions %}
+                            <p>- {{condition.condition_code}}: {{severity|get_item:condition.condition_severity}}</p>
+                            {% if conditions_history|get_item:condition.condition_identifier %}
+                                <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
+                                    <div class="history-header">
+                                        <h2>LỊCH SỬ CHỈNH SỬA</h2>
+                                        <i class="fa fa-times" aria-hidden="true" onclick="displayToggle('{{condition.condition_identifier}}')"></i>
+                                    </div>
+                                    <div>
+                                        {% for condition_history in conditions_history|get_item:condition.condition_identifier %}
+                                        <h3>Ngày chỉnh sửa: {{condition_history.last_updated}}</h3>
+                                        <p>Tên triệu chứng: {{condition_history.condition_code}}</p>
+                                        <p>Mức độ: {{severity|get_item:condition_history.condition_severity}}</p>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <button type="button" onclick="displayToggle('{{condition.condition_identifier}}')">xem lịch sử</button>
+                            {% endif %}                          
+                        {% endfor %}
+                    </div>
                 </div>
                 <h3>5. Hướng điều trị và các chế độ tiếp theo</h3>
                 <div class='right-body__body-section__item-content'></div>
@@ -267,4 +623,17 @@
             </div>
         </div>
     </div>
+</div>
+<script>
+    function displayToggle(element_id){
+        getElement = document.getElementById(element_id);
+        console.log(getElement.style.display);
+        if (getElement.style.display == 'none'){
+            getElement.style.display = 'block';
+        }
+        else {
+            getElement.style.display = 'none';
+        }
+    }
+</script>
 {% endblock %}
