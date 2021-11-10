@@ -34,7 +34,7 @@
             </div>
             <p>7. Địa chỉ: {{patient.home_address}}</p>
             <p>8. Nơi làm việc: {{patient.work_address}}</p>
-            <p>9. Họ tên, địa chỉ người nhà khi cần báo tin, Điện thoại số</p>
+            <p>9. Họ tên, địa chỉ người nhà khi cần báo tin: {{relationship|get_item:patient.contact_relationship}} - {{patient.contact_name}} - {{patient.contact_address}}. Điện thoại số: {{patient.contact_telecom}}</p>
         </div>
         <div class="right-body__body-section history-container">
             {% if encounter_history %}
@@ -91,11 +91,11 @@
                         <p>23. Ra viện</p>
                         <p>+ Bệnh chính</p>
                         {% for condition in discharge_conditions %}
-                            <p>- {{condition.condition_code}}: {{severity|get_item:condition.condition_severity}}</p>
+                            <p>- {{condition.condition_code}}: {{condition_severity|get_item:condition.condition_severity|lower}}</p>
                         {% endfor %}
                         <p>+ Bệnh kèm theo</p>
                         {% for condition in comorbidity_conditions %}
-                            <p>- {{condition.condition_code}}: {{severity|get_item:condition.condition_severity}}</p>
+                            <p>- {{condition.condition_code}}: {{condition_severity|get_item:condition.condition_severity|lower}}</p>
                         {% endfor %}                        
                     </div>
                 </div>
@@ -124,7 +124,7 @@
                     <h4>1. Quá trình bệnh lý</h4>
                         <div class='right-body__body-section__item-content history-container'>
                             {% for condition in admission_conditions.patient %}
-                                <p>- {{condition.condition_code}}: {{severity|get_item:condition.condition_severity}}</p>
+                                <p>- {{condition.condition_code}}: {{condition_severity|get_item:condition.condition_severity|lower}}</p>
                                 {% if conditions_history|get_item:condition.condition_identifier %}
                                     <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
                                         <div class="history-header">
@@ -135,7 +135,7 @@
                                             {% for condition_history in conditions_history|get_item:condition.condition_identifier %}
                                             <h3>Ngày chỉnh sửa: {{condition_history.last_updated}}</h3>
                                             <p>Tên triệu chứng: {{condition_history.condition_code}}</p>
-                                            <p>Mức độ: {{severity|get_item:condition_history.condition_severity}}</p>
+                                            <p>Mức độ: {{condition_severity|get_item:condition_history.condition_severity|lower}}</p>
                                             {% endfor %}
                                         </div>
                                     </div>
@@ -145,9 +145,9 @@
                         </div>
                     <h4>2. Tiền sử bệnh</h4>
                         <h3>+ Bản thân</h3>
-                            <div class='right-body__body-section__item-content history-container'>
+                            <div class='right-body__body-section__item-content history-container history-container'>
                                 {% for condition in resolved_conditions %}
-                                    <p>- {{condition.condition_code}}: {{severity|get_item:condition.condition_severity}}</p>
+                                    <p>- {{condition.condition_code}}: {{condition_severity|get_item:condition.condition_severity|lower}}</p>
                                     {% if conditions_history|get_item:condition.condition_identifier %}
                                     <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
                                         <div class="history-header">
@@ -158,7 +158,7 @@
                                             {% for condition_history in conditions_history|get_item:condition.condition_identifier %}
                                             <h3>Ngày chỉnh sửa: {{condition_history.last_updated}}</h3>
                                             <p>Tên triệu chứng: {{condition_history.condition_code}}</p>
-                                            <p>Mức độ: {{severity|get_item:condition_history.condition_severity}}</p>
+                                            <p>Mức độ: {{condition_severity|get_item:condition_history.condition_severity|lower}}</p>
                                             {% endfor %}
                                         </div>
                                     </div>
@@ -167,7 +167,23 @@
                                 {% endfor %}                                    
                             </div>
                         <h3>+ Dị ứng</h3>
-                            <div class='right-body__body-section__item-content'></div>
+                            <div class='right-body__body-section__item-content history-container'>
+                                {% for allergy in allergies %}
+                                    <p>- Dị ứng {{allergy_severity|get_item:allergy.allergy_reaction_severity|lower}} với {% if allergy.allergy_reaction_substance %}thành phần {{allergy.allergy_reaction_substance}} của {% endif %}{{allergy.allergy_code}}. Mức độ nguy hiểm: {{allergy_criticality|get_item:allergy.allergy_criticality|lower}}{% if allergies_history|get_item:allergy.allergy_identifier %}<button type="button" onclick="displayToggle('{{allergy.allergy_identifier}}')">Xem lịch sử</button>{% endif %}</p>
+                                    <div class="history" id="{{allergy.allergy_identifier}}" style="display: none;">
+                                        <div class="history-header">
+                                            <h2>LỊCH SỬ CHỈNH SỬA</h2>
+                                            <i class="fa fa-times" aria-hidden="true" onclick="displayToggle('{{allergy.allergy_identifier}}')"></i>
+                                        </div>
+                                        <div>
+                                            {% for allergy_history in allergies_history|get_item:allergy.allergy_identifier %}
+                                                <h3>Ngày chỉnh sửa: {{allergy_history.last_updated}}</h3>
+                                                <p>- Dị ứng {{allergy_history.allergy_reaction_severity|lower}} với {% if allergy_history.allergy_reaction_substance %}thành phần {{allergy_history.allergy_reaction_substance}}{% endif %} của {{allergy_history.allergy_code}}. Mức độ nguy hiểm: {{allergy_criticality|get_item:allergy.allergy_criticality}}</p>    
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
                         <h3>+ Gia đình</h3>
                             <div class='right-body__body-section__item-content'></div>
             </div>
@@ -178,7 +194,7 @@
                     <div class="right-body__body-section__item-content right-body__body-section__item-content--flex right-body__body-section__item-content--flex--align-center">
                         <div class="right-body__body-section__item-content--flex__item right-body__body-section__item-content--flex__item--with-border history-container">
                             {% for condition in admission_conditions.doctor.toanthan %}
-                                <p>- {{condition.condition_code}}: {{severity|get_item:condition.condition_severity}}</p>
+                                <p>- {{condition.condition_code}}: {{condition_severity|get_item:condition.condition_severity|lower}}</p>
                                 {% if conditions_history|get_item:condition.condition_identifier %}
                                     <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
                                         <div class="history-header">
@@ -189,7 +205,7 @@
                                             {% for condition_history in conditions_history|get_item:condition.condition_identifier %}
                                             <h3>Ngày chỉnh sửa: {{condition_history.last_updated}}</h3>
                                             <p>Tên triệu chứng: {{condition_history.condition_code}}</p>
-                                            <p>Mức độ: {{severity|get_item:condition_history.condition_severity}}</p>
+                                            <p>Mức độ: {{condition_severity|get_item:condition_history.condition_severity|lower}}</p>
                                             {% endfor %}
                                         </div>
                                     </div>
@@ -210,7 +226,7 @@
                         <h5>+ Tuần hoàn</h5>
                             <div class='right-body__body-section__item-content history-container'>
                                 {% for condition in admission_conditions.doctor.tuanhoan %}
-                                    <p>- {{condition.condition_code}}: {{severity|get_item:condition.condition_severity}} </p>
+                                    <p>- {{condition.condition_code}}: {{condition_severity|get_item:condition.condition_severity|lower}} </p>
                                     {% if conditions_history|get_item:condition.condition_identifier %}
                                         <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
                                             <div class="history-header">
@@ -221,7 +237,7 @@
                                                 {% for condition_history in conditions_history|get_item:condition.condition_identifier %}
                                                 <h3>Ngày chỉnh sửa: {{condition_history.last_updated}}</h3>
                                                 <p>Tên triệu chứng: {{condition_history.condition_code}}</p>
-                                                <p>Mức độ: {{severity|get_item:condition_history.condition_severity}}</p>
+                                                <p>Mức độ: {{condition_severity|get_item:condition_history.condition_severity|lower}}</p>
                                                 {% endfor %}
                                             </div>
                                         </div>
@@ -233,7 +249,7 @@
                         <h5>+ Hô hấp</h5>
                             <div class='right-body__body-section__item-content history-container'>
                                 {% for condition in admission_conditions.doctor.hohap %}
-                                    <p>- {{condition.condition_code}}: {{severity|get_item:condition.condition_severity}} </p>      
+                                    <p>- {{condition.condition_code}}: {{condition_severity|get_item:condition.condition_severity|lower}} </p>      
                                     {% if conditions_history|get_item:condition.condition_identifier %}
                                         <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
                                             <div class="history-header">
@@ -244,7 +260,7 @@
                                                 {% for condition_history in conditions_history|get_item:condition.condition_identifier %}
                                                 <h3>Ngày chỉnh sửa: {{condition_history.last_updated}}</h3>
                                                 <p>Tên triệu chứng: {{condition_history.condition_code}}</p>
-                                                <p>Mức độ: {{severity|get_item:condition_history.condition_severity}}</p>
+                                                <p>Mức độ: {{condition_severity|get_item:condition_history.condition_severity|lower}}</p>
                                                 {% endfor %}
                                             </div>
                                         </div>
@@ -257,7 +273,7 @@
                         <h5>+ Tiêu hóa</h5>
                             <div class='right-body__body-section__item-content history-container'>
                                 {% for condition in admission_conditions.doctor.tieuhoa %}
-                                    <p>- {{condition.condition_code}}: {{severity|get_item:condition.condition_severity}} </p>
+                                    <p>- {{condition.condition_code}}: {{condition_severity|get_item:condition.condition_severity|lower}} </p>
                                     {% if conditions_history|get_item:condition.condition_identifier %}
                                         <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
                                             <div class="history-header">
@@ -268,7 +284,7 @@
                                                 {% for condition_history in conditions_history|get_item:condition.condition_identifier %}
                                                 <h3>Ngày chỉnh sửa: {{condition_history.last_updated}}</h3>
                                                 <p>Tên triệu chứng: {{condition_history.condition_code}}</p>
-                                                <p>Mức độ: {{severity|get_item:condition_history.condition_severity}}</p>
+                                                <p>Mức độ: {{condition_severity|get_item:condition_history.condition_severity|lower}}</p>
                                                 {% endfor %}
                                             </div>
                                         </div>
@@ -281,7 +297,7 @@
                         <h5>+ Thận - Tiết niệu - Sinh dục</h5>
                             <div class='right-body__body-section__item-content history-container'>
                                 {% for condition in admission_conditions.doctor.tts %}
-                                    <p>- {{condition.condition_code}}: {{severity|get_item:condition.condition_severity}} </p>
+                                    <p>- {{condition.condition_code}}: {{condition_severity|get_item:condition.condition_severity|lower}} </p>
                                     {% if conditions_history|get_item:condition.condition_identifier %}
                                         <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
                                             <div class="history-header">
@@ -292,7 +308,7 @@
                                                 {% for condition_history in conditions_history|get_item:condition.condition_identifier %}
                                                 <h3>Ngày chỉnh sửa: {{condition_history.last_updated}}</h3>
                                                 <p>Tên triệu chứng: {{condition_history.condition_code}}</p>
-                                                <p>Mức độ: {{severity|get_item:condition_history.condition_severity}}</p>
+                                                <p>Mức độ: {{condition_severity|get_item:condition_history.condition_severity|lower}}</p>
                                                 {% endfor %}
                                             </div>
                                         </div>
@@ -305,7 +321,7 @@
                         <h5>+ Thần kinh</h5>
                             <div class='right-body__body-section__item-content history-container'>
                                 {% for condition in admission_conditions.doctor.thankinh %}
-                                    <p>- {{condition.condition_code}}: {{severity|get_item:condition.condition_severity}} </p>
+                                    <p>- {{condition.condition_code}}: {{condition_severity|get_item:condition.condition_severity|lower}} </p>
                                     {% if conditions_history|get_item:condition.condition_identifier %}
                                         <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
                                             <div class="history-header">
@@ -316,7 +332,7 @@
                                                 {% for condition_history in conditions_history|get_item:condition.condition_identifier %}
                                                 <h3>Ngày chỉnh sửa: {{condition_history.last_updated}}</h3>
                                                 <p>Tên triệu chứng: {{condition_history.condition_code}}</p>
-                                                <p>Mức độ: {{severity|get_item:condition_history.condition_severity}}</p>
+                                                <p>Mức độ: {{condition_severity|get_item:condition_history.condition_severity|lower}}</p>
                                                 {% endfor %}
                                             </div>
                                         </div>
@@ -329,7 +345,7 @@
                         <h5>+ Cơ - Xương - Khớp</h5>
                             <div class='right-body__body-section__item-content history-container'>
                                 {% for condition in admission_conditions.doctor.cxk %}
-                                    <p>- {{condition.condition_code}}: {{severity|get_item:condition.condition_severity}} </p>
+                                    <p>- {{condition.condition_code}}: {{condition_severity|get_item:condition.condition_severity|lower}} </p>
                                     {% if conditions_history|get_item:condition.condition_identifier %}
                                         <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
                                             <div class="history-header">
@@ -340,7 +356,7 @@
                                                 {% for condition_history in conditions_history|get_item:condition.condition_identifier %}
                                                 <h3>Ngày chỉnh sửa: {{condition_history.last_updated}}</h3>
                                                 <p>Tên triệu chứng: {{condition_history.condition_code}}</p>
-                                                <p>Mức độ: {{severity|get_item:condition_history.condition_severity}}</p>
+                                                <p>Mức độ: {{condition_severity|get_item:condition_history.condition_severity|lower}}</p>
                                                 {% endfor %}
                                             </div>
                                         </div>
@@ -353,7 +369,7 @@
                         <h5>+ Tai - Mũi - Họng</h5>
                             <div class='right-body__body-section__item-content history-container'>
                                 {% for condition in admission_conditions.doctor.tmh %}
-                                    <p>- {{condition.condition_code}}: {{severity|get_item:condition.condition_severity}} </p>
+                                    <p>- {{condition.condition_code}}: {{condition_severity|get_item:condition.condition_severity|lower}} </p>
                                     {% if conditions_history|get_item:condition.condition_identifier %}
                                         <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
                                             <div class="history-header">
@@ -364,7 +380,7 @@
                                                 {% for condition_history in conditions_history|get_item:condition.condition_identifier %}
                                                 <h3>Ngày chỉnh sửa: {{condition_history.last_updated}}</h3>
                                                 <p>Tên triệu chứng: {{condition_history.condition_code}}</p>
-                                                <p>Mức độ: {{severity|get_item:condition_history.condition_severity}}</p>
+                                                <p>Mức độ: {{condition_severity|get_item:condition_history.condition_severity|lower}}</p>
                                                 {% endfor %}
                                             </div>
                                         </div>
@@ -377,7 +393,7 @@
                         <h5>+ Răng - Hàm - Mặt</h5>
                             <div class='right-body__body-section__item-content history-container'>
                                 {% for condition in admission_conditions.doctor.rhm %}
-                                    <p>- {{condition.condition_code}}: {{severity|get_item:condition.condition_severity}} </p>
+                                    <p>- {{condition.condition_code}}: {{condition_severity|get_item:condition.condition_severity|lower}} </p>
                                     {% if conditions_history|get_item:condition.condition_identifier %}
                                         <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
                                             <div class="history-header">
@@ -388,7 +404,7 @@
                                                 {% for condition_history in conditions_history|get_item:condition.condition_identifier %}
                                                 <h3>Ngày chỉnh sửa: {{condition_history.last_updated}}</h3>
                                                 <p>Tên triệu chứng: {{condition_history.condition_code}}</p>
-                                                <p>Mức độ: {{severity|get_item:condition_history.condition_severity}}</p>
+                                                <p>Mức độ: {{condition_severity|get_item:condition_history.condition_severity|lower}}</p>
                                                 {% endfor %}
                                             </div>
                                         </div>
@@ -401,7 +417,7 @@
                         <h5>+ Mắt</h5>
                             <div class='right-body__body-section__item-content history-container'>
                                 {% for condition in admission_conditions.doctor.mat %}
-                                    <p>- {{condition.condition_code}}: {{severity|get_item:condition.condition_severity}} </p>
+                                    <p>- {{condition.condition_code}}: {{condition_severity|get_item:condition.condition_severity|lower}} </p>
                                     {% if conditions_history|get_item:condition.condition_identifier %}
                                         <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
                                             <div class="history-header">
@@ -412,7 +428,7 @@
                                                 {% for condition_history in conditions_history|get_item:condition.condition_identifier %}
                                                 <h3>Ngày chỉnh sửa: {{condition_history.last_updated}}</h3>
                                                 <p>Tên triệu chứng: {{condition_history.condition_code}}</p>
-                                                <p>Mức độ: {{severity|get_item:condition_history.condition_severity}}</p>
+                                                <p>Mức độ: {{condition_severity|get_item:condition_history.condition_severity|lower}}</p>
                                                 {% endfor %}
                                             </div>
                                         </div>
@@ -425,7 +441,7 @@
                         <h5>+ Nội tiết, dinh dưỡng và các bệnh lý khác</h5>
                             <div class='right-body__body-section__item-content history-container'>
                                 {% for condition in admission_conditions.doctor.noitiet %}
-                                    <p>- {{condition.condition_code}}: {{severity|get_item:condition.condition_severity}} </p>
+                                    <p>- {{condition.condition_code}}: {{condition_severity|get_item:condition.condition_severity|lower}} </p>
                                     {% if conditions_history|get_item:condition.condition_identifier %}
                                         <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
                                             <div class="history-header">
@@ -436,7 +452,7 @@
                                                 {% for condition_history in conditions_history|get_item:condition.condition_identifier %}
                                                 <h3>Ngày chỉnh sửa: {{condition_history.last_updated}}</h3>
                                                 <p>Tên triệu chứng: {{condition_history.condition_code}}</p>
-                                                <p>Mức độ: {{severity|get_item:condition_history.condition_severity}}</p>
+                                                <p>Mức độ: {{condition_severity|get_item:condition_history.condition_severity|lower}}</p>
                                                 {% endfor %}
                                             </div>
                                         </div>
@@ -455,7 +471,7 @@
                         <h5>+ Bệnh chính</h5>
                         <div class='right-body__body-section__item-content history-container'>
                             {% for condition in discharge_conditions %}
-                                <p>- {{condition.condition_code}}: {{severity|get_item:condition.condition_severity}} </p>
+                                <p>- {{condition.condition_code}}: {{condition_severity|get_item:condition.condition_severity|lower}} </p>
                                 {% if conditions_history|get_item:condition.condition_identifier %}
                                     <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
                                         <div class="history-header">
@@ -466,7 +482,7 @@
                                             {% for condition_history in conditions_history|get_item:condition.condition_identifier %}
                                             <h3>Ngày chỉnh sửa: {{condition_history.last_updated}}</h3>
                                             <p>Tên triệu chứng: {{condition_history.condition_code}}</p>
-                                            <p>Mức độ: {{severity|get_item:condition_history.condition_severity}}</p>
+                                            <p>Mức độ: {{condition_severity|get_item:condition_history.condition_severity|lower}}</p>
                                             {% endfor %}
                                         </div>
                                     </div>
@@ -477,7 +493,7 @@
                         <h5>+ Bệnh kèm theo</h5>
                         <div class='right-body__body-section__item-content history-container'>
                             {% for condition in comorbidity_conditions %}
-                                <p>- {{condition.condition_code}}: {{severity|get_item:condition.condition_severity}} </p>
+                                <p>- {{condition.condition_code}}: {{condition_severity|get_item:condition.condition_severity|lower}} </p>
                                 {% if conditions_history|get_item:condition.condition_identifier %}
                                     <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
                                         <div class="history-header">
@@ -488,7 +504,7 @@
                                             {% for condition_history in conditions_history|get_item:condition.condition_identifier %}
                                             <h3>Ngày chỉnh sửa: {{condition_history.last_updated}}</h3>
                                             <p>Tên triệu chứng: {{condition_history.condition_code}}</p>
-                                            <p>Mức độ: {{severity|get_item:condition_history.condition_severity}}</p>
+                                            <p>Mức độ: {{condition_severity|get_item:condition_history.condition_severity|lower}}</p>
                                             {% endfor %}
                                         </div>
                                     </div>
@@ -532,7 +548,7 @@
                     <h4>+ Bệnh chính</h4>
                     <div class="history-container">
                         {% for condition in discharge_conditions %}
-                            <p>- {{ condition.condition_code }}: {{severity|get_item:condition.condition_severity}}</p>
+                            <p>- {{ condition.condition_code }}: {{condition_severity|get_item:condition.condition_severity|lower}}</p>
                             {% if conditions_history|get_item:condition.condition_identifier %}
                                 <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
                                     <div class="history-header">
@@ -543,7 +559,7 @@
                                         {% for condition_history in conditions_history|get_item:condition.condition_identifier %}
                                         <h3>Ngày chỉnh sửa: {{condition_history.last_updated}}</h3>
                                         <p>Tên triệu chứng: {{condition_history.condition_code}}</p>
-                                        <p>Mức độ: {{severity|get_item:condition_history.condition_severity}}</p>
+                                        <p>Mức độ: {{condition_severity|get_item:condition_history.condition_severity|lower}}</p>
                                         {% endfor %}
                                     </div>
                                 </div>
@@ -554,7 +570,7 @@
                     <h4>+ Bệnh kèm theo</h4>
                     <div class="history-container">                        
                         {% for condition in comorbidity_conditions %}
-                            <p>- {{condition.condition_code}}: {{severity|get_item:condition.condition_severity}}</p>
+                            <p>- {{condition.condition_code}}: {{condition_severity|get_item:condition.condition_severity|lower}}</p>
                             {% if conditions_history|get_item:condition.condition_identifier %}
                                 <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
                                     <div class="history-header">
@@ -565,7 +581,7 @@
                                         {% for condition_history in conditions_history|get_item:condition.condition_identifier %}
                                         <h3>Ngày chỉnh sửa: {{condition_history.last_updated}}</h3>
                                         <p>Tên triệu chứng: {{condition_history.condition_code}}</p>
-                                        <p>Mức độ: {{severity|get_item:condition_history.condition_severity}}</p>
+                                        <p>Mức độ: {{condition_severity|get_item:condition_history.condition_severity|lower}}</p>
                                         {% endfor %}
                                     </div>
                                 </div>
@@ -605,7 +621,7 @@
                         <td>Khác</td>
                         <td></td>
                     </tr>
-                    <tr>
+                     <tr>
                         <td>Toàn bộ hồ sơ</td>
                         <td></td>
                     </tr>

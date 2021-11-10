@@ -4,12 +4,17 @@
     box-sizing: border-box;
     font-family: 'Times New Roman', Times, serif;
 }
+html, body {
+    min-height: 100%;
+    font-family: Arial;
+    line-height: 1.5;
+}
 p {
     font-size: 18px;
 }
 .header {
     display: flex;
-    height: 150px;
+    height: 120px;
     width: 100%;
     background-image: linear-gradient(to right , #3092f4 , #00a9f7 , #00bae0 , #00c5b7 , #28cc88);
     justify-content: space-between;
@@ -18,18 +23,32 @@ p {
     width: 500px;
     display: flex;
     padding-left: 50px;
-    padding-top: 15px;
+    padding-top: 10px;
+    padding-bottom: 20px;
 }
 .header .left-header img {
-    width: 120px;
-    height: 120px;
+    width: 110px;
+    height: 110px;
 }
 .header .left-header h3 {
     padding-left: 20px;
-    padding-top: 30px;
+    padding-top: 10px;
+    padding-bottom: 10px;
 }
 
 .header .right-header{
     padding: 10px 16px 0 0;
 }
+.header .right-header a{
+    color: white !important;
+}
 
+.header h3 {
+    font-family: sans-serif;
+    color: white;
+    font-size: 40px;
+}
+
+textarea{
+    width: 80%;
+}

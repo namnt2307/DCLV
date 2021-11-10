@@ -15,6 +15,11 @@
     <p>Ngày sinh: {{data.Patient.birthdate|date:"d-m-Y"}}</p>
     <p>Địa chỉ: {{data.Patient.home_address}}</p>
     <p>Nơi làm việc: {{data.Patient.work_address}}</p>
+    <h2>Thông tin người liên hệ</h2>
+    <p>Quan hệ: {{relationship|get_item:data.Patient.contact_relationship}}</p>
+    <p>Họ và tên: {{data.Patient.contact_name}}</p>
+    <p>Địa chỉ: {{data.Patient.contact_address}}</p>
+    <p>Số điện thoại: {{data.Patient.contact_telecom}}</p>
     {%else%}
     <h1>404 Not Found</h1>
     {%endif%}

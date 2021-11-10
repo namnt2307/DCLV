@@ -5,14 +5,14 @@ import openpyxl as xl
 from datetime import datetime
 ns = {'d': "http://hl7.org/fhir"}
 
-fhir_server = "http://10.0.0.16:8080/fhir"
+fhir_server = "http://10.0.0.25:8080/fhir"
 
 
 def identifier_type(resource, system, value, use="usual", _type=None, period=None, assigner=None):
     ET.SubElement(resource, 'use value=\"{}\"'.format(use))
     if _type:
         type_res = ET.SubElement(resource, 'type')
-        codeable_concept(type_res, len(_type), _type)
+        codeable_concept(type_res, _type)
     ET.SubElement(resource, 'system value=\"{}\"'.format(system))
     ET.SubElement(resource, 'value value=\"{:0>5}\"'.format(value))
     if period:
@@ -96,9 +96,9 @@ def contactpoint_type(resource, system, value, use=None, rank=None, period=None)
         period_type(resource, period)
 
 
-def codeable_concept(resource, num_code=None, codes=None, text=None):
-    if num_code and codes:
-        for i in range(num_code):
+def codeable_concept(resource, codes=None, text=None):
+    if codes:
+        for i in range(len(codes)):
             coding = ET.SubElement(resource, 'coding')
             coding_type(coding, codes[i].get('system'), codes[i].get(
                 'code'), codes[i].get('display'), version=codes[i].get('version'))
@@ -252,6 +252,50 @@ def get_date(date_str):
 def get_patient_upload_data(excel_file):
     wb = xl.load_workbook(excel_file)
     sh = wb['Sheet1']
+    max_row = sh.max_row
+    data = {'Patient': {}, 'Encounter': {}, 'Observation': [], 'Condition': []}
+    for i in range(1, max_row + 1):
+        cell = sh.cell(row=i, column=5)
+        if cell.value:
+            tag = sh.cell(row=i, column=4)
+            if 'encounter' in tag.value:
+                data['Encounter'][tag.value] = cell.value
+            elif 'conditions' in tag.value:
+                if 'admission' in tag.value:
+                    if tag.value.split('.')[1] == 'patient':
+                        data['Condition']['admission_by_patient'] = []
+                        for condition in cell.value.split(';'):
+
+                            data['Condition']['admission_by_patient'].append()
+                        pass
+                    else:
+                        data['Condition']['admission_by_doctor'] = []
+                        pass
+                    pass
+                elif 'resolved' in tag.value:
+                    data['Condition']['resolved_conditions'] = []
+                    pass
+                elif 'discharge' in tag.value:
+                    data['Condition']['discharge_conditions'] = []
+                    pass
+                elif 'comorbidity' in tag.value:
+                    data['Condition']['comorbidity_conditions'] = []
+                    pass
+            elif 'observations' in tag.value:
+                data['Observation'].append({tag.value.split('.')[1]: cell.value})
+            elif 'diagnostic' in tag.value:
+                pass
+            elif 'service' in tag.value:
+                pass
+            else:
+                data['Patient'][tag.value] = cell.value
+
+    pass
+
+
+def get_patient_upload_data(excel_file):
+    wb = xl.load_workbook(excel_file)
+    sh = wb['Sheet1']
     m_row = sh.max_row
     last_line = 0
     data = {'Patient': {}, 'Encounter': {}, 'Observation': []}
@@ -318,12 +362,12 @@ def create_patient_resource(patient):
     tree = ET.ElementTree(root)
     root.set("xmlns", "http://hl7.org/fhir")
     if patient.get('id'):
-        id = ET.SubElement(root, 'id')
-        id.set('value', patient['id'])
+        id_ = ET.SubElement(root, 'id')
+        id_.set('value', patient['id'])
     if patient.get('identifier'):
         identifier_resource = ET.SubElement(root, 'identifier')
         identifier_type(identifier_resource, 'urn:trinhcongminh', patient['identifier'], 'usual', [
-                        {'system': 'http://terminology.hl7.org/CodeSystem/v2-0203', 'code': 'MR'}])
+                        {'system': 'http://terminology.hl7.org/CodeSystem/v2-0203', 'code': 'SB'}])
     if patient.get('name'):
         name = ET.SubElement(root, 'name')
         name_type(name, patient['name'])
@@ -346,8 +390,33 @@ def create_patient_resource(patient):
     if patient.get('work_address'):
         address = ET.SubElement(root, 'address')
         address_type(address, patient['work_address'], use='work')
-    if patient.get('contact'):
-        contact = ET.SubElement(root, 'contact')
+    contact = ET.SubElement(root, 'contact')
+    if patient.get('contact_relationship'):
+        contact_relationship = ET.SubElement(contact, 'relationship')
+        codes = [
+            {
+                'system': 'http://terminology.hl7.org/CodeSystem/v2-0131', 'code': patient['contact_relationship'], 'version': '4.0.1'
+            }
+        ]
+        # codes = [
+            #     {'system': 'http://hl7.org/fhir/reaction-event-severity', 'code': allergy['reaction']['severity']}
+            # ]
+        codeable_concept(contact_relationship, codes, text=patient['contact_relationship'])
+    if patient.get('contact_name'):
+        name = ET.SubElement(contact, 'name')
+        name_type(name, patient['contact_name'])
+    if patient.get('contact_telecom'):
+        telecom = ET.SubElement(contact, 'telecom')
+        contactpoint_type(telecom, 'phone', patient['contact_telecom'])
+    if patient.get('contact_address'):
+        address = ET.SubElement(contact, 'address')
+        address_type(address, patient['contact_address'])
+    if patient.get('contact_gender'):
+        gender = ET.SubElement(contact, 'gender')
+        if patient['contact_gender'] == 'Nam':
+            gender.set('value', 'male')
+        else:
+            gender.set('value', 'female')
     return ET.tostring(root, encoding="us-ascii", method="xml", xml_declaration=None, default_namespace=None, short_empty_elements=True)
 
 
@@ -382,7 +451,7 @@ def create_encounter_resource(encounter, patient_id, patient_name, practitioner_
         codeable_concept(service_type, text=encounter['service_type'])
     if encounter.get('priority'):
         priority = ET.SubElement(root, 'priority')
-        codeable_concept(priority, 1, [
+        codeable_concept(priority,[
                          {'system': 'http://terminology.hl7.org/CodeSystem/v3-ActPriority', 'code': encounter['priority'], 'version':'2018-08-12'}], text=encounter['priority'])
     subject = ET.SubElement(root, 'subject')
     reference_type(subject, 'Patient/' + patient_id,
@@ -421,11 +490,11 @@ def create_condition_resource(condition, patient_id, patient_name, encounter_id)
                         condition['identifier'], 'usual')
     if condition.get('clinical_status'):
         clinical = ET.SubElement(root, 'clinicalStatus')
-        codeable_concept(clinical, 1, [{'system': 'http://terminology.hl7.org/CodeSystem/condition-clinical',
+        codeable_concept(clinical, [{'system': 'http://terminology.hl7.org/CodeSystem/condition-clinical',
                          'code': condition['clinical_status'], 'version':'4.0.1'}], text=condition['clinical_status'])
     if condition.get('verification_status'):
         verify = ET.SubElement(root, 'verificationStatus')
-        codeable_concept(verify, 1, [{'system': 'http://terminology.hl7.org/CodeSystem/condition-ver-status',
+        codeable_concept(verify, [{'system': 'http://terminology.hl7.org/CodeSystem/condition-ver-status',
                                   'code': 'confirmed', 'version': '4.0.1'}], text='confirmed')
     if condition.get('category'):
         category = ET.SubElement(root, 'category')
@@ -518,7 +587,7 @@ def create_observation_resource(observation, patient_id, patient_name, encounter
         status.set('value', observation['status'])
     if observation.get('category'):
         category = ET.SubElement(root, 'category')
-        codeable_concept(category, 1, [{'system': 'http://terminology.hl7.org/CodeSystem/observation-category',
+        codeable_concept(category, [{'system': 'http://terminology.hl7.org/CodeSystem/observation-category',
                                         'code': observation['category'], 'version': '4.0.1'}], text=observation['category'])
     if observation.get('code'):
         code = ET.SubElement(root, 'code')
@@ -594,7 +663,12 @@ def create_procedure_resource(procedure, patient_id, patient_name, encounter_id,
         codeable_concept(reasonCode, text=procedure['reasonCode'])
     if procedure.get('outcome'):
         outcome = ET.SubElement(root, 'outcome')
-        codeable_concept(outcome, text=procedure['outcome'])
+        codes = [
+            {
+                'system': 'http://snomed.info/sct', 'code': procedure['outcome'], 'version': '4.0.1'
+            }
+        ]
+        codeable_concept(outcome, codes, text=procedure['outcome'])
     if procedure.get('complication'):
         complication = ET.SubElement(root, 'complication')
         codeable_concept(complication, text=procedure['complication'])
@@ -707,46 +781,138 @@ def create_diagnostic_report_resource(diagnostic_report, patient_id, patient_nam
     return ET.tostring(root, encoding="us-ascii", method="xml", xml_declaration=None, default_namespace=None, short_empty_elements=True)
 
 
-def query_patient(patient_identifier, get_id):
+def create_allergy_resource(allergy, patient_id, patient_name, encounter_id):
+    root = ET.Element('AllergyIntolerance')
+    tree = ET.ElementTree(root)
+    root.set('xmlns', 'http://hl7.org/fhir')
+    if allergy.get('id'):
+        id_ = ET.SubElement(root, 'id')
+        id_.set('value', allergy['id'])
+    if allergy.get('identifier'):
+        identifier = ET.SubElement(root, 'identifier')
+        identifier_type(identifier, 'urn:trinhcongminh', allergy['identifier'])
+    if allergy.get('clinical_status'):
+        clinical_status = ET.SubElement(root, 'clinicalStatus')
+        codes = [
+            {'system': 'http://terminology.hl7.org/CodeSystem/allergyintolerance-clinical', 'code': allergy['clinical_status'], 'version': '4.0.1'}
+        ]
+        codeable_concept(clinical_status, codes, text=allergy['clinical_status'])
+    if allergy.get('verification_status'):
+        verification_status = ET.SubElement(root, 'verificationStatus')
+        codes = [
+            {'system': 'http://terminology.hl7.org/CodeSystem/allergyintolerance-verification', 'code': allergy['verification_status'], 'version': '4.0.1'}
+        ]
+        codeable_concept(verification_status, codes, text=allergy['verification_status'])
+    allergy_type = ET.SubElement(root, 'type')
+    allergy_type.set('value', 'allergy')
+    if allergy.get('category'):
+        category = ET.SubElement(root, 'category')
+        # codes = [
+        #     {'system': 'http://hl7.org/fhir/allergy-intolerance-category', 'code': allergy['category'], 'version': '4.0.1'}
+        # ]
+        # codeable_concept(category, codes, text=allergy['category'])
+        category.set('value', allergy['category'])
+    if allergy.get('criticality'):
+        criticality = ET.SubElement(root, 'criticality')
+        # codes = [
+        #     {'system': 'http://hl7.org/fhir/allergy-intolerance-criticality', 'code': allergy['criticality'], 'version': '4.0.1'}
+        # ]
+        criticality.set('value', allergy['criticality'])
+        # codeable_concept(criticality, codes, text=allergy['criticality'])
+    if allergy.get('code'):
+        code = ET.SubElement(root, 'code')
+        codeable_concept(code, text=allergy['code'])
+    patient = ET.SubElement(root, 'patient')
+    reference_type(patient, 'Patient/' + patient_id, 'Patient', display=patient_name)
+    encounter = ET.SubElement(root, 'encounter')
+    reference_type(encounter, 'Encounter/' + encounter_id, 'Encounter')
+    if allergy.get('onset'):
+        onset = ET.SubElement(root, 'onsetDateTime')
+        onset.set('value', allergy['onset'])
+    if allergy.get('last_occurrence'):
+        last_occurrence = ET.SubElement(root, 'lastOccurrence')
+        last_occurrence.set('value', allergy['last_occurrence'])
+    if allergy.get('reaction'):
+        reaction = ET.SubElement(root, 'reaction')
+        if allergy['reaction'].get('substance'):
+            substance = ET.SubElement(reaction, 'substance')
+            codeable_concept(substance, text=allergy['reaction']['substance'])
+        if allergy['reaction'].get('manifestation'):
+            manifestation = ET.SubElement(reaction, 'manifestation')
+            codeable_concept(manifestation, text=allergy['reaction']['manifestation'])
+        if allergy['reaction'].get('severity'):
+            severity = ET.SubElement(reaction, 'severity')
+            severity.set('value', allergy['reaction']['severity'])
+            # codes = [
+            #     {'system': 'http://hl7.org/fhir/reaction-event-severity', 'code': allergy['reaction']['severity']}
+            # ]
+            # codeable_concept(severity, codes, text=allergy['reaction']['severity'])
+    return ET.tostring(root, encoding="us-ascii", method="xml", xml_declaration=None, default_namespace=None, short_empty_elements=True)
+
+
+
+def query_patient(patient_identifier, query_type):
     patient = {}
     get_req = requests.get(fhir_server + "/Patient?identifier=urn:trinhcongminh|" +
                            patient_identifier, headers={'Content-type': 'application/xml'})
-    # print(get_req.status_code)
-    # print(get_req.content.decode('utf-8'))
     if get_req.status_code == 200 and 'entry' in get_req.content.decode('utf-8'):
         get_root = ET.fromstring(get_req.content.decode('utf-8'))
         entry = get_root.find('d:entry', ns)
         resource = entry.find('d:resource', ns)
         patient_resource = resource.find('d:Patient', ns)
-        if get_id == True:
+        if query_type == 'id' or query_type == 'all':
             id_resource = patient_resource.find('d:id', ns)
             patient['id'] = id_resource.attrib['value']
-        name = patient_resource.find('d:name', ns)
-        if name:
-            patient['name'] = name.find(
-                'd:family', ns).attrib['value'] + ' ' + name.find('d:given', ns).attrib['value']
-        telecom = patient_resource.find('d:telecom', ns)
-        if telecom:
-            patient['telecom'] = telecom.find('d:value', ns).attrib['value']
-        gender = patient_resource.find('d:gender', ns)
-        if gender != None:
-            if gender.attrib['value'] == 'male':
-                patient['gender'] = 'Nam'
-            elif gender.attrib['value'] == 'female':
-                patient['gender'] = 'Nữ'
-        birthdate = patient_resource.find('d:birthDate', ns)
-        if birthdate != None:
-            patient['birthdate'] = birthdate.attrib['value']
-        for address in patient_resource.findall('d:address', ns):
-            addr_type = address.find('d:use', ns).attrib['value']
-            if addr_type == 'home':
-                patient['home_address'] = address.find('d:line', ns).attrib['value'] + ', ' + address.find(
-                    'd:district', ns).attrib['value'] + ', ' + address.find('d:city', ns).attrib['value']
-            elif addr_type == 'work':
-                patient['work_address'] = address.find('d:line', ns).attrib['value'] + ', ' + address.find(
-                    'd:district', ns).attrib['value'] + ', ' + address.find('d:city', ns).attrib['value']
-        patient['identifier'] = patient_identifier
-        # print(patient)
+        if query_type == 'data' or query_type == 'all':
+            name = patient_resource.find('d:name', ns)
+            if name:
+                patient['name'] = name.find(
+                    'd:family', ns).attrib['value'] + ' ' + name.find('d:given', ns).attrib['value']
+            telecom = patient_resource.find('d:telecom', ns)
+            if telecom:
+                patient['telecom'] = telecom.find('d:value', ns).attrib['value']
+            gender = patient_resource.find('d:gender', ns)
+            if gender != None:
+                if gender.attrib['value'] == 'male':
+                    patient['gender'] = 'Nam'
+                elif gender.attrib['value'] == 'female':
+                    patient['gender'] = 'Nữ'
+            birthdate = patient_resource.find('d:birthDate', ns)
+            if birthdate != None:
+                patient['birthdate'] = birthdate.attrib['value']
+            for address in patient_resource.findall('d:address', ns):
+                addr_type = address.find('d:use', ns).attrib['value']
+                if addr_type == 'home':
+                    patient['home_address'] = address.find('d:line', ns).attrib['value'] + ', ' + address.find(
+                        'd:district', ns).attrib['value'] + ', ' + address.find('d:city', ns).attrib['value']
+                elif addr_type == 'work':
+                    patient['work_address'] = address.find('d:line', ns).attrib['value'] + ', ' + address.find(
+                        'd:district', ns).attrib['value'] + ', ' + address.find('d:city', ns).attrib['value']
+            patient['identifier'] = patient_identifier
+            contact = patient_resource.find('d:contact', ns)
+            if contact:
+                relationship = contact.find('d:relationship', ns)
+                if relationship:
+                    patient['contact_relationship'] = relationship.find('d:text', ns).attrib['value']
+                name = contact.find('d:name', ns)
+                if name:
+                    patient['contact_name'] = name.find(
+                        'd:family', ns).attrib['value'] + ' ' + name.find('d:given', ns).attrib['value']
+                telecom = contact.find('d:telecom', ns)
+                if telecom:
+                    patient['contact_telecom'] = telecom.find('d:value', ns).attrib['value']
+                address = contact.find('d:address', ns)
+                if address:
+                    patient['contact_address'] = address.find('d:line', ns).attrib['value'] + ', ' + address.find(
+                        'd:district', ns).attrib['value'] + ', ' + address.find('d:city', ns).attrib['value']
+                gender = contact.find('d:gender', ns)
+                if gender != None:
+                    gender_value = gender.attrib['value']
+                    if gender_value == 'male':
+                        patient['contact_gender'] = 'Nam'
+                    else:
+                        patient['contact_gender'] = 'Nữ'
+            # print(patient)
         return patient
     else:
         return None
@@ -1177,6 +1343,58 @@ def query_diagnostic_report(diagnostic_report_identifier, query_type):
     return diagnostic_report
 
 
+def query_allergy(allergy_identifier, query_type):
+    allergy = {}
+    get_allergy = requests.get(fhir_server + "/AllergyIntolerance?identifier=urn:trinhcongminh|" + allergy_identifier, headers={'Content-type': 'application/xml'})
+    if get_allergy.status_code == 200 and 'entry' in get_allergy.content.decode('utf-8'):
+        get_root = ET.fromstring(get_allergy.content.decode('utf-8'))
+        entry = get_root.find('d:entry', ns)
+        resource = entry.find('d:resource', ns)
+        allergy_resource = resource.find('d:AllergyIntolerance', ns)
+        if query_type == 'all' or query_type == 'meta':
+            meta = allergy_resource.find('d:meta', ns)
+            allergy['version'] = meta.find('d:versionId', ns).attrib['value']
+            allergy['last_updated'] = getdatetime(meta.find('d:lastUpdated').attrib['value'])
+        if query_type == 'all' or query_type == 'id':
+            id_ = allergy_resource.find('d:id', ns)
+            allergy['id'] = id_.attrib['value']
+        if query_type == 'all' or query_type == 'data':
+            allergy['allergy_identifier'] = allergy_identifier
+            clinical_status = allergy_resource.find('d:clinicalStatus', ns)
+            if clinical_status:
+                allergy['allergy_clinical_status'] = clinical_status.find('d:text', ns).attrib['value']
+            verification_status = allergy_resource.find('d:verificationStatus', ns)
+            if verification_status:
+                allergy['allergy_verification_status'] = verification_status.find('d:text', ns).attrib['value']
+            category = allergy_resource.find('d:category', ns)
+            if category:
+                allergy['allergy_category'] = category.find('d:text', ns).attrib['value']
+            criticality = allergy_resource.find('d:criticality', ns)
+            if criticality:
+                allergy['allergy_criticality'] = criticality.find('d:text', ns).attrib['value']
+            code = allergy_resource.find('d:code', ns)
+            if code:
+                allergy['allergy_code'] = code.find('d:text', ns).attrib['value']
+            onset = allergy_resource.find('d:onsetDateTime', ns)
+            if onset != None:
+                allergy['allergy_onset'] = onset.attrib['value']
+            last_occurrence = allergy_resource.find('d:lastOccurrence')
+            if last_occurrence != None:
+                allergy['allergy_last_occurrence'] = last_occurrence.attrib['value']
+            reaction = allergy_resource.find('d:reaction', ns)
+            if reaction:
+                substance = reaction.find('d:substance', ns)
+                if substance:
+                    allergy['allergy_reaction_substance'] = substance.find('d:text', ns).attrib['value']
+                manifestation = reaction.find('d:manifestation', ns)
+                if manifestation:
+                    allergy['allergy_reaction_manifestation'] = manifestation.find('d:text', ns).attrib['value']
+                severity = allergy_resource.find('d:severity', ns)
+                if severity:
+                    allergy['allergy_reaction_severity'] = severity.find('d:severity', ns).attrib['value']
+    return allergy
+
+
 def query_encounter_history(encounter_id, version, query_type):
     encounter = {}
     get_encounter = requests.get(fhir_server + "/Encounter/" + encounter_id + "/_history/" + version, headers={'Content-type': 'application/xml'})
@@ -1593,6 +1811,55 @@ def query_diagnostic_report_history(diagnostic_report_id, version, query_type):
     return diagnostic_report
 
 
+def query_allergy_history(allergy_id, version, query_type):
+    allergy = {}
+    get_allergy = requests.get(fhir_server + "/AllergyIntolerance/" + allergy_id + '/_history/' + version, headers={'Content-type': 'application/xml'})
+    if get_allergy.status_code == 200:
+        allergy_resource = ET.fromstring(get_allergy.content.decode('utf-8'))
+        if query_type == 'all' or query_type == 'meta':
+            meta = allergy_resource.find('d:meta', ns)
+            allergy['version'] = meta.find('d:versionId', ns).attrib['value']
+            allergy['last_updated'] = getdatetime(meta.find('d:lastUpdated', ns).attrib['value'])
+        if query_type == 'all' or query_type == 'id':
+            id_ = allergy_resource.find('d:id', ns)
+            allergy['id'] = id_.attrib['value']
+        if query_type == 'all' or query_type == 'data':
+            clinical_status = allergy_resource.find('d:clinicalStatus', ns)
+            if clinical_status:
+                allergy['allergy_clinical_status'] = clinical_status.find('d:text', ns).attrib['value']
+            verification_status = allergy_resource.find('d:verificationStatus', ns)
+            if verification_status:
+                allergy['allergy_verification_status'] = verification_status.find('d:text', ns).attrib['value']
+            category = allergy_resource.find('d:category', ns)
+            if category:
+                allergy['allergy_category'] = category.find('d:text', ns).attrib['value']
+            criticality = allergy_resource.find('d:criticality', ns)
+            if criticality:
+                allergy['allergy_criticality'] = criticality.find('d:text', ns).attrib['value']
+            code = allergy_resource.find('d:code', ns)
+            if code:
+                allergy['allergy_code'] = code.find('d:text', ns).attrib['value']
+            onset = allergy_resource.find('d:onsetDateTime', ns)
+            if onset != None:
+                allergy['allergy_onset'] = onset.attrib['value']
+            last_occurrence = allergy_resource.find('d:lastOccurrence')
+            if last_occurrence != None:
+                allergy['allergy_last_occurrence'] = last_occurrence.attrib['value']
+            reaction = allergy_resource.find('d:reaction', ns)
+            if reaction:
+                substance = reaction.find('d:substance', ns)
+                if substance:
+                    allergy['allergy_reaction_substance'] = substance.find('d:text', ns).attrib['value']
+                manifestation = reaction.find('d:manifestation', ns)
+                if manifestation:
+                    allergy['allergy_reaction_manifestation'] = manifestation.find('d:text', ns).attrib['value']
+                severity = allergy_resource.find('d:severity', ns)
+                if severity:
+                    allergy['allergy_reaction_severity'] = severity.find('d:severity', ns).attrib['value']
+    return allergy
+
+
+
 def get_encounter(encounter_resource, query_type):
     encounter = {}
     if query_type == 'meta' or query_type == 'all':
@@ -1956,3 +2223,5 @@ def get_diagnostic_report(diagnostic_report_resource, query_type):
         if conclusion != None:
             diagnostic_report['diagnostic_conclusion'] = conclusion.attrib['value']
     return diagnostic_report
+
+

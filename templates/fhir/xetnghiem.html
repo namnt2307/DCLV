@@ -12,27 +12,37 @@
 <h1>CÁC XÉT NGHIỆM</h1>
 <table>
     <thead>
-        <th>ID xét nghiệm</th>
-        <th>Tên xét nghiệm</th>
-        <th>Tình trạng xét nghiệm</th>
-        <th>Ngày dự kiến thực hiện xét nghiệm</th>
-        <th>Ngày yêu cầu xét nghiệm</th>
-        <th>Bác sĩ yêu cầu xét nghiệm</th>
-        <th>Ghi chú cho xét nghiệm</th>
-        <th>Chẩn đoán</th>
+        <th class="cell-data-8">ID xét nghiệm</th>
+        <th class="cell-data-8">Tên xét nghiệm</th>
+        <th class="cell-data-8">Tình trạng xét nghiệm</th>
+        <th class="cell-data-8">Ngày dự kiến thực hiện xét nghiệm</th>
+        <th class="cell-data-8">Ngày yêu cầu xét nghiệm</th>
+        <th class="cell-data-8">Bác sĩ yêu cầu xét nghiệm</th>
+        <th class="cell-data-8">Ghi chú cho xét nghiệm</th>
+        <th class="cell-data-8">Chẩn đoán</th>
     </thead>
     <tbody>
     {% if services %}
         {% for service in services %}
         <tr>
-            <td><a href="{%url 'fhir:chitietxetnghiem' group_name user_name data.Patient.identifier data.Encounter.identifier service.service_identifier%}"">{{service.service_identifier}}</a></td>
-            <td>{{service.service_code}}</td>
-            <td>{{service.service_status}}</td>
-            <td>{{service.service_occurrence|date:"d-m-Y"}}</td>
-            <td>{{service.service_authored|date:"d-m-Y"}}</td>
-            <td>{{service.service_requester}}</td>
-            <td>{{service.service_note}}</td>
-            <td><a href="{% url 'fhir:chandoan' group_name user_name data.Patient.identifier data.Encounter.identifier service.service_identifier%}">Chẩn đoán</a></td>
+            <td class="cell-data-8"><a href="{%url 'fhir:chitietxetnghiem' group_name user_name data.Patient.identifier data.Encounter.identifier service.service_identifier%}"">{{service.service_identifier}}</a></td>
+            <td class="cell-data-8">{{service.service_code}}</td>
+            <td class="cell-data-8">{{service.service_status}}</td>
+            <td class="cell-data-8">{{service.service_occurrence|date:"d-m-Y"}}</td>
+            <td class="cell-data-8">{{service.service_authored|date:"d-m-Y"}}</td>
+            <td class="cell-data-8">{{service.service_requester}}</td>
+            <td class="cell-data-8">{{service.service_note}}</td>
+            <td class="cell-data-8"><a href="{% url 'fhir:chandoan' group_name user_name data.Patient.identifier data.Encounter.identifier service.service_identifier%}">Chẩn đoán</a></td>
+            <td>
+                <form action="{% url 'fhir:delete' %}" method="POST">
+                    {%csrf_token%}
+                    <input type="hidden" name="_method" value="delete">
+                    <input type="hidden" name="resource_type" id="" value="service_request">
+                    <input type="hidden" name="url_next" value="{{request.get_full_path}}">
+                    <input type="hidden" name="resource_identifier" value="{{service.service_identifier}}">
+                    <button type="submit" class="btn">Xóa</button>
+                </form>
+            </td>
         </tr>
         {% endfor %}
     {% endif %}

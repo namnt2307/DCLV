@@ -13,7 +13,7 @@ class EHRCreationForm(forms.ModelForm):
     class Meta:
         model = get_user_model()
         fields = ('name', 'gender', 'birthdate',
-                  'home_address', 'work_address', 'identifier', 'telecom')
+                  'home_address', 'work_address', 'identifier', 'telecom', 'contact_name', 'contact_gender', 'contact_relationship', 'contact_address', 'contact_telecom')
 
 
 class EncounterForm(forms.ModelForm):
@@ -34,7 +34,7 @@ class UserForm(forms.ModelForm):
     class Meta:
         model = UserModel()
         fields = ('identifier', 'name', 'gender', 'birthdate',
-                  'home_address', 'work_address', 'telecom')
+                  'home_address', 'work_address', 'telecom', 'contact_name', 'contact_gender', 'contact_relationship', 'contact_address', 'contact_telecom')
 
 
 class ConditionForm(forms.ModelForm):

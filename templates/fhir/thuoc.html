@@ -8,19 +8,35 @@
 {%block url6%}'{%url 'fhir:hinhanh' group_name user_name data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
 {% load widget_tweaks %}
 {%block function%}
+{{discharge_conditions|length|add:1}}
 <h1>KẾT QUẢ</h1>
 <div>
+    
     <h2>+ Bệnh chính</h2>
         <div>
             <table>
-                <th>Tên bệnh</th>
-                <th>Mức độ</th>
+                <th class="cell-data-2">Tên bệnh</th>
+                <th class="cell-data-2">Mức độ</th>
+                <th></th>
+                {%if discharge_conditions.all %}
+                <th></th>
+                {% endif %}
                 {% for condition in discharge_conditions %}
                 <tbody id="{{condition.condition_identifier}}-data">
                     <tr>
-                        <td>{{condition.condition_code}}</td>
-                        <td>{{severity|get_item:condition.condition_severity}}</td>
+                        <td class="cell-data-2">{{condition.condition_code}}                       </td>
+                        <td class="cell-data-2">{{severity|get_item:condition.condition_severity}}</td>
                         <td><button onclick="toggleDisplay('{{condition.condition_identifier}}')">Chỉnh sửa</button></td>
+                        <td>
+                            <form action="{% url 'fhir:delete' %}" method="POST">
+                                {%csrf_token%}
+                                <input type="hidden" name="_method" value="delete">
+                                <input type="hidden" name="resource_type" id="" value="condition">
+                                <input type="hidden" name="url_next" value="{{request.get_full_path}}">
+                                <input type="hidden" name="resource_identifier" value="{{condition.condition_identifier}}">
+                                <button type="submit">Xóa</button>
+                            </form>
+                        </td>
                     </tr>
                 </tbody>
                 <tbody style="display: none;" id="{{condition.condition_identifier}}-form">
@@ -30,10 +46,17 @@
                             <input type="hidden" name="classifier" id="" value="discharge">
                             <input type="hidden" name="condition_identifier" value="{{condition.condition_identifier}}">
                             {%with 'value:'|add:condition.condition_code as code%}
-                                <td>{{condition_form.condition_code|attr:code}}</td>
+                                <td class="cell-data-2">
+                                    <input list="comorbidity_diseases" name="condition_code" value="{{condition.condition_code}}">
+                                    <datalist id="comorbidity_diseases">
+                                        {% for disease in comorbidity_diseases %}
+                                            <option value="{{disease.disease_search}}">
+                                        {% endfor %}
+                                    </datalist>
+                                </td>
                             {%endwith%}
                             {%with 'value:'|add:condition.condition_severity as code%}
-                                <td>{{condition_form.condition_severity|attr:code}}</td>
+                                <td class="cell-data-2">{{condition_form.condition_severity|attr:code}}</td>
                             {%endwith%}
                             <td><button type="submit">Lưu</button></td>
                             <td><button type="button" onclick="toggleDisplay('{{condition.condition_identifier}}')">Hủy</button></td>
@@ -41,13 +64,24 @@
                     </tr>
                 </tbody>
                 {% endfor %}
+                    
                 <tr>
                     <form action="" method="POST">
                     {% csrf_token %}
                     <input type="hidden" name="classifier" id="" value="discharge">
-                        <td>{{condition_form.condition_code}}</td>
-                        <td>{{condition_form.condition_severity}}</td>
+                        <td class="cell-data-2">
+                            <input list="discharge_diseases" name="condition_code" id="discharge_disease" onchange="test('discharge_disease')">
+                            <datalist id="discharge_diseases">
+                                {% for disease in discharge_diseases %}
+                                    <option value="{{disease.disease_search}}">
+                                {% endfor %}
+                            </datalist>
+                        </td>
+                        <td class="cell-data-2">{{condition_form.condition_severity}}</td>
                         <td><button type="submit" onclick="toggleDisplay('{{condition.condition_identifier}}')">Thêm</button></td>
+                        {% if discharge_conditions.all %}
+                            <td></td>
+                        {%endif%}
                     </form>
                 </tr>
             </table>
@@ -55,14 +89,28 @@
     <h2>+ Bệnh kèm theo</h2>
     <div>
         <table>
-            <th>Tên bệnh</th>
-            <th>Mức độ</th>
+            <th class="cell-data-2">Tên bệnh</th>
+            <th class="cell-data-2">Mức độ</th>
+            <th></th>
+            {%if comorbidity_conditions.all %}
+            <th></th>
+            {% endif %}
             {% for condition in comorbidity_conditions %}
             <tbody id="{{condition.condition_identifier}}-data">
                 <tr>
-                    <td>{{condition.condition_code}}</td>
-                    <td>{{severity|get_item:condition.condition_severity}}</td>
+                    <td class="cell-data-2">{{condition.condition_code}}</td>
+                    <td class="cell-data-2">{{severity|get_item:condition.condition_severity}}</td>
                     <td><button type="button" onclick="toggleDisplay('{{condition.condition_identifier}}')">Chỉnh sửa</button></td>
+                    <td>
+                        <form action="{% url 'fhir:delete' %}" method="POST">
+                            {%csrf_token%}
+                            <input type="hidden" name="_method" value="delete">
+                            <input type="hidden" name="resource_type" id="" value="condition">
+                            <input type="hidden" name="url_next" value="{{request.get_full_path}}">
+                            <input type="hidden" name="resource_identifier" value="{{condition.condition_identifier}}">
+                            <button type="submit">Xóa</button>
+                        </form>
+                    </td>
                 </tr>
             </tbody>
             <tbody style="display: none;" id="{{condition.condition_identifier}}-form">
@@ -72,10 +120,15 @@
                         <input type="hidden" name="classifier" id="" value="comorbidity">
                         <input type="hidden" name="condition_identifier" value="{{condition.condition_identifier}}">
                         {%with 'value:'|add:condition.condition_code as code%}
-                            <td>{{condition_form.condition_code|attr:code}}</td>
+                            <input list="comorbidity_diseases" name="condition_code" id="comorbidity_disease">
+                            <datalist id="comorbidity_diseases">
+                                {% for disease in d_diseases %}
+                                    <option value="{{disease.disease_search}}">
+                                {% endfor %}
+                            </datalist>
                         {%endwith%}
                         {%with 'value:'|add:condition.condition_severity as code%}
-                            <td>{{condition_form.condition_severity|attr:code}}</td>
+                            <td class="cell-data-2">{{condition_form.condition_severity|attr:code}}</td>
                         {%endwith%}
                         <td><button type="submit">Lưu</button></td>
                         <td><button type="button" onclick="toggleDisplay('{{condition.condition_identifier}}')">Hủy</button></td>                        
@@ -86,9 +139,16 @@
             <tr>
                 <form action="" method="POST">
                 {% csrf_token %}
-                <input type="hidden" name="classifier" id="" value="comorbidity">
-                    <td>{{condition_form.condition_code}}</td>
-                    <td>{{condition_form.condition_severity}}</td>
+                    <td>
+                        <input type="hidden" name="classifier" id="" value="comorbidity">
+                        <input list="comorbidity_diseases" name="condition_code" id="comorbidity_disease">
+                        <datalist id="comorbidity_diseases">
+                            {% for disease in comorbidity_diseases %}
+                                <option value="{{disease.disease_search}}">
+                            {% endfor %}
+                        </datalist>
+                    </td>
+                    <td class="cell-data-2">{{condition_form.condition_severity}}</td>
                     <td><button type="submit">Thêm</button></td>
                 </form>
             </tr>
@@ -98,14 +158,15 @@
 <h1>THUỐC</h1>
 <table>
     <thead>
-        <th>Thuốc</th>
-        <th>Lý do dùng thuốc</th>
-        <th>Bắt đầu dùng thuốc từ</th>
-        <th>Tần suất dùng thuốc</th>
-        <th>Liều dùng</th>
-        <th>Thời gian sử dụng</th>
-        <th>Đường dùng</th>
-        <th>Ngày chỉ định</th>
+        <th class="cell-data-6">Thuốc</th>
+        <th class="cell-data-6">Lý do dùng thuốc</th>
+        {%comment%}<th class="cell-data-8">Bắt đầu dùng thuốc từ</th>{%endcomment%}
+        <th class="cell-data-6">Tần suất dùng thuốc</th>
+        <th class="cell-data-6">Liều dùng</th>
+        <th class="cell-data-6">Thời gian sử dụng</th>
+        <th class="cell-data-6">Đường dùng</th>
+        <th></th>
+        {%comment%}<th class="cell-data-8">Ngày chỉ định</th>{%endcomment%}
     </thead>
     
     {% if medications %}
@@ -113,23 +174,34 @@
         {% for medication in medications %}
             <tbody id="{{medication.medication_identifier}}-data">
                 <tr>
-                    <td>{{medication.medication_medication}}</td>
-                    <td>{{medication.medication_reason_code}}</td>
-                    <td>{{medication.medication_effective|date:"d-m-Y"}}</td>
-                    <td>{{medication.dosage_frequency}}/{{medication.dosage_period}} {{unit|get_item:medication.dosage_period_unit}}</td>
-                    <td>{{medication.dosage_quantity}}</td>
-                    <td>{{medication.dosage_duration}} {{unit|get_item:medication.dosage_duration_unit}}</td>
-                    <td>{{medication.dosage_route}}</td>
-                    <td>{{medication.medication_date_asserted|date:"d-m-Y"}}</td>
+                    <td class="cell-data-6">{{medication.medication_medication}}</td>
+                    <td class="cell-data-6">{{medication.medication_reason_code}}</td>
+                    {%comment%}<td class="cell-data-8">{{medication.medication_effective|date:"d-m-Y"}}</td>{%endcomment%}
+                    <td class="cell-data-6">{{medication.dosage_frequency}}/{{medication.dosage_period}} {{unit|get_item:medication.dosage_period_unit}}</td>
+                    <td class="cell-data-6">{{medication.dosage_quantity}}</td>
+                    <td class="cell-data-6">{{medication.dosage_duration}} {{unit|get_item:medication.dosage_duration_unit}}</td>
+                    <td class="cell-data-6">{{medication.dosage_route}}</td>
+                    {%comment%}<td class="cell-data-8">{{medication.medication_date_asserted|date:"d-m-Y"}}</td>{%endcomment%}
+                    <td><button class="submit-button" onclick="toggleDisplay('{{medication.medication_identifier}}')">Chỉnh sửa</button></td>
                 </tr>
                 <tr>
-                    <td colspan="8">
+                    <td colspan="6" style="text-align: left;">
                         <p>Thời điểm sử dụng: {{when|get_item:medication.dosage_when|capfirst}} {%if medication.dosage_offset != '0'%}{{medication.dosage_offset}} phút{%endif%}</p>
                         <p>Hướng dẫn thêm: {{medication.dosage_additional_instruction}}</p>
                         <p>Hướng dẫn đặc biệt: {{medication.dosage_patient_instruction}}</p>
                     </td>
+                    <td>
+                        <form action="{% url 'fhir:delete' %}" method="POST">
+                            {%csrf_token%}
+                            <input type="hidden" name="_method" value="delete">
+                            <input type="hidden" name="resource_type" id="" value="medication_statement">
+                            <input type="hidden" name="url_next" value="{{request.get_full_path}}">
+                            <input type="hidden" name="resource_identifier" value="{{medication.medication_identifier}}">
+                            <button type="submit">Xóa</button>
+                        </form>
+                    </td>
                 </tr>
-                <td colspan="8"><button class="submit-button" onclick="toggleDisplay('{{medication.medication_identifier}}')">Chỉnh sửa</button></td>
+                
             </tbody>
             <tbody id="{{medication.medication_identifier}}-form" style="display: none;">   
                 <form action="" method="POST" >
@@ -139,20 +211,20 @@
                         {%csrf_token%}
 
                         {%with 'value:'|add:medication.medication_medication as code%}
-                            <td>{{medication_form.medication_medication|attr:code}}</td>
+                            <td class="cell-data-6">{{medication_form.medication_medication|attr:code}}</td>
                         {%endwith%}
                     
                         {%with 'value:'|add:medication.medication_reason_code as code%}   
-                            <td>{{medication_form.medication_reason_code|attr:code}}</td>
+                            <td class="cell-data-6">{{medication_form.medication_reason_code|attr:code}}</td>
                         {%endwith%}
-                    
+                    {%comment%}
                         {%with medication.medication_effective|date:'Y-m-d' as effective_date%}
                             {%with 'value:'|add:effective_date as code%}        
-                                <td>{{medication_form.medication_effective|attr:code}}</td>
+                                <td class="cell-data-8">{{medication_form.medication_effective|attr:code}}</td>
                             {%endwith%}
                         {%endwith%}
-
-                        <td>
+                    {%endcomment%}
+                        <td class="cell-data-6">
                             {%with 'value:'|add:medication.dosage_frequency as code%}
                         
                                 {{medication_form.dosage_frequency|attr:code}}
@@ -169,11 +241,11 @@
                         </td>
 
                         {%with 'value:'|add:medication.dosage_quantity as code%}
-                            <td>{{medication_form.dosage_quantity|attr:code}}</td>
+                            <td class="cell-data-6">{{medication_form.dosage_quantity|attr:code}}</td>
                         {%endwith%}
 
                         {%with 'value:'|add:medication.dosage_duration as code%}         
-                            <td>
+                            <td class="cell-data-6">
                                 {{medication_form.dosage_duration|attr:code}}
                                 <br>
                                 {{medication_form.dosage_duration_unit}}
@@ -183,12 +255,12 @@
 
 
                         {%with 'value:'|add:medication.dosage_route as code%}
-                            <td>{{medication_form.dosage_route|attr:code}}</td>
+                            <td class="cell-data-6">{{medication_form.dosage_route|attr:code}}</td>
                         {%endwith%}
                         <td><button type="submit">Lưu</button></td>
                     </tr>
                     <tr>
-                        <td colspan="7">
+                        <td colspan="6">
                             {%with 'value:'|add:medication.dosage_when as code%}                
                                 <p>Thời điểm dùng thuốc: {{medication_form.dosage_when|attr:code}}
                             {%endwith%}
@@ -215,23 +287,23 @@
         <input type="hidden" name="classifier" id="" value="medication">
         <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
         <tr>
-            <td>{{medication_form.medication_medication}}</td>
-            <td>{{medication_form.medication_reason_code}}</td>
-            <td>{{medication_form.medication_effective}}</td>
-            <td>
+            <td class="cell-data-6">{{medication_form.medication_medication}}</td>
+            <td class="cell-data-6">{{medication_form.medication_reason_code}}</td>
+            {%comment%}<td class="cell-data-8">{{medication_form.medication_effective}}</td>{%endcomment%}
+            <td class="cell-data-6">
             {{medication_form.dosage_frequency}}
             <br>
             / 
             <br>
             {{medication_form.dosage_period}} {{medication_form.dosage_period_unit}}
             </td>
-            <td>{{medication_form.dosage_quantity}}</td>
-            <td>{{medication_form.dosage_duration}} {{medication_form.dosage_duration_unit}}</td>
-            <td>{{medication_form.dosage_route}}</td>
+            <td class="cell-data-6">{{medication_form.dosage_quantity}}</td>
+            <td class="cell-data-6">{{medication_form.dosage_duration}} {{medication_form.dosage_duration_unit}}</td>
+            <td class="cell-data-6">{{medication_form.dosage_route}}</td>
             <td rowspan="2"><button type="submit">Thêm Thuốc</button></td>
         </tr>
         <tr>
-            <td colspan="7">
+            <td colspan="6" style="text-align: left;">
                 <p>Thời điểm dùng thuốc: {{medication_form.dosage_when}} {{medication_form.dosage_offset}} phút</p>
                 <p>Hướng dẫn thêm: {{medication_form.dosage_additional_instruction}}</p>
                 <p>Hướng dẫn đặc biệt: {{medication_form.dosage_patient_instruction}}</p>       
@@ -293,6 +365,13 @@
         else {
             data.style.display = 'none';
             form.style.display = 'table-row-group';
+        }
+    }
+    function test(elementId){
+        element = document.getElementById(elementId);
+        console.log(element.value);
+        if(element.value.includes(' ')){
+            code = element.value.split(' ')[-1];
         }
     }
 </script>

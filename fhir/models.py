@@ -9,14 +9,14 @@ from datetime import datetime
 class EncounterModel(models.Model):
     CLASS_CHOICES = (
         ('IMP', 'Nội trú'),
-        ('AMB', 'Ambulatory'),
+        ('AMB', 'Ngoại trú'),
         ('FLD', 'Khám tại địa điểm ngoài'),
         ('EMER', 'Khẩn cấp'),
         ('HH', 'Khám tại nhà'),
         ('ACUTE', 'Nội trú khẩn cấp'),
         ('NONAC', 'Nội trú không khẩn cấp'),
         ('OBSENC', 'Thăm khám quan sát'),
-        ('SS', 'Ngoại trú'),
+        ('SS', 'Thăm khám trong ngày'),
         ('VR', 'Trực tuyến'),
         ('PRENC', 'Tái khám')
     )
@@ -76,6 +76,15 @@ class UserModel(models.Model):
         ('Nam', 'Nam'),
         ('Nữ', 'Nữ')
     )
+    CONTACT_RELATIONSHIP_CHOICES = (
+        ('C', 'Liên hệ khẩn cấp'),
+        ('E', 'Chủ sở hữu lao động'),
+        ('F', 'Cơ quan liên bang'),
+        ('I', 'Công ty bảo hiểm'),
+        ('N', 'Người nối dõi'),
+        ('S', 'Cơ quan nhà nước'),
+        ('U', 'Không xác định')
+    )
     identifier = models.CharField(primary_key=True, max_length=10)
     name = models.CharField(default='', max_length=100)
     birthdate = models.DateField(default=datetime.now)
@@ -84,6 +93,12 @@ class UserModel(models.Model):
     home_address = models.CharField(default='', max_length=255)
     telecom = models.CharField(default='', max_length=10)
     group_name = models.CharField(default='patient', max_length=20)
+    contact_relationship = models.CharField(max_length=100, null=True, blank=True, default='C', choices=CONTACT_RELATIONSHIP_CHOICES)
+    contact_name = models.CharField(max_length=100, blank=True, null=True)
+    contact_telecom = models.CharField(max_length=100, blank=True, null=True)
+    contact_address = models.CharField(max_length=100, null=True, blank=True)
+    contact_gender = models.CharField(max_length=100, choices=GENDER_CHOICES, null=True, blank=True)
+
 
 
 class ConditionModel(models.Model):
@@ -136,7 +151,7 @@ class ServiceRequestModel(models.Model):
 class ObservationModel(models.Model):
     encounter_identifier = models.ForeignKey(
         EncounterModel, on_delete=models.CASCADE)
-    service_identifier = models.ForeignKey(ServiceRequestModel, on_delete=CASCADE, null=True)
+    service_identifier = models.ForeignKey(ServiceRequestModel, on_delete=models.CASCADE, null=True)
     observation_identifier = models.CharField(max_length=100, primary_key=True)
     observation_status = models.CharField(default='registered', max_length=10)
     observation_category = models.CharField(default='', max_length=10)
@@ -161,9 +176,14 @@ class ProcedureModel(models.Model):
         ('46947000', 'Phương pháp chỉnh hình'),
         ('410606002', 'Phương pháp dịch vụ xã hội')
     )
+    PROCEDURE_OUTCOME_CHOICES = (
+        ('385669000', 'Thành công'),
+        ('385671000', 'Không thành công'),
+        ('385670004', 'Thành công một phần')
+    )
     encounter_identifier = models.ForeignKey(
         EncounterModel, on_delete=models.CASCADE)
-    service_identifier = models.ForeignKey(ServiceRequestModel, on_delete=CASCADE, null=True)
+    service_identifier = models.ForeignKey(ServiceRequestModel, on_delete=models.CASCADE, null=True)
     procedure_identifier = models.CharField(max_length=100, primary_key=True)
     procedure_status = models.CharField(max_length=100)
     procedure_category = models.CharField(
@@ -174,7 +194,7 @@ class ProcedureModel(models.Model):
     procedure_performer = models.CharField(max_length=100, null=True)
     procedure_location = models.CharField(max_length=100, null=True)
     procedure_reason_code = models.CharField(max_length=100, null = True)
-    procedure_outcome = models.CharField(max_length=100, null=True)
+    procedure_outcome = models.CharField(max_length=100, null=True, choices=PROCEDURE_OUTCOME_CHOICES)
     procedure_complication = models.CharField(max_length=100, null=True)
     procedure_follow_up = models.CharField(max_length=100, null=True)
     procedure_note = models.CharField(max_length=100, null=True)
@@ -204,9 +224,10 @@ class AllergyModel(models.Model):
         ('moderate', 'vừa phải'),
         ('severe', 'dữ dội')
     )
-    encounter_identifier = models.ForeignKey(EncounterModel, on_delete=CASCADE)
+    encounter_identifier = models.ForeignKey(EncounterModel, on_delete=models.CASCADE)
     allergy_identifier = models.CharField(max_length=100,primary_key=True)
-    allergy_clinical_status = models.CharField(max_length=100)
+    allergy_clinical_status = models.CharField(max_length=100, choices=CLINICAL_CHOICES)
+    allergy_verification_status = models.CharField(max_length=100, default='confirmed')
     allergy_type = models.CharField(max_length=100, default='allergy')
     allergy_category = models.CharField(max_length=100, choices=CATEGORY_CHOICES)
     allergy_code = models.CharField(max_length=100)
@@ -217,6 +238,7 @@ class AllergyModel(models.Model):
     allergy_reaction_manifestation = models.CharField(max_length=100, null=True)
     allergy_reaction_severity = models.CharField(max_length=100, choices=SEVERITY_CHOICES, blank=True)
     allergy_reaction_note = models.CharField(max_length=100, null=True, blank=True)
+    allergy_version = models.IntegerField(default=0)
 
 
 class MedicationModel(models.Model):
@@ -253,8 +275,8 @@ class MedicationModel(models.Model):
     medication_effective = models.DateField()
     medication_date_asserted = models.DateField(null=True)
     medication_reason_code = models.CharField(max_length=100, default='')
-    dosage_additional_instruction = models.CharField(max_length=100)
-    dosage_patient_instruction = models.CharField(max_length=100)
+    dosage_additional_instruction = models.CharField(max_length=100, blank=True)
+    dosage_patient_instruction = models.CharField(max_length=100, blank=True)
     dosage_frequency = models.CharField(max_length=10)
     dosage_period = models.CharField(max_length=10)
     dosage_period_unit = models.CharField(max_length=10, choices=UNIT_CHOICES, null=True)
@@ -269,10 +291,10 @@ class MedicationModel(models.Model):
 
 class DiagnosticReportModel(models.Model):
     encounter_identifier = models.ForeignKey(
-        EncounterModel, on_delete=CASCADE
+        EncounterModel, on_delete=models.CASCADE
     )
     service_identifier = models.ForeignKey(
-        ServiceRequestModel, on_delete=CASCADE
+        ServiceRequestModel, on_delete=models.CASCADE
     )
     diagnostic_identifier = models.CharField(max_length=100, primary_key=True)
     diagnostic_status = models.CharField(max_length=100)
@@ -283,6 +305,18 @@ class DiagnosticReportModel(models.Model):
     diagnostic_conclusion = models.CharField(max_length=1000)
     diagnostic_version = models.IntegerField(default=0)
 
+
+class DischargeDiseases(models.Model):
+    disease_code = models.CharField(max_length=10)
+    disease_name = models.CharField(max_length=100)    
+    disease_search = models.CharField(max_length=100)
+
+
+class ComorbidityDiseases(models.Model):
+    discharge_diseases = models.ForeignKey(DischargeDiseases, on_delete=models.CASCADE)
+    disease_code = models.CharField(max_length=10)
+    disease_name = models.CharField(max_length=100)
+    disease_search = models.CharField(max_length=100)
     
 
 

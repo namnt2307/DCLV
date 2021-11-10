@@ -41,6 +41,29 @@
                         <label for=""><h4 class="title">Số điện thoại:</h4></label>
                         <h4 class="value">{{form.telecom}}</h4>               
                     </div>
+                    <div>
+                        <h3><strong>Thông tin người liên hệ khi cần báo tin</strong></h3>
+                        <div class="patient">
+                            <label for="id_contact_name"><h4 class="title">Họ tên người liên hệ</h4></label>
+                            <h4>{{form.contact_name}}</h4>
+                        </div>
+                        <div class="patient">
+                            <label for="id_contact_gender"><h4 class="title">Giới tính người liên hệ</h4></label>
+                            <h4>{{form.contact_gender}}</h4>
+                        </div>
+                        <div class="patient">
+                            <label for="id_contact_relationship"><h4 class="title">Quan hệ với bệnh nhân</h4></label>
+                            <h4>{{form.contact_relationship}}</h4>
+                        </div>
+                        <div class="patient">
+                            <label for="id_contact_address"><h4 class="title">Địa chỉ người liên hệ</h4></label>
+                            <h4>{{form.contact_address}}</h4>
+                        </div>
+                        <div class="patient">
+                            <label for="id_contact_telecom"><h4 class="title">Số điện thoại</h4></label>
+                            <h4 class="value">{{form.contact_telecom}}</h4>
+                        </div>
+                    </div>
                 <button type="submit" class="btn btn-success">Tạo hồ sơ</button>
             </form> 
             </div>

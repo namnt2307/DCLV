@@ -145,52 +145,68 @@
     <div>
         <h2>1. Quá trình bệnh lý</h2>
             <table>
-                <th>Tên triệu chứng</th>
-                <th>Ngày xuất hiện triệu chứng</th>
-                <th>Ngày hết</th>
-                <th>Mức độ</th>
+                <thead>
+                    <th>Tên triệu chứng</th>
+                    <th>Ngày xuất hiện triệu chứng</th>
+                    <th>Ngày hết</th>
+                    <th>Mức độ</th>
+                </thead>
                 {% for condition in admission_conditions %}
-                    <tr id="{{condition.condition_identifier}}-data">
-                        <td>{{condition.condition_code}}</td>
-                        <td>{{condition.condition_onset|date:'d-m-Y'}}</td>
-                        <td>{{condition.condition_abatement|date:'d-m-Y'}}</td>
-                        <td>{{severity|get_item:condition.condition_severity}}</td>
+                <tbody id="{{condition.condition_identifier}}-data">
+                    <tr>
+                        <td class="cell-data-4">{{condition.condition_code}}</td>
+                        <td class="cell-data-4">{{condition.condition_onset|date:'d-m-Y'}}</td>
+                        <td class="cell-data-4">{{condition.condition_abatement|date:'d-m-Y'}}</td>
+                        <td class="cell-data-4">{{severity|get_item:condition.condition_severity}}</td>
                         <td><button type="button" onclick="toggleDisplay('{{condition.condition_identifier}}')">Chỉnh sửa</button></td>
+                        <td>
+                            <form action="{% url 'fhir:delete' %}" method="POST">
+                                {%csrf_token%}
+                                <input type="hidden" name="_method" value="delete">
+                                <input type="hidden" name="resource_type" id="" value="condition">
+                                <input type="hidden" name="url_next" value="{{request.get_full_path}}">
+                                <input type="hidden" name="resource_identifier" value="{{condition.condition_identifier}}">
+                                <button type="submit">Xóa</button>
+                            </form>
+                        </td>
                     </tr>
-                    <tr style="display: none;" id="{{condition.condition_identifier}}-form">
+                </tbody>
+                <tbody style="display: none;" id="{{condition.condition_identifier}}-form">
+                    <tr>
                         <form action="" method="POST">
                             <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
                             <input type="hidden" name="classifier" id="" value="benhly">
                             <input type="hidden" name="condition_identifier" value="{{condition.condition_identifier}}">
                             {%with 'value:'|add:condition.condition_code as code%}
-                                <td>{{condition_form.condition_code|attr:code}}</td>
+                                <td class="cell-data-4">{{condition_form.condition_code|attr:code}}</td>
                             {%endwith%}
                             {%with condition.condition_onset|date:'Y-m-d' as condition_date%}
                             {%with 'value:'|add:condition_date as code%}
-                                <td>{{condition_form.condition_onset|attr:code}}</td>
+                                <td class="cell-data-4">{{condition_form.condition_onset|attr:code}}</td>
                             {%endwith%}
                             {%endwith%}
                             {%with condition.condition_abatement|date:'Y-m-d' as condition_date%}
                             {%with 'value:'|add:condition_date as code%}
-                                <td>{{condition_form.condition_abatement|attr:code}}</td>
+                                <td class="cell-data-4">{{condition_form.condition_abatement|attr:code}}</td>
                             {%endwith%}
                             {%endwith%}                            
                             {%with 'value:'|add:condition.condition_severity as code%}
-                                <td>{{condition_form.condition_severity|attr:code}}</td>
+                                <td class="cell-data-4">{{condition_form.condition_severity|attr:code}}</td>
                             {%endwith%}
                             <td><button type="submit">Lưu</button></td>
                             <td><button type="button" onclick="toggleDisplay('{{condition.condition_identifier}}')">Hủy</button></td>
                         </form>
                     </tr>
+                </tbody>
                 {% endfor %}
                 <tr>
                     <form action="" method="POST">
                         {% csrf_token %}
                         <input type="hidden" name="classifier" id="" value="benhly">
-                        <td>{{condition_form.condition_code}}</td>
-                        <td>{{condition_form.condition_onset}}</td>
-                        <td>{{condition_form.condition_abatement}}</td>
-                        <td>{{condition_form.condition_severity}}</td>
+                        <td class="cell-data-4">{{condition_form.condition_code}}</td>
+                        <td class="cell-data-4">{{condition_form.condition_onset}}</td>
+                        <td class="cell-data-4">{{condition_form.condition_abatement}}</td>
+                        <td class="cell-data-4">{{condition_form.condition_severity}}</td>
                         <td><button type="submit">Thêm</button></td>
                     </form>
                 </tr>
@@ -201,56 +217,184 @@
         <div>
             <h3>+ Bản thân</h3>
                 <table>
-                    <th>Tên bệnh</th>
-                    <th>Ngày mắc bệnh</th>
-                    <th>Ngày hết</th>
-                    <th>Mức độ</th>
+                    <thead>
+                        <th>Tên bệnh</th>
+                        <th>Ngày mắc bệnh</th>
+                        <th>Ngày hết</th>
+                        <th>Mức độ</th>
+                    </thead>
                     {% for condition in resolved_conditions %}
-                        <tr id="{{condition.condition_identifier}}-data">
-                            <td>{{condition.condition_code}}</td>
-                            <td>{{condition.condition_onset|date:'d-m-Y'}}</td>
-                            <td>{{condition.condition_abatement|date:'d-m-Y'}}</td>
-                            <td>{{severity|get_item:condition.condition_severity}}</td>
+                    <tbody id="{{condition.condition_identifier}}-data">
+                        <tr>
+                            <td class="cell-data-4">{{condition.condition_code}}</td>
+                            <td class="cell-data-4">{{condition.condition_onset|date:'d-m-Y'}}</td>
+                            <td class="cell-data-4">{{condition.condition_abatement|date:'d-m-Y'}}</td>
+                            <td class="cell-data-4">{{severity|get_item:condition.condition_severity}}</td>
+                            <td>
+                                <form action="{% url 'fhir:delete' %}" method="POST">
+                                    {%csrf_token%}
+                                    <input type="hidden" name="_method" value="delete">
+                                    <input type="hidden" name="resource_type" id="" value="condition">
+                                    <input type="hidden" name="url_next" value="{{request.get_full_path}}">
+                                    <input type="hidden" name="resource_identifier" value="{{condition.condition_identifier}}">
+                                    <button type="submit">Xóa</button>
+                                </form>
+                            </td>
                         </tr>
-                        <tr style="display: none;" id="{{condition.condition_identifier}}-form">
+                    </tbody>
+                    <tbody style="display: none;" id="{{condition.condition_identifier}}-form">
+                        <tr>
                             <form action="" method="POST">
                                 <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
                                 <input type="hidden" name="classifier" id="" value="tiensubanthan">
                                 <input type="hidden" name="condition_identifier" value="{{condition.condition_identifier}}">
                                 {%with 'value:'|add:condition.condition_code as code%}
-                                    <td>{{condition_form.condition_code|attr:code}}</td>
+                                    <td class="cell-data-4">{{condition_form.condition_code|attr:code}}</td>
                                 {%endwith%}
                                 {%with condition.condition_onset|date:'Y-m-d' as condition_date%}
                                 {%with 'value:'|add:condition_date as code%}
-                                    <td>{{condition_form.condition_onset|attr:code}}</td>
+                                    <td class="cell-data-4">{{condition_form.condition_onset|attr:code}}</td>
                                 {%endwith%}
                                 {%endwith%}
                                 {%with condition.condition_abatement|date:'Y-m-d' as condition_date%}
                                 {%with 'value:'|add:condition_date as code%}
-                                    <td>{{condition_form.condition_abatement|attr:code}}</td>
+                                    <td class="cell-data-4">{{condition_form.condition_abatement|attr:code}}</td>
                                 {%endwith%}
                                 {%endwith%}                            
                                 {%with 'value:'|add:condition.condition_severity as code%}
-                                    <td>{{condition_form.condition_severity|attr:code}}</td>
+                                    <td class="cell-data-4">{{condition_form.condition_severity|attr:code}}</td>
                                 {%endwith%}
                             </form>
                         </tr>
+                    </tbody>
                     {% endfor %}
-                    <tr>
-                        <form action="" method="POST">
-                        {% csrf_token %}
-                        <input type="hidden" name="classifier" id="" value="tiensubanthan">
-                            <td>{{condition_form.condition_code}}</td>
-                            <td>{{condition_form.condition_onset}}</td>
-                            <td>{{condition_form.condition_abatement}}</td>
-                            <td>{{condition_form.condition_severity}}</td>
-                            <td><button type="submit">Thêm</button></td>
-                        </form>
-                    </tr>
+                    <tbody>
+                        <tr>
+                            <form action="" method="POST">
+                            {% csrf_token %}
+                                <input type="hidden" name="classifier" id="" value="tiensubanthan">
+                                <td class="cell-data-4">{{condition_form.condition_code}}</td>
+                                <td class="cell-data-4">{{condition_form.condition_onset}}</td>
+                                <td class="cell-data-4">{{condition_form.condition_abatement}}</td>
+                                <td class="cell-data-4">{{condition_form.condition_severity}}</td>
+                                <td><button type="submit">Thêm</button></td>
+                            </form>
+                        </tr>
+                    </tbody>
                 </table>
         </div>
         <div>
             <h3>+ Dị ứng</h3>
+                <table>
+                    <thead>
+                        <th>Tình trạng dị ứng</th>
+                        <th>Phân loại dị ứng</th>
+                        <th>Tên dị ứng</th>
+                        <th>Mức độ nghiêm trọng</th>
+                        <th>Thời điểm phát hiện</th>
+                        <th>Thời điểm tái phát</th>
+                    </thead>
+                    {% for allergy in allergies %}
+                        <tbody id="{{allergy.allergy_identifier}}-data">
+                            <tr>
+                                <td class="cell-data-6">{{allergy.allergy_clinical_status}}</td>
+                                <td class="cell-data-6">{{allergy.allergy_category}}</td>
+                                <td class="cell-data-6">{{allergy.allergy_code}}</td>
+                                <td class="cell-data-6">{{allergy.allergy_criticality}}</td>
+                                <td class="cell-data-6">{{allergy.allergy_onset|date:'d-m-Y'}}</td>
+                                <td class="cell-data-6">{{allergy.allergy_last_occurrence|date:'d-m-Y'}}</td>
+                                <td colspan="6"><button type="button" onclick="toggleDisplay('{{allergy.allergy_identifier}}')">Chỉnh sửa</button></td>
+                            </tr>
+
+                            <tr>
+                                <td colspan="6" style="text-align: left;">
+                                    <p>Thành phần dị ứng: {{allergy.allergy_reaction_substance}}</p>
+                                    <p>Phản ứng: {{allergy.allergy_reaction_manifestation}}</p>
+                                    <p>Mức độ phản ứng: {{allergy.allergy_reaction_severity}}</p>
+                                </td>
+                                <td>
+                                    <form action="{% url 'fhir:delete' %}" method="POST">
+                                        {%csrf_token%}
+                                        <input type="hidden" name="_method" value="delete">
+                                        <input type="hidden" name="resource_type" id="" value="allergy">
+                                        <input type="hidden" name="url_next" value="{{request.get_full_path}}">
+                                        <input type="hidden" name="resource_identifier" value="{{allergy.allergy_identifier}}">
+                                        <button type="submit">Xóa</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        </tbody>
+                        <tbody style="display: none;" id="{{allergy.allergy_identifier}}-form">
+                            <form action="" method="POST">
+                                <tr>
+                                    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+                                    <input type="hidden" name="classifier" id="" value="diung">
+                                    <input type="hidden" name="allergy_identifier" value="{{allergy.allergy_identifier}}">
+                                    {%with 'value:'|add:allergy.allergy_clinical_status as code%}
+                                        <td class="cell-data-6">{{allergy_form.allergy_clinical_status|attr:code}}</td>
+                                    {%endwith%}
+                                    {%with 'value:'|add:allergy.allergy_category as code%}
+                                        <td class="cell-data-6">{{allergy_form.allergy_category|attr:code}}</td>
+                                    {%endwith%}                            
+                                    {%with 'value:'|add:allergy.allergy_code as code%}
+                                        <td class="cell-data-6">{{allergy_form.allergy_code|attr:code}}</td>
+                                    {%endwith%}                        
+                                    {%with 'value:'|add:allergy.allergy_criticality as code%}
+                                        <td class="cell-data-6">{{allergy_form.allergy_criticality|attr:code}}</td>
+                                    {%endwith%}                                            
+                                    {%with allergy.allergy_onset|date:'Y-m-d' as allergy_date%}
+                                    {%with 'value:'|add:allergy_date as code%}
+                                        <td class="cell-data-6">{{allergy_form.allergy_onset|attr:code}}</td>
+                                    {%endwith%}
+                                    {%endwith%}
+                                    {%with allergy.allergy_last_occurrence|date:'Y-m-d' as allergy_date%}
+                                    {%with 'value:'|add:allergy_date as code%}
+                                        <td class="cell-data-6">{{allergy_form.allergy_last_occurrence|attr:code}}</td>
+                                    {%endwith%}
+                                    {%endwith%}                                                                                                                              
+                                    <td><button type="submit">Lưu</button></td>                                        
+                                </tr>
+                                <tr>
+                                    <td colspan="6" style="text-align: left;">
+                                        {%with 'value:'|add:allergy.allergy_reaction_substance as code%}
+                                            <p>Thành phần dị ứng: {{allergy_form.allergy_reaction_substance|attr:code}}</p>
+                                        {%endwith%}
+                                        {%with 'value:'|add:allergy.allergy_reaction_manifestation as code%}
+                                            <p>Phản ứng: {{allergy_form.allergy_reaction_manifestation|attr:code}}</p>
+                                        {%endwith%}
+                                        {%with 'value:'|add:allergy.allergy_reaction_severity as code%}
+                                            <p>Mức độ phản ứng: {{allergy_form.allergy_reaction_severity|attr:code}}</p>
+                                        {%endwith%}  
+                                    </td>
+                                    <td><button type="button" onclick="toggleDisplay('{{allergy.allergy_identifier}}')">Hủy</button></td>
+                                </tr>
+                            
+                            </form>
+                       </tbody>
+                    {% endfor %}
+                    <form action="" method="POST">
+                        <tbody>
+                            <tr>
+                                {% csrf_token %}
+                                <input type="hidden" name="classifier" id="" value="diung">
+                                <td class="cell-data-6">{{allergy_form.allergy_clinical_status}}</td>
+                                <td class="cell-data-6">{{allergy_form.allergy_category}}</td>
+                                <td class="cell-data-6">{{allergy_form.allergy_code}}</td>
+                                <td class="cell-data-6">{{allergy_form.allergy_criticality}}</td>
+                                <td class="cell-data-6">{{allergy_form.allergy_onset}}</td>
+                                <td class="cell-data-6">{{allergy_form.allergy_last_occurrence}}</td>                            
+                                <td rowspan="2"><button type="submit">Thêm</button></td>
+                            </tr>
+                            <tr>
+                                <td colspan="7" style="text-align: left;">
+                                    <p>Thành phần dị ứng: {{allergy_form.allergy_reaction_substance}}</p>
+                                    <p>Phản ứng: {{allergy_form.allergy_reaction_manifestation}}</p>
+                                    <p>Mức độ phản ứng: {{allergy_form.allergy_reaction_severity}}</p>
+                                </td>    
+                            </tr>
+                        </tbody>
+                    </form>
+                </table>            
         </div>
         <div>
             <h3>+ Gia đình</h3>
@@ -262,12 +406,12 @@
         data = document.getElementById(elementId + '-data');
         form = document.getElementById(elementId + '-form');
         if (data.style.display == 'none'){
-            data.style.display = "table-row";
+            data.style.display = "table-row-group";
             form.style.display = "none";
         }
         else{
             data.style.display = "none";
-            form.style.display = "table-row";
+            form.style.display = "table-row-group";
         }
     }
 </script>

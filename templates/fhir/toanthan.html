@@ -201,9 +201,19 @@
                 <th>Mức độ</th>
                 {% for condition in conditions.toanthan %}
                     <tr id='{{condition.condition_identifier}}-data'>
-                        <td>{{condition.condition_code}}</td>
-                        <td>{{severity|get_item:condition.condition_severity}}</td>
+                        <td class="cell-data-2">{{condition.condition_code}}</td>
+                        <td class="cell-data-2">{{severity|get_item:condition.condition_severity}}</td>
                         <td><button type="button" onclick="toggleDisplay('{{condition.condition_identifier}}')">Chỉnh sửa</button></td>
+                        <td>
+                            <form action="{% url 'fhir:delete' %}" method="POST">
+                                {%csrf_token%}
+                                <input type="hidden" name="_method" value="delete">
+                                <input type="hidden" name="resource_type" id="" value="condition">
+                                <input type="hidden" name="url_next" value="{{request.get_full_path}}">
+                                <input type="hidden" name="resource_identifier" value="{{condition.condition_identifier}}">
+                                <button type="submit">Xóa</button>
+                            </form>
+                        </td>
                     </tr>
                     <tr style="display: none;" id="{{condition.condition_identifier}}-form">
                         <form action="" method="POST">
@@ -212,10 +222,10 @@
                             <input type="hidden" name="condition_category" id="" value="toanthan">
                             <input type="hidden" name="condition_identifier" value="{{condition.condition_identifier}}">
                             {%with 'value:'|add:condition.condition_code as code%}
-                                <td>{{condition_form.condition_code|attr:code}}</td>
+                                <td class="cell-data-2">{{condition_form.condition_code|attr:code}}</td>
                             {%endwith%}                       
                             {%with 'value:'|add:condition.condition_severity as code%}
-                                <td>{{condition_form.condition_severity|attr:code}}</td>
+                                <td class="cell-data-2">{{condition_form.condition_severity|attr:code}}</td>
                             {%endwith%}
                             <td><button type="submit">Lưu</button></td>
                             <td><button type="button" onclick="toggleDisplay('{{condition.condition_identifier}}')">Hủy</button></td>
@@ -227,8 +237,8 @@
                         {% csrf_token %}
                         <input type="hidden" name="classifier" id="" value="condition">
                         <input type="hidden" name="condition_category" id="" value="toanthan">
-                        <td>{{condition_form.condition_code}}</td>
-                        <td>{{condition_form.condition_severity}}</td>
+                        <td class="cell-data-2">{{condition_form.condition_code}}</td>
+                        <td class="cell-data-2">{{condition_form.condition_severity}}</td>
                         <td><button type="submit">Thêm</button></td>
                     </form>
                 </tr>
@@ -244,9 +254,19 @@
                         <th>Mức độ</th>
                         {% for condition in conditions.tuanhoan %}
                             <tr id='{{condition.condition_identifier}}-data'>
-                                <td>{{condition.condition_code}}</td>
-                                <td>{{severity|get_item:condition.condition_severity}}</td>
+                                <td class="cell-data-2">{{condition.condition_code}}</td>
+                                <td class="cell-data-2">{{severity|get_item:condition.condition_severity}}</td>
                                 <td><button type="button" onclick="toggleDisplay('{{condition.condition_identifier}}')">Chỉnh sửa</button></td>
+                                <td>
+                                    <form action="{% url 'fhir:delete' %}" method="POST">
+                                        {%csrf_token%}
+                                        <input type="hidden" name="_method" value="delete">
+                                        <input type="hidden" name="resource_type" id="" value="condition">
+                                        <input type="hidden" name="url_next" value="{{request.get_full_path}}">
+                                        <input type="hidden" name="resource_identifier" value="{{condition.condition_identifier}}">
+                                        <button type="submit">Xóa</button>
+                                    </form>
+                                </td>
                             </tr>
                             <tr style="display: none;" id="{{condition.condition_identifier}}-form">
                                 <form action="" method="POST">
@@ -270,8 +290,8 @@
                                 {% csrf_token %}
                                 <input type="hidden" name="classifier" id="" value="condition">
                                 <input type="hidden" name="condition_category" id="" value="tuanhoan">
-                                <td>{{condition_form.condition_code}}</td>
-                                <td>{{condition_form.condition_severity}}</td>
+                                <td class="cell-data-2">{{condition_form.condition_code}}</td>
+                                <td class="cell-data-2">{{condition_form.condition_severity}}</td>
                                 <td><button type="submit">Thêm</button></td>
                             </form>
                         </tr>
@@ -279,33 +299,62 @@
                 </div>
                 <div>
                     {% if observations %}
-                        <div>
-                            <p>Mạch: {{ observations.mach.observation_value_quantity }} lần/ph</p>
-                            <p>Nhiệt độ: {{ observations.nhietdo.observation_value_quantity }} Cel</p>
-                            <p>Huyết áp: {{ observations.tamthu.observation_value_quantity }}/{{ observations.tamtruong.observation_value_quantity }} mmHg</p>
-                            <p>Nhịp thở: {{ observations.nhiptho.observation_value_quantity }} lần/ph</p>
-                            <p>Cân nặng: {{ observations.cannang.observation_value_quantity }} kg</p>
+                        <div class="vital-signs">
+                            <div class="flex_container">
+                                <p class="title"><b>Mạch:</b></p><p class="value"> {{ observations.mach.observation_value_quantity }} lần/ph</p>
+                            </div>
+                            <div class="flex_container">
+                                <p class="title"><b>Nhiệt độ:</b></p><p class="value">{{ observations.nhietdo.observation_value_quantity }} Cel</p>
+                            </div>
+                            <div class="flex_container">
+                                <p class="title"><b>Huyết áp:</b></p><p class="value">{{ observations.tamthu.observation_value_quantity }}/{{ observations.tamtruong.observation_value_quantity }} mmHg</p>
+                            </div>
+                            <div class="flex_container">
+                                <p class="title"><b>Nhịp thở:</b></p><p class="value">{{ observations.nhiptho.observation_value_quantity }} lần/ph</p>
+                            </div>
+                            <div class="flex_container">
+                                <p class="title"><b>Cân nặng:</b></p><p class="value">{{ observations.cannang.observation_value_quantity }} kg</p>
+                            </div>
                         </div>
                     {% else %}
-                        <form action="" method="POST">
-                            <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
-                            <input type="hidden" name="classifier" id="" value="observation">
-                            <label for="mach">Mạch</label>
-                            <input type="text" name="mach" id="mach">
-                            <br>
-                            <label for="nhietdo">Nhiệt độ</label>
-                            <input type="text" name="nhietdo" id="nhietdo">
-                            <br>
-                            <label for="huyetap">Huyết áp</label>
-                            <input type="text" name="huyetaptamthu" id="huyetaptamthu">/<input type="text" name="huyetaptamtruong" id="huyetaptamtruong">
-                            <br>
-                            <label for="nhiptho">Nhịp thở</label>
-                            <input type="text" name="nhiptho" id="nhiptho">
-                            <br>
-                            <label for="cannang">Cân nặng</label>
-                            <input type="text" name="cannang" id="cannang">      
-                            <button type="submit">lưu lại</button>                  
-                        </form>
+                    <table>
+                        <tr>
+                            <td>
+                                <form action="" method="POST">
+                                    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+                                    <input type="hidden" name="classifier" id="" value="observation">
+                                    <div class="flex_container">
+                                        <label class="title" for="mach">Mạch</label>
+                                        <input class="value" type="text" name="mach" id="mach">
+                                    </div>
+                                    <br>
+                                    <div class="flex_container">
+                                        <label class="title" for="nhietdo">Nhiệt độ</label>
+                                        <input type="text" name="nhietdo" id="nhietdo">
+                                    </div>
+                                    <br>
+                                    <div class="flex_container">
+                                        <label class="title" for="huyetap">Huyết áp</label>
+                                        <input type="text" name="huyetaptamthu" id="huyetaptamthu">/<input type="text" name="huyetaptamtruong" id="huyetaptamtruong">
+                                    </div>
+                                    <br>
+                                    <div class="flex_container">
+                                        <label class="title" for="nhiptho">Nhịp thở</label>
+                                        <input type="text" name="nhiptho" id="nhiptho">
+                                    </div>
+                                    <br>
+                                    <div class="flex_container">
+                                        <label class="title" for="cannang">Cân nặng</label>
+                                        <input type="text" name="cannang" id="cannang">      
+                                    </div>
+                                </td>
+                                <td style='width:16%;'>
+                                    <button type="submit">lưu lại</button>                  
+                                </td>
+                                </form>
+                                </tr>
+                                </table>
+
                     {% endif %}
                 </div>
             </div> 
@@ -316,9 +365,17 @@
                     <th>Mức độ</th>
                     {% for condition in conditions.hohap %}
                         <tr id='{{condition.condition_identifier}}-data'>
-                            <td>{{condition.condition_code}}</td>
-                            <td>{{severity|get_item:condition.condition_severity}}</td>
+                            <td class="cell-data-2">{{condition.condition_code}}</td>
+                            <td class="cell-data-2">{{severity|get_item:condition.condition_severity}}</td>
                             <td><button type="button" onclick="toggleDisplay('{{condition.condition_identifier}}')">Chỉnh sửa</button></td>
+                            <form action="{% url 'fhir:delete' %}" method="POST">
+                                {%csrf_token%}
+                                <input type="hidden" name="_method" value="delete">
+                                <input type="hidden" name="resource_type" id="" value="condition">
+                                <input type="hidden" name="url_next" value="{{request.get_full_path}}">
+                                <input type="hidden" name="resource_identifier" value="{{condition.condition_identifier}}">
+                                <button type="submit">Xóa</button>
+                            </form>
                         </tr>
                         <tr style="display: none;" id="{{condition.condition_identifier}}-form">
                             <form action="" method="POST">
@@ -327,10 +384,10 @@
                                 <input type="hidden" name="condition_category" id="" value="hohap">
                                 <input type="hidden" name="condition_identifier" value="{{condition.condition_identifier}}">
                                 {%with 'value:'|add:condition.condition_code as code%}
-                                    <td>{{condition_form.condition_code|attr:code}}</td>
+                                    <td class="cell-data-2">{{condition_form.condition_code|attr:code}}</td>
                                 {%endwith%}                        
                                 {%with 'value:'|add:condition.condition_severity as code%}
-                                    <td>{{condition_form.condition_severity|attr:code}}</td>
+                                    <td class="cell-data-2">{{condition_form.condition_severity|attr:code}}</td>
                                 {%endwith%}
                                 <td><button type="submit">Lưu</button></td>
                                 <td><button type="button" onclick="toggleDisplay('{{condition.condition_identifier}}')">Hủy</button></td>
@@ -342,8 +399,8 @@
                             {% csrf_token %}
                             <input type="hidden" name="classifier" id="" value="condition">
                             <input type="hidden" name="condition_category" id="" value="hohap">
-                            <td>{{condition_form.condition_code}}</td>
-                            <td>{{condition_form.condition_severity}}</td>
+                            <td class="cell-data-2">{{condition_form.condition_code}}</td>
+                            <td class="cell-data-2">{{condition_form.condition_severity}}</td>
                             <td><button type="submit">Thêm</button></td>
                         </form>
                     </tr>
@@ -356,9 +413,19 @@
                     <th>Mức độ</th>
                     {% for condition in conditions.tieuhoa %}
                         <tr id='{{condition.condition_identifier}}-data'>
-                            <td>{{condition.condition_code}}</td>
-                            <td>{{severity|get_item:condition.condition_severity}}</td>
+                            <td class="cell-data-2">{{condition.condition_code}}</td>
+                            <td class="cell-data-2">{{severity|get_item:condition.condition_severity}}</td>
                             <td><button type="button" onclick="toggleDisplay('{{condition.condition_identifier}}')">Chỉnh sửa</button></td>
+                            <td>
+                                <form action="{% url 'fhir:delete' %}" method="POST">
+                                    {%csrf_token%}
+                                    <input type="hidden" name="_method" value="delete">
+                                    <input type="hidden" name="resource_type" id="" value="condition">
+                                    <input type="hidden" name="url_next" value="{{request.get_full_path}}">
+                                    <input type="hidden" name="resource_identifier" value="{{condition.condition_identifier}}">
+                                    <button type="submit">Xóa</button>
+                                </form>
+                            </td>
                         </tr>
                         <tr style="display: none;" id="{{condition.condition_identifier}}-form">
                             <form action="" method="POST">
@@ -367,10 +434,10 @@
                                 <input type="hidden" name="condition_category" id="" value="tieuhoa">
                                 <input type="hidden" name="condition_identifier" value="{{condition.condition_identifier}}">
                                 {%with 'value:'|add:condition.condition_code as code%}
-                                    <td>{{condition_form.condition_code|attr:code}}</td>
+                                    <td class="cell-data-2">{{condition_form.condition_code|attr:code}}</td>
                                 {%endwith%}                          
                                 {%with 'value:'|add:condition.condition_severity as code%}
-                                    <td>{{condition_form.condition_severity|attr:code}}</td>
+                                    <td class="cell-data-2">{{condition_form.condition_severity|attr:code}}</td>
                                 {%endwith%}
                                 <td><button type="submit">Lưu</button></td>
                                 <td><button type="button" onclick="toggleDisplay('{{condition.condition_identifier}}')">Hủy</button></td>
@@ -382,8 +449,8 @@
                             {% csrf_token %}
                             <input type="hidden" name="classifier" id="" value="condition">
                             <input type="hidden" name="condition_category" id="" value="tieuhoa">
-                            <td>{{condition_form.condition_code}}</td>
-                            <td>{{condition_form.condition_severity}}</td>
+                            <td class="cell-data-2">{{condition_form.condition_code}}</td>
+                            <td class="cell-data-2">{{condition_form.condition_severity}}</td>
                             <td><button type="submit">Thêm</button></td>
                         </form>
                     </tr>
@@ -396,9 +463,19 @@
                     <th>Mức độ</th>
                     {% for condition in conditions.tts %}
                         <tr id='{{condition.condition_identifier}}-data'>
-                            <td>{{condition.condition_code}}</td>
-                            <td>{{severity|get_item:condition.condition_severity}}</td>
+                            <td class="cell-data-2">{{condition.condition_code}}</td>
+                            <td class="cell-data-2">{{severity|get_item:condition.condition_severity}}</td>
                             <td><button type="button" onclick="toggleDisplay('{{condition.condition_identifier}}')">Chỉnh sửa</button></td>
+                            <td>
+                                <form action="{% url 'fhir:delete' %}" method="POST">
+                                    {%csrf_token%}
+                                    <input type="hidden" name="_method" value="delete">
+                                    <input type="hidden" name="resource_type" id="" value="condition">
+                                    <input type="hidden" name="url_next" value="{{request.get_full_path}}">
+                                    <input type="hidden" name="resource_identifier" value="{{condition.condition_identifier}}">
+                                    <button type="submit">Xóa</button>
+                                </form>
+                            </td>
                         </tr>
                         <tr style="display: none;" id="{{condition.condition_identifier}}-form">
                             <form action="" method="POST">
@@ -407,10 +484,10 @@
                                 <input type="hidden" name="condition_category" id="" value="tts">
                                 <input type="hidden" name="condition_identifier" value="{{condition.condition_identifier}}">
                                 {%with 'value:'|add:condition.condition_code as code%}
-                                    <td>{{condition_form.condition_code|attr:code}}</td>
+                                    <td class="cell-data-2">{{condition_form.condition_code|attr:code}}</td>
                                 {%endwith%}                          
                                 {%with 'value:'|add:condition.condition_severity as code%}
-                                    <td>{{condition_form.condition_severity|attr:code}}</td>
+                                    <td class="cell-data-2">{{condition_form.condition_severity|attr:code}}</td>
                                 {%endwith%}
                                 <td><button type="submit">Lưu</button></td>
                                 <td><button type="button" onclick="toggleDisplay('{{condition.condition_identifier}}')">Hủy</button></td>
@@ -422,8 +499,8 @@
                             {% csrf_token %}
                             <input type="hidden" name="classifier" id="" value="condition">
                             <input type="hidden" name="condition_category" id="" value="tts">
-                            <td>{{condition_form.condition_code}}</td>
-                            <td>{{condition_form.condition_severity}}</td>
+                            <td class="cell-data-2">{{condition_form.condition_code}}</td>
+                            <td class="cell-data-2">{{condition_form.condition_severity}}</td>
                             <td><button type="submit">Thêm</button></td>
                         </form>
                     </tr>
@@ -436,9 +513,19 @@
                     <th>Mức độ</th>
                     {% for condition in conditions.thankinh %}
                         <tr id='{{condition.condition_identifier}}-data'>
-                            <td>{{condition.condition_code}}</td>
-                            <td>{{severity|get_item:condition.condition_severity}}</td>
+                            <td class="cell-data-2">{{condition.condition_code}}</td>
+                            <td class="cell-data-2">{{severity|get_item:condition.condition_severity}}</td>
                             <td><button type="button" onclick="toggleDisplay('{{condition.condition_identifier}}')">Chỉnh sửa</button></td>
+                            <td>
+                                <form action="{% url 'fhir:delete' %}" method="POST">
+                                    {%csrf_token%}
+                                    <input type="hidden" name="_method" value="delete">
+                                    <input type="hidden" name="resource_type" id="" value="condition">
+                                    <input type="hidden" name="url_next" value="{{request.get_full_path}}">
+                                    <input type="hidden" name="resource_identifier" value="{{condition.condition_identifier}}">
+                                    <button type="submit">Xóa</button>
+                                </form>
+                            </td>
                         </tr>
                         <tr style="display: none;" id="{{condition.condition_identifier}}-form">
                             <form action="" method="POST">
@@ -447,10 +534,10 @@
                                 <input type="hidden" name="condition_category" id="" value="thankinh">
                                 <input type="hidden" name="condition_identifier" value="{{condition.condition_identifier}}">
                                 {%with 'value:'|add:condition.condition_code as code%}
-                                    <td>{{condition_form.condition_code|attr:code}}</td>
+                                    <td class="cell-data-2">{{condition_form.condition_code|attr:code}}</td>
                                 {%endwith%}
                                 {%with 'value:'|add:condition.condition_severity as code%}
-                                    <td>{{condition_form.condition_severity|attr:code}}</td>
+                                    <td class="cell-data-2">{{condition_form.condition_severity|attr:code}}</td>
                                 {%endwith%}
                                 <td><button type="submit">Lưu</button></td>
                                 <td><button type="button" onclick="toggleDisplay('{{condition.condition_identifier}}')">Hủy</button></td>
@@ -462,8 +549,8 @@
                             {% csrf_token %}
                             <input type="hidden" name="classifier" id="" value="condition">
                             <input type="hidden" name="condition_category" id="" value="thankinh">
-                            <td>{{condition_form.condition_code}}</td>
-                            <td>{{condition_form.condition_severity}}</td>
+                            <td class="cell-data-2">{{condition_form.condition_code}}</td>
+                            <td class="cell-data-2">{{condition_form.condition_severity}}</td>
                             <td><button type="submit">Thêm</button></td>
                         </form>
                     </tr>
@@ -477,9 +564,19 @@
                     <th>Mức độ</th>
                     {% for condition in conditions.cxk %}
                         <tr id='{{condition.condition_identifier}}-data'>
-                            <td>{{condition.condition_code}}</td>
-                            <td>{{severity|get_item:condition.condition_severity}}</td>
+                            <td class="cell-data-2">{{condition.condition_code}}</td>
+                            <td class="cell-data-2">{{severity|get_item:condition.condition_severity}}</td>
                             <td><button type="button" onclick="toggleDisplay('{{condition.condition_identifier}}')">Chỉnh sửa</button></td>
+                            <td>
+                                <form action="{% url 'fhir:delete' %}" method="POST">
+                                    {%csrf_token%}
+                                    <input type="hidden" name="_method" value="delete">
+                                    <input type="hidden" name="resource_type" id="" value="condition">
+                                    <input type="hidden" name="url_next" value="{{request.get_full_path}}">
+                                    <input type="hidden" name="resource_identifier" value="{{condition.condition_identifier}}">
+                                    <button type="submit">Xóa</button>
+                                </form>
+                            </td>
                         </tr>
                         <tr style="display: none;" id="{{condition.condition_identifier}}-form">
                             <form action="" method="POST">
@@ -488,10 +585,10 @@
                                 <input type="hidden" name="condition_category" id="" value="cxk">
                                 <input type="hidden" name="condition_identifier" value="{{condition.condition_identifier}}">
                                 {%with 'value:'|add:condition.condition_code as code%}
-                                    <td>{{condition_form.condition_code|attr:code}}</td>
+                                    <td class="cell-data-2">{{condition_form.condition_code|attr:code}}</td>
                                 {%endwith%}                           
                                 {%with 'value:'|add:condition.condition_severity as code%}
-                                    <td>{{condition_form.condition_severity|attr:code}}</td>
+                                    <td class="cell-data-2">{{condition_form.condition_severity|attr:code}}</td>
                                 {%endwith%}
                                 <td><button type="submit">Lưu</button></td>
                                 <td><button type="button" onclick="toggleDisplay('{{condition.condition_identifier}}')">Hủy</button></td>
@@ -503,8 +600,8 @@
                             {% csrf_token %}
                             <input type="hidden" name="classifier" id="" value="condition">
                             <input type="hidden" name="condition_category" id="" value="cxk">
-                            <td>{{condition_form.condition_code}}</td>
-                            <td>{{condition_form.condition_severity}}</td>
+                            <td class="cell-data-2">{{condition_form.condition_code}}</td>
+                            <td class="cell-data-2">{{condition_form.condition_severity}}</td>
                             <td><button type="submit">Thêm</button></td>
                         </form>
                     </tr>
@@ -517,9 +614,19 @@
                     <th>Mức độ</th>
                     {% for condition in conditions.tmh %}
                         <tr id='{{condition.condition_identifier}}-data'>
-                            <td>{{condition.condition_code}}</td>
-                            <td>{{severity|get_item:condition.condition_severity}}</td>
+                            <td class="cell-data-2">{{condition.condition_code}}</td>
+                            <td class="cell-data-2">{{severity|get_item:condition.condition_severity}}</td>
                             <td><button type="button" onclick="toggleDisplay('{{condition.condition_identifier}}')">Chỉnh sửa</button></td>
+                            <td>
+                                <form action="{% url 'fhir:delete' %}" method="POST">
+                                    {%csrf_token%}
+                                    <input type="hidden" name="_method" value="delete">
+                                    <input type="hidden" name="resource_type" id="" value="condition">
+                                    <input type="hidden" name="url_next" value="{{request.get_full_path}}">
+                                    <input type="hidden" name="resource_identifier" value="{{condition.condition_identifier}}">
+                                    <button type="submit">Xóa</button>
+                                </form>
+                            </td>
                         </tr>
                         <tr style="display: none;" id="{{condition.condition_identifier}}-form">
                             <form action="" method="POST">
@@ -528,10 +635,10 @@
                                 <input type="hidden" name="condition_category" id="" value="tmh">
                                 <input type="hidden" name="condition_identifier" value="{{condition.condition_identifier}}">
                                 {%with 'value:'|add:condition.condition_code as code%}
-                                    <td>{{condition_form.condition_code|attr:code}}</td>
+                                    <td class="cell-data-2">{{condition_form.condition_code|attr:code}}</td>
                                 {%endwith%}                           
                                 {%with 'value:'|add:condition.condition_severity as code%}
-                                    <td>{{condition_form.condition_severity|attr:code}}</td>
+                                    <td class="cell-data-2">{{condition_form.condition_severity|attr:code}}</td>
                                 {%endwith%}
                                 <td><button type="submit">Lưu</button></td>
                                 <td><button type="button" onclick="toggleDisplay('{{condition.condition_identifier}}')">Hủy</button></td>
@@ -543,8 +650,8 @@
                             {% csrf_token %}
                             <input type="hidden" name="classifier" id="" value="condition">
                             <input type="hidden" name="condition_category" id="" value="tmh">
-                            <td>{{condition_form.condition_code}}</td>
-                            <td>{{condition_form.condition_severity}}</td>
+                            <td class="cell-data-2">{{condition_form.condition_code}}</td>
+                            <td class="cell-data-2">{{condition_form.condition_severity}}</td>
                             <td><button type="submit">Thêm</button></td>
                         </form>
                     </tr>
@@ -557,9 +664,19 @@
                     <th>Mức độ</th>
                     {% for condition in conditions.rhm %}
                         <tr id='{{condition.condition_identifier}}-data'>
-                            <td>{{condition.condition_code}}</td>
-                            <td>{{severity|get_item:condition.condition_severity}}</td>
+                            <td class="cell-data-2">{{condition.condition_code}}</td>
+                            <td class="cell-data-2">{{severity|get_item:condition.condition_severity}}</td>
                             <td><button type="button" onclick="toggleDisplay('{{condition.condition_identifier}}')">Chỉnh sửa</button></td>
+                            <td>
+                                <form action="{% url 'fhir:delete' %}" method="POST">
+                                    {%csrf_token%}
+                                    <input type="hidden" name="_method" value="delete">
+                                    <input type="hidden" name="resource_type" id="" value="condition">
+                                    <input type="hidden" name="url_next" value="{{request.get_full_path}}">
+                                    <input type="hidden" name="resource_identifier" value="{{condition.condition_identifier}}">
+                                    <button type="submit">Xóa</button>
+                                </form>
+                            </td>
                         </tr>
                         <tr style="display: none;" id="{{condition.condition_identifier}}-form">
                             <form action="" method="POST">
@@ -568,10 +685,10 @@
                                 <input type="hidden" name="condition_category" id="" value="rhm">
                                 <input type="hidden" name="condition_identifier" value="{{condition.condition_identifier}}">
                                 {%with 'value:'|add:condition.condition_code as code%}
-                                    <td>{{condition_form.condition_code|attr:code}}</td>
+                                    <td class="cell-data-2">{{condition_form.condition_code|attr:code}}</td>
                                 {%endwith%}                           
                                 {%with 'value:'|add:condition.condition_severity as code%}
-                                    <td>{{condition_form.condition_severity|attr:code}}</td>
+                                    <td class="cell-data-2">{{condition_form.condition_severity|attr:code}}</td>
                                 {%endwith%}
                                 <td><button type="submit">Lưu</button></td>
                                 <td><button type="button" onclick="toggleDisplay('{{condition.condition_identifier}}')">Hủy</button></td>
@@ -583,8 +700,8 @@
                             {% csrf_token %}
                             <input type="hidden" name="classifier" id="" value="condition">
                             <input type="hidden" name="condition_category" id="" value="rhm">
-                            <td>{{condition_form.condition_code}}</td>
-                            <td>{{condition_form.condition_severity}}</td>
+                            <td class="cell-data-2">{{condition_form.condition_code}}</td>
+                            <td class="cell-data-2">{{condition_form.condition_severity}}</td>
                             <td><button type="submit">Thêm</button></td>
                         </form>
                     </tr>
@@ -597,9 +714,19 @@
                     <th>Mức độ</th>
                     {% for condition in conditions.mat %}
                         <tr id='{{condition.condition_identifier}}-data'>
-                            <td>{{condition.condition_code}}</td>
-                            <td>{{severity|get_item:condition.condition_severity}}</td>
+                            <td class="cell-data-2">{{condition.condition_code}}</td>
+                            <td class="cell-data-2">{{severity|get_item:condition.condition_severity}}</td>
                             <td><button type="button" onclick="toggleDisplay('{{condition.condition_identifier}}')">Chỉnh sửa</button></td>
+                            <td>
+                                <form action="{% url 'fhir:delete' %}" method="POST">
+                                    {%csrf_token%}
+                                    <input type="hidden" name="_method" value="delete">
+                                    <input type="hidden" name="resource_type" id="" value="condition">
+                                    <input type="hidden" name="url_next" value="{{request.get_full_path}}">
+                                    <input type="hidden" name="resource_identifier" value="{{condition.condition_identifier}}">
+                                    <button type="submit">Xóa</button>
+                                </form>
+                            </td>
                         </tr>
                         <tr style="display: none;" id="{{condition.condition_identifier}}-form">
                             <form action="" method="POST">
@@ -608,10 +735,10 @@
                                 <input type="hidden" name="condition_category" id="" value="mat">
                                 <input type="hidden" name="condition_identifier" value="{{condition.condition_identifier}}">
                                 {%with 'value:'|add:condition.condition_code as code%}
-                                    <td>{{condition_form.condition_code|attr:code}}</td>
+                                    <td class="cell-data-2">{{condition_form.condition_code|attr:code}}</td>
                                 {%endwith%}                        
                                 {%with 'value:'|add:condition.condition_severity as code%}
-                                    <td>{{condition_form.condition_severity|attr:code}}</td>
+                                    <td class="cell-data-2">{{condition_form.condition_severity|attr:code}}</td>
                                 {%endwith%}
                                 <td><button type="submit">Lưu</button></td>
                                 <td><button type="button" onclick="toggleDisplay('{{condition.condition_identifier}}')">Hủy</button></td>
@@ -623,8 +750,8 @@
                             {% csrf_token %}
                             <input type="hidden" name="classifier" id="" value="condition">
                             <input type="hidden" name="condition_category" id="" value="mat">
-                            <td>{{condition_form.condition_code}}</td>
-                            <td>{{condition_form.condition_severity}}</td>
+                            <td class="cell-data-2">{{condition_form.condition_code}}</td>
+                            <td class="cell-data-2">{{condition_form.condition_severity}}</td>
                             <td><button type="submit">Thêm</button></td>
                         </form>
                     </tr>
@@ -637,9 +764,19 @@
                     <th>Mức độ</th>
                     {% for condition in conditions.noitiet %}
                         <tr id='{{condition.condition_identifier}}-data'>
-                            <td>{{condition.condition_code}}</td>
-                            <td>{{severity|get_item:condition.condition_severity}}</td>
+                            <td class="cell-data-2">{{condition.condition_code}}</td>
+                            <td class="cell-data-2">{{severity|get_item:condition.condition_severity}}</td>
                             <td><button type="button" onclick="toggleDisplay('{{condition.condition_identifier}}')">Chỉnh sửa</button></td>
+                            <td>
+                                <form action="{% url 'fhir:delete' %}" method="POST">
+                                    {%csrf_token%}
+                                    <input type="hidden" name="_method" value="delete">
+                                    <input type="hidden" name="resource_type" id="" value="condition">
+                                    <input type="hidden" name="url_next" value="{{request.get_full_path}}">
+                                    <input type="hidden" name="resource_identifier" value="{{condition.condition_identifier}}">
+                                    <button type="submit">Xóa</button>
+                                </form>
+                            </td>
                         </tr>
                         <tr style="display: none;" id="{{condition.condition_identifier}}-form">
                             <form action="" method="POST">
@@ -648,10 +785,10 @@
                                 <input type="hidden" name="condition_category" id="" value="noitiet">
                                 <input type="hidden" name="condition_identifier" value="{{condition.condition_identifier}}">
                                 {%with 'value:'|add:condition.condition_code as code%}
-                                    <td>{{condition_form.condition_code|attr:code}}</td>
+                                    <td class="cell-data-2">{{condition_form.condition_code|attr:code}}</td>
                                 {%endwith%}                           
                                 {%with 'value:'|add:condition.condition_severity as code%}
-                                    <td>{{condition_form.condition_severity|attr:code}}</td>
+                                    <td class="cell-data-2"{{condition_form.condition_severity|attr:code}}</td>
                                 {%endwith%}
                                 <td><button type="submit">Lưu</button></td>
                                 <td><button type="button" onclick="toggleDisplay('{{condition.condition_identifier}}')">Hủy</button></td>
@@ -663,8 +800,8 @@
                             {% csrf_token %}
                             <input type="hidden" name="classifier" id="" value="condition">
                             <input type="hidden" name="condition_category" id="" value="noitiet">
-                            <td>{{condition_form.condition_code}}</td>
-                            <td>{{condition_form.condition_severity}}</td>
+                            <td class="cell-data-2">{{condition_form.condition_code}}</td>
+                            <td class="cell-data-2">{{condition_form.condition_severity}}</td>
                             <td><button type="submit">Thêm</button></td>
                         </form>
                     </tr>

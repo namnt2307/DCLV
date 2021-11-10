@@ -6,14 +6,6 @@
 <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-{% comment %} <div class="top-menu">
-    <ul class="menu">
-        <li><a href="{% url 'fhir:user_detail'  group_name user_name %}"><i class="fa fa-home" aria-hidden="true"></i> </a></li>
-        <li><a href="{% url 'fhir:register'  group_name user_name %}"> Tao ho so </a></li>
-        <li><a href="{% url 'fhir:upload'  group_name user_name %}"> Upload Excel </a></li>
-        <li><a href="{% url 'fhir:search'  group_name user_name %}"> Tim kiem ho so</a></li>
-    </ul>
-</div> {% endcomment %}
 
 <div class="top-menu">
     <ul class="menu">
@@ -28,7 +20,6 @@
                 <a href="{% url 'fhir:register' group_name user_name %}"> Quản lí hồ sơ </a>
                 <div class="dropdown-content">
                     <a href="{% url 'fhir:register' group_name user_name %}">Tạo hồ sơ</a>
-                    <a href="">Tạo bệnh án</a>
                     <a href="{% url 'fhir:upload' group_name user_name %}">Chuyển đổi excel</a>
                     <a href="{% url 'fhir:search' group_name user_name %}">Tìm kiếm hồ sơ</a>
                 </div>
@@ -38,15 +29,6 @@
         <li>
             <div class="dropdown">
                 <a href="{% url 'fhir:upload' group_name user_name %}"> Quản lí lịch khám </a>
-                <div class="dropdown-content">
-                    <a href="">TEXT</a>
-                    <a href="">TEXT2</a>
-                </div>
-            </div>
-        </li>
-        <li>
-            <div class="dropdown">
-                <a href="{% url 'fhir:search' user_name group_name %}"> Tim kiem ho so</a>
                 <div class="dropdown-content">
                     <a href="">TEXT</a>
                     <a href="">TEXT2</a>

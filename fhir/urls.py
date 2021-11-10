@@ -30,5 +30,6 @@ urlpatterns = [
     path('<str:group_name>/<str:user_name>/<str:patient_identifier>/<str:encounter_identifier>/view_xetnghiem', views.view_xetnghiem.as_view(), name='view_xetnghiem'),
     path('<str:group_name>/<str:user_name>/<str:patient_identifier>/<str:encounter_identifier>/view_thuthuat', views.view_thuthuat.as_view(), name='view_thuthuat'),
     path('<str:group_name>/<str:user_name>/<str:patient_identifier>/<str:encounter_identifier>/view_donthuoc', views.view_donthuoc.as_view(), name='view_donthuoc'),
+    path('delete/', views.delete, name='delete'),
     path('<str:group_name>/<str:user_name>/patient-view/',views.patient_view,name="patient-view"),
     ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

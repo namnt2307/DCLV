@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import EncounterModel,ServiceRequestModel,ProcedureModel,AllergyModel,UserModel,ConditionModel, ObservationModel, MedicationModel, DiagnosticReportModel
+from .models import EncounterModel,ServiceRequestModel,ProcedureModel,AllergyModel,UserModel,ConditionModel, ObservationModel, MedicationModel, DiagnosticReportModel,DischargeDiseases, ComorbidityDiseases
 
 admin.site.register(EncounterModel)
 admin.site.register(ServiceRequestModel)
@@ -11,3 +11,5 @@ admin.site.register(ConditionModel)
 admin.site.register(ObservationModel)
 admin.site.register(MedicationModel)
 admin.site.register(DiagnosticReportModel)
+admin.site.register(DischargeDiseases)
+admin.site.register(ComorbidityDiseases)

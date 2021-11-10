@@ -22,6 +22,7 @@ h1{
     display: flex;
     justify-content: space-between;
 }
+
 table{
     width: 80%;
     margin: 10px auto;

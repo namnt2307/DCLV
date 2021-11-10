@@ -23,6 +23,7 @@
 
                 {%with 'value:'|add:diagnostic_report.diagnostic_conclusion as code%}
                     <label for="id_diagnostic_conclusion">Chẩn đoán</label>
+                    <br>
                     {{diagnostic_form.diagnostic_conclusion|attr:code}}
                 {% endwith %}
 
@@ -54,9 +55,11 @@
         </script>
     {%else%}
         <div class="diagnosticForm">
+            <h4>Chẩn đoán của bác sĩ</h4>
             <form action="" method="POST">
                 {% csrf_token %}
-                {{diagnostic_form.as_p}}
+                {{diagnostic_form.diagnostic_conclusion}}
+                <br>
                 <button type="submit">Lưu lại</button>
             </form>
         </div>

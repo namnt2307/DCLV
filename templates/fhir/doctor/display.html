@@ -44,6 +44,27 @@
                     <h4 class="title">Số điện thoại:</h4>
                     <h4 class="value">{{data.Patient.telecom}}</h4>
                 </div>
+                <h1>THÔNG TIN NGƯỜI LIÊN HỆ, BÁO TIN</h1>
+                <div class="contact patient">
+                    <h4 class="title">Quan hệ:</h4>
+                    <h4 class="value">{{relationship|get_item:data.Patient.contact_relationship}}</h4>
+                </div>                
+                <div class="contact patient">
+                    <h4 class="title">Họ và tên:</h4>
+                    <h4 class="value">{{data.Patient.contact_name}}</h4>
+                </div>
+                <div class="contact patient">
+                    <h4 class="title">Giới tính:</h4>
+                    <h4 class="value">{{data.Patient.contact_gender}}</h4>
+                </div>                    
+                <div class="contact patient">
+                    <h4 class="title">Số điện thoại:</h4>
+                    <h4 class="value">{{data.Patient.contact_telecom}}</h4>
+                </div>
+                <div class="contact patient">
+                    <h4 class="title">Địa chỉ:</h4>
+                    <h4 class="value">{{data.Patient.contact_address}}</h4>
+                </div>                                                                            
             </div>
             <div class="patient-image">
                 <img src="{% static 'img/patient/' %}{{data.Patient.identifier}}.jpg" alt="">

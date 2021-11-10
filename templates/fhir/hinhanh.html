@@ -12,32 +12,42 @@
 <h1>CÁC THỦ THUẬT XỬ LÍ HÌNH ẢNH</h1>
 <table>
     <thead>
-        <th>ID thủ thuật</th>
-        <th>Tên thủ thuật</th>
-        <th>Tình trạng thủ thuật</th>
-        <th>Ngày dự kiến thực hiện</th>
-        <th>Ngày yêu cầu</th>
-        <th>Bác sĩ yêu cầu</th>
-        <th>Ghi chú</th>
-        <th>Chi tiết</th>
-        <th>Kết quả hình ảnh</th>
-        <th>Chẩn đoán</th>
+        <th class="cell-data-8">ID thủ thuật</th>
+        <th class="cell-data-8">Tên thủ thuật</th>
+        <th class="cell-data-8">Tình trạng thủ thuật</th>
+        <th class="cell-data-8">Ngày dự kiến thực hiện</th>
+        <th class="cell-data-8">Ngày yêu cầu</th>
+        <th class="cell-data-8">Bác sĩ yêu cầu</th>
+        <th class="cell-data-8">Ghi chú</th>
+        <th class="cell-data-8">Chi tiết</th>
+        <th class="cell-data-8">Kết quả hình ảnh</th>
+        <th class="cell-data-8">Chẩn đoán</th>
     </thead>
     <tbody>
     {% if services %}
         {% for service in services %}
         <tr>
-            <td>{{service.service_identifier}}</td>
-            <td>{{service.service_code}}</td>
-            <td>{{service.service_status}}</td>
-            <td>{{service.service_occurrence|date:"d-m-Y"}}</td>
-            <td>{{service.service_authored|date:"d-m-Y"}}</td>
-            <td>{{service.service_requester}}</td>
-            <td>{{service.service_note}}</td>
-            <td><a href="{%url 'fhir:chitiethinhanh' group_name user_name data.Patient.identifier data.Encounter.identifier service.service_identifier%}">test</a></td>
-            <td></td>
+            <td class="cell-data-8">{{service.service_identifier}}</td>
+            <td class="cell-data-8">{{service.service_code}}</td>
+            <td class="cell-data-8">{{service.service_status}}</td>
+            <td class="cell-data-8">{{service.service_occurrence|date:"d-m-Y"}}</td>
+            <td class="cell-data-8">{{service.service_authored|date:"d-m-Y"}}</td>
+            <td class="cell-data-8">{{service.service_requester}}</td>
+            <td class="cell-data-8">{{service.service_note}}</td>
+            <td class="cell-data-8"><a href="{%url 'fhir:chitiethinhanh' group_name user_name data.Patient.identifier data.Encounter.identifier service.service_identifier%}">test</a></td>
+            <td class="cell-data-8"></td>
             {%comment%}<td><a href="{%url 'fhir:ketquahinhanh' group_name user_name data.Patient.identifier data.Encounter.identifier service.service_identifier %}"></a></td>{%endcomment%}
-            <td><a href="{%url 'fhir:chandoan' group_name user_name data.Patient.identifier data.Encounter.identifier service.service_identifier %}">Chẩn đoán</a></td>
+            <td class="cell-data-8"><a href="{%url 'fhir:chandoan' group_name user_name data.Patient.identifier data.Encounter.identifier service.service_identifier %}">Chẩn đoán</a></td>
+            <td>
+                <form action="{% url 'fhir:delete' %}" method="POST">
+                    {%csrf_token%}
+                    <input type="hidden" name="_method" value="delete">
+                    <input type="hidden" name="resource_type" id="" value="service_request">
+                    <input type="hidden" name="url_next" value="{{request.get_full_path}}">
+                    <input type="hidden" name="resource_identifier" value="{{service.service_identifier}}">
+                    <button type="submit">Xóa</button>
+                </form>
+            </td>
         </tr>
         {% endfor %}
     {% endif %}
