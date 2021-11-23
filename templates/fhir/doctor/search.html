@@ -16,7 +16,7 @@
   
 
   <div  class="search">
-    <form action="{% url 'fhir:search' group_name user_name %}" method="get">
+    <form action="{% url 'fhir:search'  %}" method="get">
       <div class="search_type_container">
         <label for="">Tìm kiếm theo</label>
           <div>
@@ -55,11 +55,11 @@
       <tbody>
         <tr>
           <td> <a
-              href="{% url 'fhir:display_detail' group_name user_name patient.identifier %}">{{patient.identifier}}</a>
+              href="{% url 'fhir:display_detail' patient.identifier %}">{{patient.identifier}}</a>
           </td>
           <td>{{patient.name}}</td>
           <td>{{patient.gender}}</td>
-          <td>{{patient.birthdate}}</td>
+          <td>{{patient.birthdate|date:'d-m-Y'}}</td>
           <td>{{patient.home_address}}</td>
           <td>{{patient.work_address}}</td>
           <td>{{patient.telecom}}</td>

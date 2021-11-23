@@ -89,7 +89,7 @@
                 <td>{{encounter.encounter_start|date:"d-m-Y H:i:s"}}</td>
                 {% if encounter.encounter_storage == 'local' %}
                 <td><a
-                        href="{% url 'fhir:hanhchinh' group_name user_name data.Patient.identifier encounter.encounter_identifier %}">{{encounter.encounter_identifier}}</a>
+                        href="{% url 'fhir:hanhchinh'  data.Patient.identifier encounter.encounter_identifier %}">{{encounter.encounter_identifier}}</a>
                 </td>
                 {% elif encounter.encounter_storage == 'hapi' %}
                 <td>{{encounter.encounter_identifier}}</td>
@@ -105,7 +105,7 @@
                 {%else%}
                 <td></td>
                 {%endif%}
-                <td><a href="{% url 'fhir:view_benhan' group_name user_name data.Patient.identifier encounter.encounter_identifier %}">Xem</a></td>
+                <td><a href="{% url 'fhir:view_benhan'  data.Patient.identifier encounter.encounter_identifier %}">Xem</a></td>
             </tr>
             {%endfor%}
 
@@ -113,7 +113,7 @@
             <tr>
                 <td>{{encounter.period.start}}</td>
                 <td><a
-                        href="{% url 'fhir:hanhchinh' group_name user_name data.Patient.identifier data.encounter.identifier %}">{{encounter.identifier}}</a>
+                        href="{% url 'fhir:hanhchinh'  data.Patient.identifier data.encounter.identifier %}">{{encounter.identifier}}</a>
                 </td>
                 <td>{{encounter.class}}</td>
                 <td>{{encounter.status}}</td>
@@ -128,7 +128,7 @@
         </table>
     </div>
     <div class="formPopup" id="popupForm">
-        <form action="{% url 'fhir:encounter' group_name user_name data.Patient.identifier%}" class="formContainer"
+        <form action="{% url 'fhir:encounter'  data.Patient.identifier%}" class="formContainer"
             method="POST">
             {%csrf_token%}
             {{form.as_p}}
@@ -141,7 +141,7 @@
 
 <script type="text/javascript">
     document.getElementById("myButton").onclick = function () {
-        location.href = "{% url 'fhir:encounter' group_name user_name data.Patient.identifier%} ";
+        location.href = "{% url 'fhir:encounter'  data.Patient.identifier%} ";
     };
 </script>
 

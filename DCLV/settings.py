@@ -38,9 +38,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'fhir',
-    'login',
+    'fhir.apps.FhirConfig',
+    'login.apps.LoginConfig',
     'widget_tweaks',
+    'administration.apps.AdministrationConfig'
 ]
 
 MIDDLEWARE = [

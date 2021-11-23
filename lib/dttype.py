@@ -420,6 +420,43 @@ def create_patient_resource(patient):
     return ET.tostring(root, encoding="us-ascii", method="xml", xml_declaration=None, default_namespace=None, short_empty_elements=True)
 
 
+def create_practitioner_resource(practitioner):
+    root = ET.Element('Practitioner')
+    tree = ET.ElementTree(root)
+    root.set("xmlns", "http://hl7.org/fhir")
+    if practitioner.get('id'):
+        id_ = ET.SubElement(root, 'id')
+        id_.set('value', practitioner['id'])
+    if practitioner.get('identifier'):
+        identifier_resource = ET.SubElement(root, 'identifier')
+        identifier_type(identifier_resource, 'urn:trinhcongminh', 'P' + practitioner['identifier'], 'usual', [
+                        {'system': 'http://terminology.hl7.org/CodeSystem/v2-0203', 'code': 'EI'}])
+    if practitioner.get('name'):
+        name = ET.SubElement(root, 'name')
+        name_type(name, practitioner['name'])
+    if practitioner.get('telecom'):
+        telecom = ET.SubElement(root, 'telecom')
+        contactpoint_type(telecom, 'phone', practitioner['telecom'])
+    if practitioner.get('gender'):
+        gender = ET.SubElement(root, 'gender')
+        if practitioner['gender'] == 'Nam':
+            code = 'male'
+        elif practitioner['gender'] == 'Nữ':
+            code = 'female'
+        gender.set('value', code)
+    if practitioner.get('birthdate'):
+        birthdate = ET.SubElement(root, 'birthDate')
+        birthdate.set('value', practitioner['birthdate'])
+    if practitioner.get('home_address'):
+        address = ET.SubElement(root, 'address')
+        address_type(address, practitioner['home_address'], use='home')
+    if practitioner.get('qualification'):
+        qualification = ET.SubElement(root, 'qualification')
+        qualification_code = ET.SubElement(qualification, 'code')
+        codeable_concept(qualification_code, text=practitioner['qualification'])
+    return ET.tostring(root, encoding="us-ascii", method="xml", xml_declaration=None, default_namespace=None, short_empty_elements=True)
+
+
 def create_encounter_resource(encounter, patient_id, patient_name, practitioner_id):
     root = ET.Element('Encounter')
     tree = ET.ElementTree(root)

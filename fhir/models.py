@@ -6,6 +6,37 @@ from login.models import myUser
 from datetime import datetime
 
 
+
+
+
+class PatientModel(models.Model):
+    GENDER_CHOICES = (
+        ('Nam', 'Nam'),
+        ('Nữ', 'Nữ')
+    )
+    CONTACT_RELATIONSHIP_CHOICES = (
+        ('C', 'Liên hệ khẩn cấp'),
+        ('E', 'Chủ sở hữu lao động'),
+        ('F', 'Cơ quan liên bang'),
+        ('I', 'Công ty bảo hiểm'),
+        ('N', 'Người nối dõi'),
+        ('S', 'Cơ quan nhà nước'),
+        ('U', 'Không xác định')
+    )
+    identifier = models.CharField(primary_key=True, max_length=10)
+    name = models.CharField(default='', max_length=100)
+    birthdate = models.DateField(default=datetime.now)
+    gender = models.CharField(max_length=3, choices=GENDER_CHOICES, default='')
+    work_address = models.CharField(default='', max_length=255)
+    home_address = models.CharField(default='', max_length=255)
+    telecom = models.CharField(default='', max_length=10)
+    group_name = models.CharField(default='patient', max_length=20)
+    contact_relationship = models.CharField(max_length=100, null=True, blank=True, default='C', choices=CONTACT_RELATIONSHIP_CHOICES)
+    contact_name = models.CharField(max_length=100, blank=True, null=True)
+    contact_telecom = models.CharField(max_length=100, blank=True, null=True)
+    contact_address = models.CharField(max_length=100, null=True, blank=True)
+    contact_gender = models.CharField(max_length=100, choices=GENDER_CHOICES, null=True, blank=True)
+
 class EncounterModel(models.Model):
     CLASS_CHOICES = (
         ('IMP', 'Nội trú'),
@@ -51,12 +82,12 @@ class EncounterModel(models.Model):
     #     ('14', 'Khoa Tâm thần'),
     #     ('15', 'Khoa Thần kinh')
     # )
-    user_identifier = models.ForeignKey(myUser, on_delete=models.CASCADE)
+    patient = models.ForeignKey(PatientModel, on_delete=models.CASCADE)
     encounter_identifier = models.CharField(max_length=100, primary_key=True)
     encounter_start = models.DateTimeField(default=datetime.now)
     encounter_end = models.DateTimeField(null=True)
     encounter_length = models.CharField(max_length=100, null=True)
-    encounter_status = models.CharField(max_length=20, default='in-progress')
+    encounter_status = models.CharField(max_length=20, default='queued')
     encounter_class = models.CharField(
         default="AMB", null=True, max_length=10, choices=CLASS_CHOICES)
     encounter_type = models.CharField(
@@ -69,37 +100,6 @@ class EncounterModel(models.Model):
     encounter_participant = models.CharField(max_length=100, null=True)
     encounter_version = models.IntegerField(default=0)
     encounter_storage = models.CharField(max_length=100, default='local')
-
-
-class UserModel(models.Model):
-    GENDER_CHOICES = (
-        ('Nam', 'Nam'),
-        ('Nữ', 'Nữ')
-    )
-    CONTACT_RELATIONSHIP_CHOICES = (
-        ('C', 'Liên hệ khẩn cấp'),
-        ('E', 'Chủ sở hữu lao động'),
-        ('F', 'Cơ quan liên bang'),
-        ('I', 'Công ty bảo hiểm'),
-        ('N', 'Người nối dõi'),
-        ('S', 'Cơ quan nhà nước'),
-        ('U', 'Không xác định')
-    )
-    identifier = models.CharField(primary_key=True, max_length=10)
-    name = models.CharField(default='', max_length=100)
-    birthdate = models.DateField(default=datetime.now)
-    gender = models.CharField(max_length=3, choices=GENDER_CHOICES, default='')
-    work_address = models.CharField(default='', max_length=255)
-    home_address = models.CharField(default='', max_length=255)
-    telecom = models.CharField(default='', max_length=10)
-    group_name = models.CharField(default='patient', max_length=20)
-    contact_relationship = models.CharField(max_length=100, null=True, blank=True, default='C', choices=CONTACT_RELATIONSHIP_CHOICES)
-    contact_name = models.CharField(max_length=100, blank=True, null=True)
-    contact_telecom = models.CharField(max_length=100, blank=True, null=True)
-    contact_address = models.CharField(max_length=100, null=True, blank=True)
-    contact_gender = models.CharField(max_length=100, choices=GENDER_CHOICES, null=True, blank=True)
-
-
 
 class ConditionModel(models.Model):
     CLINICAL_CHOICES = (
@@ -133,10 +133,19 @@ class ConditionModel(models.Model):
 
 
 class ServiceRequestModel(models.Model):
+    SERVICE_STATUS_CHOICES = (
+        ('draft', 'Nháp'),
+        ('active', 'Đang hoạt động'),
+        ('on-hold', 'Tạm giữ'),
+        ('revoked', 'Đã thu hồi'),
+        ('completed', 'Hoàn tất'),
+        ('entered-in-error', 'Nhập sai'),
+        ('unknown', 'Không xác định')
+    )
     encounter_identifier = models.ForeignKey(
         EncounterModel, on_delete=models.CASCADE)
     service_identifier = models.CharField(max_length=100, primary_key=True)
-    service_status = models.CharField(default='active', max_length=100)
+    service_status = models.CharField(default='active', max_length=100, choices=SERVICE_STATUS_CHOICES)
     service_intent = models.CharField(max_length=100, default='order')
     service_category = models.CharField(max_length=10)
     service_code = models.CharField(max_length=100, null=True)
@@ -183,7 +192,7 @@ class ProcedureModel(models.Model):
     )
     encounter_identifier = models.ForeignKey(
         EncounterModel, on_delete=models.CASCADE)
-    service_identifier = models.ForeignKey(ServiceRequestModel, on_delete=models.CASCADE, null=True)
+    service_identifier = models.OneToOneField(ServiceRequestModel, on_delete=models.CASCADE)
     procedure_identifier = models.CharField(max_length=100, primary_key=True)
     procedure_status = models.CharField(max_length=100)
     procedure_category = models.CharField(
@@ -293,7 +302,7 @@ class DiagnosticReportModel(models.Model):
     encounter_identifier = models.ForeignKey(
         EncounterModel, on_delete=models.CASCADE
     )
-    service_identifier = models.ForeignKey(
+    service_identifier = models.OneToOneField(
         ServiceRequestModel, on_delete=models.CASCADE
     )
     diagnostic_identifier = models.CharField(max_length=100, primary_key=True)
@@ -320,3 +329,14 @@ class ComorbidityDiseases(models.Model):
     
 
 
+class ScheduleModel(models.Model):
+    practitioner_name = models.CharField(max_length=100)
+    practitioner_identifier = models.CharField(max_length=20)
+    practitioner_location = models.CharField(max_length=100, null=True)
+    schedule_date = models.DateField()
+    session = models.CharField(max_length=20)
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    
+    
+    

@@ -24,6 +24,12 @@ h1 {
     font-weight: bold;
     /* padding-left: 100px; */
 }
+.value input {
+    width: 300px;
+}
+.value select{
+    width: 300px;
+}
 input{
     height: 23.2px;
 }

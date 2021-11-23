@@ -3,17 +3,17 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
 from django.forms import fields, widgets
 from lib.tools import generate_password
-from .models import EncounterModel, ServiceRequestModel, ProcedureModel, AllergyModel, UserModel, ConditionModel, ObservationModel, ProcedureModel, MedicationModel, DiagnosticReportModel
+from .models import EncounterModel, ServiceRequestModel, ProcedureModel, AllergyModel, PatientModel, ConditionModel, ObservationModel, ProcedureModel, MedicationModel, DiagnosticReportModel
 
 class DateInput(forms.DateInput):
     input_type = 'date'
-class EHRCreationForm(forms.ModelForm):
-    birthdate = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}))
+# class EHRCreationForm(forms.ModelForm):
+#     birthdate = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}))
 
-    class Meta:
-        model = get_user_model()
-        fields = ('name', 'gender', 'birthdate',
-                  'home_address', 'work_address', 'identifier', 'telecom', 'contact_name', 'contact_gender', 'contact_relationship', 'contact_address', 'contact_telecom')
+#     class Meta:
+#         model = get_user_model()
+#         fields = ('name', 'gender', 'birthdate',
+#                   'home_address', 'work_address', 'identifier', 'telecom', 'contact_name', 'contact_gender', 'contact_relationship', 'contact_address', 'contact_telecom')
 
 
 class EncounterForm(forms.ModelForm):
@@ -30,16 +30,15 @@ class EncounterForm(forms.ModelForm):
         }
 
 
-class UserForm(forms.ModelForm):
+class PatientForm(forms.ModelForm):
+    birthdate = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}))
     class Meta:
-        model = UserModel()
+        model = PatientModel
         fields = ('identifier', 'name', 'gender', 'birthdate',
                   'home_address', 'work_address', 'telecom', 'contact_name', 'contact_gender', 'contact_relationship', 'contact_address', 'contact_telecom')
 
 
 class ConditionForm(forms.ModelForm):
-    
-
     class Meta:
         model = ConditionModel
         fields = ('condition_code', 'condition_clinical_status',
@@ -117,12 +116,11 @@ class MedicationForm(forms.ModelForm):
         )
         model = MedicationModel
         fields = (
-            'medication_medication', 'medication_reason_code', 'medication_effective', 'dosage_frequency', 'dosage_period', 'dosage_period_unit', 'dosage_duration', 'dosage_duration_unit', 'dosage_route', 'dosage_quantity', 'dosage_when', 'dosage_offset', 'dosage_additional_instruction', 'dosage_patient_instruction'
+            'medication_medication', 'medication_reason_code', 'dosage_frequency', 'dosage_period', 'dosage_period_unit', 'dosage_duration', 'dosage_duration_unit', 'dosage_route', 'dosage_quantity', 'dosage_when', 'dosage_offset', 'dosage_additional_instruction', 'dosage_patient_instruction'
         )
         labels = {
             'medication_medication': 'Thuốc chỉ định',
             'medication_reason_code': 'Lý do dùng thuốc',
-            'medication_effective': 'Ngày bắt đầu dùng thuốc',
             'dosage_frequency': 'Tần suất dùng thuốc',
             'dosage_period': 'Chu kì dùng thuốc',
             'dosage_period_unit': '',

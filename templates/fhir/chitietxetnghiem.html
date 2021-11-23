@@ -1,11 +1,11 @@
 {%extends 'fhir/base.html'%}
-{%block url1%}'{%url 'fhir:hanhchinh' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%block url2%}'{%url 'fhir:dangky' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%block url3%}'{%url 'fhir:hoibenh' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%block url5%}'{%url 'fhir:xetnghiem' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%block url4%}'{%url 'fhir:toanthan' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%comment%}{%block url8%}'{%url 'fhir:thuthuat' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}{%endcomment%}{%block url7%}'{%url 'fhir:thuoc' group_name user_name data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
-{%block url6%}'{%url 'fhir:hinhanh' group_name user_name data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
+{%block url1%}'{%url 'fhir:hanhchinh'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url2%}'{%url 'fhir:dangky'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url3%}'{%url 'fhir:hoibenh'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url5%}'{%url 'fhir:xetnghiem'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url4%}'{%url 'fhir:toanthan'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%comment%}{%block url8%}'{%url 'fhir:thuthuat'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}{%endcomment%}{%block url7%}'{%url 'fhir:thuoc'  data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
+{%block url6%}'{%url 'fhir:hinhanh'  data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
 {%block function%}
     {% if service %}
         <h1>KẾT QUẢ XÉT NGHIỆM</h1>
@@ -88,23 +88,4 @@
             }
         </script>
     {%endif%}
-    <!-- {%if test%} -->
-        <!-- {% if service.service_status == 'active'%}
-        <form action="" method="POST">
-        {%csrf_token%}
-            {%for observation in observations%}
-                <input type="text">
-            {%endfor%}  
-        <button type="submit">Lưu lại</button>
-        </form>
-       
-        {%elif procedure.procedure_status == 'completed'%}
-        <p>Ngày thực hiện: {{procedure.procedure_performedDateTime}}</p>
-        <p>Kết quả thủ thuật, phẫu thuật: {{procedure.procedure_outcome}}</p>
-        <p>Các biến chứng sau thủ thuật, phẫu thuật: {{procedure.procedure_complication}}</p>
-        <p>Các hướng dẫn bệnh nhân sau thủ thuật, phẫu thuật: {{procedure.procedure_followUp}}</p>
-        <p>Thiết bị thực hiện thủ thuật, phẫu thuật: {{procedure.procedure_focalDevice}}</p>
-        <p>Ghi chú của bác sĩ: {{procedure.procedure_note}}</p>
-        {%endif%}
-    {% endif %} -->
 {%endblock%}

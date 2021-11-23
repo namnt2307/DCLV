@@ -1,145 +1,13 @@
 {%extends 'fhir/base.html'%}
-{%block url1%}'{%url 'fhir:hanhchinh' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%block url2%}'{%url 'fhir:dangky' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%block url3%}'{%url 'fhir:hoibenh' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%block url5%}'{%url 'fhir:xetnghiem' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%block url4%}'{%url 'fhir:toanthan' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%comment%}{%block url8%}'{%url 'fhir:thuthuat' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}{%endcomment%}{%block url7%}'{%url 'fhir:thuoc' group_name user_name data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
-{%block url6%}'{%url 'fhir:hinhanh' group_name user_name data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
+{%block url1%}'{%url 'fhir:hanhchinh'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url2%}'{%url 'fhir:dangky'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url3%}'{%url 'fhir:hoibenh'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url5%}'{%url 'fhir:xetnghiem'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url4%}'{%url 'fhir:toanthan'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%comment%}{%block url8%}'{%url 'fhir:thuthuat'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}{%endcomment%}{%block url7%}'{%url 'fhir:thuoc'  data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
+{%block url6%}'{%url 'fhir:hinhanh'  data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
 {% load widget_tweaks %}
 {%block function%}
-{% comment %}
-    {%if condition%}
-    <div id='data'>
-        <h1>THÔNG TIN HỎI BỆNH</h1>
-        <p>Vấn đề lâm sàng: {{condition.condition_code}}</p>
-        <p>Tình trạng: {{clinical|get_item:condition.condition_clinical_status}}</p>
-        <p>Dấu hiệu bắt đầu từ ngày: {{condition.condition_onset|date:"d-m-Y"}}</p>
-        <p>Mức độ: {{severity|get_item:condition.condition_severity}}</p>
-    </div>
-    <div id='form' style="display: none;">
-        <form action="" method="POST">
-            {%csrf_token%}
-            <input type="hidden" name="condition_identifier" value="{{condition.condition_identifier}}">
-
-            {%with 'value:'|add:condition.condition_code as code%}
-            <label for="id_condition_code">Vấn đề lâm sàng:</label>
-            <p>{{form.condition_code|attr:code}}</p>
-            {%endwith%}
-
-            {%with 'value:'|add:condition.condition_clinical_status as code%}
-            <label for="id_condition_clinicalstatus">Tình trạng:</label>
-            <p>{{form.condition_clinical_status|attr:code}}</p>
-            {%endwith%}
-
-            {%with condition.condition_onset|date:'Y-m-d' as condition_date%}
-            {%with 'value:'|add:condition_date as code%}
-            <label for="id_condition_onset">Dấu hiệu bắt đầu từ ngày:</label>
-            <p>{{form.condition_onset|attr:code}}</p>
-            {%endwith%}
-            {%endwith%}
-
-            {%with 'value:'|add:condition.condition_severity as code%}
-            <label for="id_condition_severity">Mức độ:</label>
-            <p>{{form.condition_severity|attr:code}}</p>
-            {%endwith%}
-            
-            <button type="submit">Lưu lại</button>
-        </form>
-    </div>
-    <div class="button">
-        <button id="clickButton" onclick="changeDisplay()">Chỉnh sửa</button>
-    </div>
-    <script>
-        function changeDisplay(){
-            button = document.getElementById('clickButton');
-            data = document.getElementById('data');
-            form = document.getElementById('form');
-            if (button.textContent == "Chỉnh sửa"){
-                data.style.display = "none";
-                form.style.display = "block";
-                button.textContent = "Hủy bỏ"
-            }
-            else{
-                data.style.display = "block";
-                form.style.display = "none";
-                button.textContent = "Chỉnh sửa"
-            }
-        }
-    </script>
-    {%else%}
-        <form action="" method = "POST">
-            {%csrf_token%}
-            {{form.as_p}}
-            <button type="submit">Lưu lại</button>
-        </form>
-    {%endif%}
-{% endcomment %}
-{% comment %}
-{% if admission_conditions %}
-<div>
-    <div id="data">
-        <div>
-            <h2>1. Quá trình bệnh lý</h2>
-            {% for condition in admission_conditions %}
-                <p>{{condition.condition_code}}; {{condition.condition_clinical_status}}; {{condition.condition_onset|date:'d-m-Y'}}; {{severity|get_item:condition.condition_severity}}</p>
-            {% endfor %}
-        </div>
-        <div>
-            <h2>2. Tiền sử bệnh</h2>
-            <div>
-                <h3>+ Bản thân</h3>
-                {% for condition in resolved_conditions %}
-                    <p>{{condition.condition_code}}; {{condition.condition_onset|date:'d-m-Y'}}; {{condition.condition_abatement|date:'d-m-Y'}}; {{severity|get_item:condition.condition_severity}}</p>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
-    <div>
-        <form action="" method="POST" id="form" style="display: none;"> 
-            {% csrf_token %}
-                <div>
-                    <h2>1. Quá trình bệnh lý</h2>
-                    <textarea name="" id="" cols="30" rows="10">{% for condition in admission_conditions %}
-{{condition.condition_code}}; {{condition.condition_clinical_status}}; {{condition.condition_onset|date:'Y-m-d'}}; {{severity|get_item:condition.condition_severity}}{% endfor %}</textarea>
-                </div>
-                <div>
-                    <h2>2. Tiền sử bệnh</h2>
-                    <div>
-                        <h3>+ Bản thân</h3>
-                        <textarea name="" id="" cols="30" rows="10">{% for condition in resolved_conditions %}
-{{condition.condition_code}}; {{condition.condition_clinical_status}}; {{condition.condition_onset|date:'Y-m-d'}}; {{severity|get_item:condition.condition_severity}}{% endfor %}</textarea>
-                    </div>
-                </div>
-            <button type="submit">Lưu lại</button>
-        </form>
-    </div>
-</div>
-<div class="button">
-    <button id="clickButton" onclick="changeDisplay()">Chỉnh sửa</button>
-</div>
-{% else %}
-<div>
-    <form action="" method="POST"> 
-        {% csrf_token %}
-        <div>
-            <h2>1. Quá trình bệnh lý</h2>
-            <textarea type="text" name="benhly" id="" required></textarea>
-        </div>
-        <div>
-            <h2>2. Tiền sử bệnh</h2>
-            <h3>+ Bản thân</h3>
-            <textarea type="text" name="tiensubanthan" id=""></textarea>
-            <h3>+ Dị ứng</h3>
-            <textarea type="text" name="diung" id=""></textarea>
-            <h3>+ Gia đình</h3>
-            <textarea type="text" name="tiensugiadinh" id=""></textarea>
-        </div>
-        <button type="submit">Lưu lại</button>
-    </form>
-</div>
-{% endif %}
-{% endcomment %}
 <div>
     <h1>THÔNG TIN HỎI BỆNH</h1>
     <div>
@@ -150,15 +18,20 @@
                     <th>Ngày xuất hiện triệu chứng</th>
                     <th>Ngày hết</th>
                     <th>Mức độ</th>
+                    {%if admission_conditions %}
+                    <th></th>
+                    <th></th>
+                    {%endif%}
                 </thead>
+                {% if admission_conditions %}
                 {% for condition in admission_conditions %}
                 <tbody id="{{condition.condition_identifier}}-data">
                     <tr>
                         <td class="cell-data-4">{{condition.condition_code}}</td>
                         <td class="cell-data-4">{{condition.condition_onset|date:'d-m-Y'}}</td>
                         <td class="cell-data-4">{{condition.condition_abatement|date:'d-m-Y'}}</td>
-                        <td class="cell-data-4">{{severity|get_item:condition.condition_severity}}</td>
-                        <td><button type="button" onclick="toggleDisplay('{{condition.condition_identifier}}')">Chỉnh sửa</button></td>
+                        <td class="cell-data-4">{{condition.get_condition_severity_display}}</td>
+                        <td><button type="button" class="btn edit" onclick="toggleDisplay('{{condition.condition_identifier}}')">Chỉnh sửa</button></td>
                         <td>
                             <form action="{% url 'fhir:delete' %}" method="POST">
                                 {%csrf_token%}
@@ -166,7 +39,7 @@
                                 <input type="hidden" name="resource_type" id="" value="condition">
                                 <input type="hidden" name="url_next" value="{{request.get_full_path}}">
                                 <input type="hidden" name="resource_identifier" value="{{condition.condition_identifier}}">
-                                <button type="submit">Xóa</button>
+                                <button type="submit" class="btn cancel">Xóa</button>
                             </form>
                         </td>
                     </tr>
@@ -194,11 +67,12 @@
                                 <td class="cell-data-4">{{condition_form.condition_severity|attr:code}}</td>
                             {%endwith%}
                             <td><button type="submit">Lưu</button></td>
-                            <td><button type="button" onclick="toggleDisplay('{{condition.condition_identifier}}')">Hủy</button></td>
+                            <td><button type="button" class="btn cancel" onclick="toggleDisplay('{{condition.condition_identifier}}')">Hủy</button></td>
                         </form>
                     </tr>
                 </tbody>
                 {% endfor %}
+                {%endif%}
                 <tr>
                     <form action="" method="POST">
                         {% csrf_token %}
@@ -207,7 +81,12 @@
                         <td class="cell-data-4">{{condition_form.condition_onset}}</td>
                         <td class="cell-data-4">{{condition_form.condition_abatement}}</td>
                         <td class="cell-data-4">{{condition_form.condition_severity}}</td>
-                        <td><button type="submit">Thêm</button></td>
+                        {%if admission_conditions %}
+                        <td><button type="submit" class="btn">Thêm</button></td>
+                        <td></td>
+                        {%else%}
+                        <td><button type="submit" class="btn">Thêm</button></td>
+                        {%endif%}
                     </form>
                 </tr>
             </table>
@@ -222,14 +101,20 @@
                         <th>Ngày mắc bệnh</th>
                         <th>Ngày hết</th>
                         <th>Mức độ</th>
+                        {%if resolved_conditions%}
+                        <th></th>
+                        <th></th>
+                        {%endif%}
                     </thead>
+                    {%if resolved_conditions%}
                     {% for condition in resolved_conditions %}
                     <tbody id="{{condition.condition_identifier}}-data">
                         <tr>
                             <td class="cell-data-4">{{condition.condition_code}}</td>
                             <td class="cell-data-4">{{condition.condition_onset|date:'d-m-Y'}}</td>
                             <td class="cell-data-4">{{condition.condition_abatement|date:'d-m-Y'}}</td>
-                            <td class="cell-data-4">{{severity|get_item:condition.condition_severity}}</td>
+                            <td class="cell-data-4">{{condition.get_condition_severity_display}}</td>
+                            <td><button type="button" class="btn edit" onclick="toggleDisplay('{{condition.condition_identifier}}')">Chỉnh sửa</button></td>
                             <td>
                                 <form action="{% url 'fhir:delete' %}" method="POST">
                                     {%csrf_token%}
@@ -237,7 +122,7 @@
                                     <input type="hidden" name="resource_type" id="" value="condition">
                                     <input type="hidden" name="url_next" value="{{request.get_full_path}}">
                                     <input type="hidden" name="resource_identifier" value="{{condition.condition_identifier}}">
-                                    <button type="submit">Xóa</button>
+                                    <button type="submit" class="btn cancel">Xóa</button>
                                 </form>
                             </td>
                         </tr>
@@ -264,10 +149,13 @@
                                 {%with 'value:'|add:condition.condition_severity as code%}
                                     <td class="cell-data-4">{{condition_form.condition_severity|attr:code}}</td>
                                 {%endwith%}
+                                <td><button type="submit" class="btn">Lưu</button></td>
+                                <td><button type="button" class="btn cancel" onclick="toggleDisplay('{{condition.condition_identifier}}')">Hủy</button></td>                                
                             </form>
                         </tr>
                     </tbody>
                     {% endfor %}
+                    {%endif%}
                     <tbody>
                         <tr>
                             <form action="" method="POST">
@@ -277,7 +165,12 @@
                                 <td class="cell-data-4">{{condition_form.condition_onset}}</td>
                                 <td class="cell-data-4">{{condition_form.condition_abatement}}</td>
                                 <td class="cell-data-4">{{condition_form.condition_severity}}</td>
-                                <td><button type="submit">Thêm</button></td>
+                                {%if resolved_conditions%}
+                                <td><button type="submit" class="btn">Thêm</button></td>
+                                <td></td>
+                                {%else%}
+                                <td><button type="submit" class="btn">Thêm</button></td>
+                                {%endif%}
                             </form>
                         </tr>
                     </tbody>
@@ -293,24 +186,33 @@
                         <th>Mức độ nghiêm trọng</th>
                         <th>Thời điểm phát hiện</th>
                         <th>Thời điểm tái phát</th>
+                        {%if allergies%}
+                        <th></th>
+                        {%endif%}
                     </thead>
                     {% for allergy in allergies %}
                         <tbody id="{{allergy.allergy_identifier}}-data">
                             <tr>
-                                <td class="cell-data-6">{{allergy.allergy_clinical_status}}</td>
-                                <td class="cell-data-6">{{allergy.allergy_category}}</td>
+                                <td class="cell-data-6">{{allergy.get_allergy_clinical_status_display}}</td>
+                                <td class="cell-data-6">{{allergy.get_allergy_category_display}}</td>
                                 <td class="cell-data-6">{{allergy.allergy_code}}</td>
-                                <td class="cell-data-6">{{allergy.allergy_criticality}}</td>
+                                <td class="cell-data-6">{{allergy.get_allergy_criticality_display}}</td>
                                 <td class="cell-data-6">{{allergy.allergy_onset|date:'d-m-Y'}}</td>
                                 <td class="cell-data-6">{{allergy.allergy_last_occurrence|date:'d-m-Y'}}</td>
-                                <td colspan="6"><button type="button" onclick="toggleDisplay('{{allergy.allergy_identifier}}')">Chỉnh sửa</button></td>
+                                <td colspan="6"><button class="btn edit" type="button" onclick="toggleDisplay('{{allergy.allergy_identifier}}')">Chỉnh sửa</button></td>
                             </tr>
 
                             <tr>
                                 <td colspan="6" style="text-align: left;">
-                                    <p>Thành phần dị ứng: {{allergy.allergy_reaction_substance}}</p>
-                                    <p>Phản ứng: {{allergy.allergy_reaction_manifestation}}</p>
-                                    <p>Mức độ phản ứng: {{allergy.allergy_reaction_severity}}</p>
+                                    <div class="flex_container">
+                                        <p class="title">Thành phần dị ứng:</p> <p>{{allergy.allergy_reaction_substance}}</p>
+                                    </div>
+                                    <div class="flex_container">
+                                        <p class="title">Phản ứng:</p> <p>{{allergy.allergy_reaction_manifestation}}</p>
+                                    </div>
+                                    <div class="flex_container">
+                                        <p class="title">Mức độ phản ứng:</p> <p>{{allergy.get_allergy_reaction_severity_display}}</p>
+                                    </div>
                                 </td>
                                 <td>
                                     <form action="{% url 'fhir:delete' %}" method="POST">
@@ -319,7 +221,7 @@
                                         <input type="hidden" name="resource_type" id="" value="allergy">
                                         <input type="hidden" name="url_next" value="{{request.get_full_path}}">
                                         <input type="hidden" name="resource_identifier" value="{{allergy.allergy_identifier}}">
-                                        <button type="submit">Xóa</button>
+                                        <button type="submit" class="btn cancel">Xóa</button>
                                     </form>
                                 </td>
                             </tr>
@@ -352,21 +254,27 @@
                                         <td class="cell-data-6">{{allergy_form.allergy_last_occurrence|attr:code}}</td>
                                     {%endwith%}
                                     {%endwith%}                                                                                                                              
-                                    <td><button type="submit">Lưu</button></td>                                        
+                                    <td><button type="submit" class="btn">Lưu</button></td>                                        
                                 </tr>
                                 <tr>
                                     <td colspan="6" style="text-align: left;">
                                         {%with 'value:'|add:allergy.allergy_reaction_substance as code%}
-                                            <p>Thành phần dị ứng: {{allergy_form.allergy_reaction_substance|attr:code}}</p>
+                                        <div class="flex_container">
+                                            <p class="title">Thành phần dị ứng:</p> <p>{{allergy_form.allergy_reaction_substance|attr:code}}</p>
+                                        </div>
                                         {%endwith%}
                                         {%with 'value:'|add:allergy.allergy_reaction_manifestation as code%}
-                                            <p>Phản ứng: {{allergy_form.allergy_reaction_manifestation|attr:code}}</p>
+                                        <div class="flex_container">
+                                            <p class="title">Phản ứng:</p> <p>{{allergy_form.allergy_reaction_manifestation|attr:code}}</p>
+                                        </div>
                                         {%endwith%}
                                         {%with 'value:'|add:allergy.allergy_reaction_severity as code%}
-                                            <p>Mức độ phản ứng: {{allergy_form.allergy_reaction_severity|attr:code}}</p>
+                                        <div class="flex_container">
+                                            <p class="title">Mức độ phản ứng:</p> <p>{{allergy_form.allergy_reaction_severity|attr:code}}</p>
+                                        </div>
                                         {%endwith%}  
                                     </td>
-                                    <td><button type="button" onclick="toggleDisplay('{{allergy.allergy_identifier}}')">Hủy</button></td>
+                                    <td><button type="button" class="btn cancel" onclick="toggleDisplay('{{allergy.allergy_identifier}}')">Hủy</button></td>
                                 </tr>
                             
                             </form>
@@ -383,13 +291,19 @@
                                 <td class="cell-data-6">{{allergy_form.allergy_criticality}}</td>
                                 <td class="cell-data-6">{{allergy_form.allergy_onset}}</td>
                                 <td class="cell-data-6">{{allergy_form.allergy_last_occurrence}}</td>                            
-                                <td rowspan="2"><button type="submit">Thêm</button></td>
+                                <td rowspan="2"><button type="submit" class="btn">Thêm</button></td>
                             </tr>
                             <tr>
                                 <td colspan="7" style="text-align: left;">
-                                    <p>Thành phần dị ứng: {{allergy_form.allergy_reaction_substance}}</p>
-                                    <p>Phản ứng: {{allergy_form.allergy_reaction_manifestation}}</p>
-                                    <p>Mức độ phản ứng: {{allergy_form.allergy_reaction_severity}}</p>
+                                    <div class="flex_container">
+                                        <p class="title">Thành phần dị ứng:</p> <p>{{allergy_form.allergy_reaction_substance}}</p>
+                                    </div>
+                                    <div class="flex_container">
+                                        <p class="title">Phản ứng:</p> <p>{{allergy_form.allergy_reaction_manifestation}}</p>
+                                    </div>
+                                    <div class="flex_container">
+                                        <p class="title">Mức độ phản ứng:</p> <p>{{allergy_form.allergy_reaction_severity}}</p>
+                                    </div>
                                 </td>    
                             </tr>
                         </tbody>

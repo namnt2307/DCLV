@@ -1,12 +1,12 @@
 {%extends 'fhir/base.html'%}
-{%block url1%}'{%url 'fhir:hanhchinh' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%block url2%}'{%url 'fhir:dangky' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%block url3%}'{%url 'fhir:hoibenh' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%block url5%}'{%url 'fhir:xetnghiem' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%block url4%}'{%url 'fhir:toanthan' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%comment%}{%block url8%}'{%url 'fhir:thuthuat' group_name user_name data.Patient.identifier data.Encounter.identifier%}'{%endblock%}{%endcomment%}
-{%block url7%}'{%url 'fhir:thuoc' group_name user_name data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
-{%block url6%}'{%url 'fhir:hinhanh' group_name user_name data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
+{%block url1%}'{%url 'fhir:hanhchinh'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url2%}'{%url 'fhir:dangky'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url3%}'{%url 'fhir:hoibenh'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url5%}'{%url 'fhir:xetnghiem'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url4%}'{%url 'fhir:toanthan'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%comment%}{%block url8%}'{%url 'fhir:thuthuat'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}{%endcomment%}
+{%block url7%}'{%url 'fhir:thuoc'  data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
+{%block url6%}'{%url 'fhir:hinhanh'  data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
 {%block function%}
 {{services}}
 <h1>CÁC THỦ THUẬT ĐƯỢC THỰC HIỆN </h1>
@@ -23,7 +23,7 @@
     {% if procedures %}
         {% for procedure in procedures %}
         <tr>
-            <td><a href="{%url 'fhir:chitietthuthuat' group_name user_name data.Patient.identifier data.Encounter.identifier procedure.procedure_identifier%}">{{procedure.procedure_identifier}}</a></td>
+            <td><a href="{%url 'fhir:chitietthuthuat'  data.Patient.identifier data.Encounter.identifier procedure.procedure_identifier%}">{{procedure.procedure_identifier}}</a></td>
             <td>{{procedure.procedure_category}}</td>
             <td>{{procedure.procedure_code}}</td>
             <td>{{procedure.procedure_asserter}}</td>
@@ -38,7 +38,7 @@
     </tr>
 </table>
 <div class="formPopup" id="procPopupForm">
-    <form action="{% url 'fhir:thuthuat' group_name user_name data.Patient.identifier data.Encounter.identifier%}" class="formContainer"
+    <form action="{% url 'fhir:thuthuat'  data.Patient.identifier data.Encounter.identifier%}" class="formContainer"
         method="POST">
         {%csrf_token%}
         {{form.as_p}}
@@ -58,21 +58,6 @@
         <th>Ghi chú</th>
     </thead>
     <tbody>
-        {%comment%}
-    {% if services %}
-        {% for service in services %}
-        <tr>
-            <td><a href="{%url 'fhir:chitietxetnghiem' group_name user_name data.Patient.identifier data.Encounter.identifier service.service_identifier%}"">{{service.service_identifier}}</a></td>
-            <td>{{service.service_code}}</td>
-            <td>{{service.service_status}}</td>
-            <td>{{service.service_occurrence|date:"d-m-Y"}}</td>
-            <td>{{service.service_authored|date:"d-m-Y"}}</td>
-            <td>{{service.service_requester}}</td>
-            <td>{{service.service_note}}</td>
-        </tr>
-        {% endfor %}
-    {% endif %}
-    {%endcomment%}
 </tbody>
     <div>
         <div class="formPopup" id="serviceForm">
@@ -94,21 +79,8 @@
 
 <script type="text/javascript">
 document.getElementById("myButton").onclick = function () {
-    location.href = "{% url 'fhir:encounter' group_name user_name data.Patient.identifier%} ";
+    location.href = "{% url 'fhir:encounter'  data.Patient.identifier%} ";
 };
 </script>
-
 </div>
-{%comment%}
-<div>
-<script>
-    function openForm() {
-        document.getElementById("procPopupForm").style.display = "inline-block";
-    }
-    function closeForm() {
-        document.getElementById("procPopupForm").style.display = "none";
-    }
-</script>
-</div>
-{%endcomment%}
 {%endblock%}

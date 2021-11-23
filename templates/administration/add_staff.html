@@ -1,0 +1,46 @@
+{% extends 'administration/index.html' %}
+{% block content %}
+<div class="create">
+    <div class="create-data">
+        <h1>HỒ SƠ NHÂN VIÊN</h1>
+        <div class="text-data">
+            <form action="{% url 'administration:add_staff' %}" class="create-form" method="post">
+                {% csrf_token %}
+                <div class="flex_data_container">
+                    <h4 class="title">Mã y tế:</h4>
+                    <h4 class="value">{{form.identifier}}</h4>
+                </div>
+                <div class="flex_data_container">
+                    <h4 class="title">Họ và tên:</h4>
+                    <h4 class="value">{{form.name}}</h4>
+                </div>
+                <div class="flex_data_container">
+                    <h4 class="title">Giới tính:</h4>
+                    <h4 class="value">{{form.gender}}</h4>
+                </div>
+                <div class="flex_data_container">
+                    <h4 class="title">Ngày sinh:</h4>
+                    <h4 class="value">{{form.birthdate}}</h4>
+                </div>
+                <div class="flex_data_container">
+                    <h4 class="title">Địa chỉ nhà:</h4>
+                    <h4 class="value">{{form.home_address}}</h4>
+                </div>
+                <div class="flex_data_container">
+                    <h4 class="title">Số điện thoại:</h4>
+                    <h4 class="value">{{form.telecom}}</h4>
+                </div>
+                <div class="flex_data_container">
+                    <h4 class="title">Vị trí:</h4>
+                    <h4 class="value">{{form.practitioner_role}}</h4>
+                </div>
+                <div class="flex_data_container">
+                    <h4 class="title">Bằng cấp:</h4>
+                    <h4 class="value">{{form.qualification}}</h4>
+                </div>
+                <button class="btn">Tạo hồ sơ</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

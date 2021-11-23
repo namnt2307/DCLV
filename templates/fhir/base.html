@@ -12,24 +12,24 @@
   <ul class="menu">
       <li>
           <div class="dropdown">
-              <a href="{% url 'fhir:user_detail' group_name user_name %}"><i class="fa fa-home"
+              <a href="{% url 'fhir:user_detail'  %}"><i class="fa fa-home"
                       aria-hidden="true"></i></a>
           </div>
       </li>
       <li>
           <div class="dropdown">
-              <a href="{% url 'fhir:register' group_name user_name %}"> Quản lí hồ sơ </a>
+              <a href="{% url 'fhir:register'  %}"> Quản lí hồ sơ </a>
               <div class="dropdown-content">
-                  <a href="{% url 'fhir:register' group_name user_name %}">Tạo hồ sơ</a>
-                  <a href="{% url 'fhir:upload' group_name user_name %}">Chuyển đổi excel</a>
-                  <a href="{% url 'fhir:search' group_name user_name %}">Tìm kiếm hồ sơ</a>
+                  <a href="{% url 'fhir:register'  %}">Tạo hồ sơ</a>
+                  <a href="{% url 'fhir:upload'  %}">Chuyển đổi excel</a>
+                  <a href="{% url 'fhir:search'  %}">Tìm kiếm hồ sơ</a>
               </div>
               <!-- #328be4; -->
           </div>
       </li>
       <li>
           <div class="dropdown">
-              <a href="{% url 'fhir:upload' group_name user_name %}"> Quản lí lịch khám </a>
+              <a href="{% url 'fhir:upload'  %}"> Quản lí lịch khám </a>
               <div class="dropdown-content">
                   <a href="">TEXT</a>
                   <a href="">TEXT2</a>
@@ -71,7 +71,7 @@
             <button class="btn"  id="myButton">Lưu bản ghi</button>
             <script type="text/javascript">
               document.getElementById("myButton").onclick = function () {
-                  location.href = "{% url 'fhir:save' group_name user_name data.Patient.identifier data.Encounter.identifier%} ";
+                  location.href = "{% url 'fhir:save'  data.Patient.identifier data.Encounter.identifier%} ";
               };
             </script>
         </ul>
