@@ -14,12 +14,12 @@
         <h2>1. Quá trình bệnh lý</h2>
             <table>
                 <thead>
-                    <th>Tên triệu chứng</th>
-                    <th>Ngày xuất hiện triệu chứng</th>
-                    <th>Ngày hết</th>
-                    <th>Mức độ</th>
-                    {%if admission_conditions %}
+                    <th class="cell-data-4">Tên triệu chứng</th>
+                    <th class="cell-data-4">Ngày xuất hiện triệu chứng</th>
+                    <th class="cell-data-4">Ngày hết</th>
+                    <th class="cell-data-4">Mức độ</th>
                     <th></th>
+                    {%if admission_conditions %}                    
                     <th></th>
                     {%endif%}
                 </thead>
@@ -93,16 +93,17 @@
     </div>
     <div>
         <h2>2. Tiền sử bệnh</h2>
-        <div>
-            <h3>+ Bản thân</h3>
+        <div>            
+            <h3><i id="icon" class="fa fa-arrow-right" style="font-size: 18px; line-height:24px"></i> Bản thân</h3>
                 <table>
                     <thead>
-                        <th>Tên bệnh</th>
-                        <th>Ngày mắc bệnh</th>
-                        <th>Ngày hết</th>
-                        <th>Mức độ</th>
-                        {%if resolved_conditions%}
+                        <th class="cell-data-4">Tên bệnh</th>
+                        <th class="cell-data-4">Ngày mắc bệnh</th>
+                        <th class="cell-data-4">Ngày hết</th>
+                        <th class="cell-data-4">Mức độ</th>
                         <th></th>
+                        {%if resolved_conditions%}
+                        
                         <th></th>
                         {%endif%}
                     </thead>
@@ -177,18 +178,16 @@
                 </table>
         </div>
         <div>
-            <h3>+ Dị ứng</h3>
+            <h3><i id="icon" class="fa fa-arrow-right" style="font-size: 18px; line-height:24px"></i> Dị ứng</h3>
                 <table>
                     <thead>
-                        <th>Tình trạng dị ứng</th>
-                        <th>Phân loại dị ứng</th>
-                        <th>Tên dị ứng</th>
-                        <th>Mức độ nghiêm trọng</th>
-                        <th>Thời điểm phát hiện</th>
-                        <th>Thời điểm tái phát</th>
-                        {%if allergies%}
+                        <th class="cell-data-6">Tình trạng dị ứng</th>
+                        <th class="cell-data-6">Phân loại dị ứng</th>
+                        <th class="cell-data-6">Tên dị ứng</th>
+                        <th class="cell-data-6">Mức độ nghiêm trọng</th>
+                        <th class="cell-data-6">Thời điểm phát hiện</th>
+                        <th class="cell-data-6">Thời điểm tái phát</th>
                         <th></th>
-                        {%endif%}
                     </thead>
                     {% for allergy in allergies %}
                         <tbody id="{{allergy.allergy_identifier}}-data">
@@ -199,7 +198,7 @@
                                 <td class="cell-data-6">{{allergy.get_allergy_criticality_display}}</td>
                                 <td class="cell-data-6">{{allergy.allergy_onset|date:'d-m-Y'}}</td>
                                 <td class="cell-data-6">{{allergy.allergy_last_occurrence|date:'d-m-Y'}}</td>
-                                <td colspan="6"><button class="btn edit" type="button" onclick="toggleDisplay('{{allergy.allergy_identifier}}')">Chỉnh sửa</button></td>
+                                <td><button class="btn edit" type="button" onclick="toggleDisplay('{{allergy.allergy_identifier}}')">Chỉnh sửa</button></td>
                             </tr>
 
                             <tr>
@@ -311,7 +310,7 @@
                 </table>            
         </div>
         <div>
-            <h3>+ Gia đình</h3>
+            <h3><i id="icon" class="fa fa-arrow-right" style="font-size: 18px; line-height:24px"></i> Gia đình</h3>
         </div>
     </div>    
 </div>

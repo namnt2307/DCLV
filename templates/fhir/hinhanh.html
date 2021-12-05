@@ -20,7 +20,6 @@
         <th class="cell-data-10">Ngày yêu cầu</th>
         <th class="cell-data-10">Bác sĩ yêu cầu</th>
         <th class="cell-data-10">Ghi chú</th>
-        <th class="cell-data-10">Chi tiết</th>
         <th class="cell-data-10">Kết quả hình ảnh</th>
         <th class="cell-data-10">Chẩn đoán</th>
         {% if services %}
@@ -31,15 +30,14 @@
     {% if services %}
         {% for service in services %}
         <tr>
-            <td class="cell-data-10">{{service.service_identifier}}</td>
+            <td class="cell-data-10"><a href="{%url 'fhir:chitiethinhanh'  data.Patient.identifier data.Encounter.identifier service.service_identifier%}">{{service.service_identifier}}</a></td>
             <td class="cell-data-10">{{service.service_code}}</td>
             <td class="cell-data-10">{{service.get_service_status_display}}</td>
             <td class="cell-data-10">{{service.service_occurrence|date:"d-m-Y"}}</td>
             <td class="cell-data-10">{{service.service_authored|date:"d-m-Y"}}</td>
             <td class="cell-data-10">{{service.service_requester}}</td>
             <td class="cell-data-10">{{service.service_note}}</td>
-            <td class="cell-data-10"><a href="{%url 'fhir:chitiethinhanh'  data.Patient.identifier data.Encounter.identifier service.service_identifier%}">test</a></td>
-            <td class="cell-data-10"></td>
+            <td></td>
             {%comment%}<td><a href="{%url 'fhir:ketquahinhanh'  data.Patient.identifier data.Encounter.identifier service.service_identifier %}"></a></td>{%endcomment%}
             <td class="cell-data-10"><a href="{%url 'fhir:chandoan'  data.Patient.identifier data.Encounter.identifier service.service_identifier %}">Chẩn đoán</a></td>
             <td>
@@ -62,18 +60,18 @@
                 <form action="" method="POST">
                     {%csrf_token%}
                     <div class="flex_container">
-                        <label class="title">Tên xét nghiệm:</label>
+                        <label class="title">Tên thủ thuật:</label>
                        {{service_form.service_code|add_class:"value"}}
                     </div>
                     <br>
                     <div class="flex_container">
                         <label class="title">Ngày dự kiến thực hiện:</label>
-                        {{service_form.service_code|add_class:"value"}}
+                        {{service_form.service_occurrence|add_class:"value"}}
                     </div>
                     <br>
                     <div class="flex_container">
                         <label class="title">Ghi chú thêm:</label>
-                        {{service_form.service_code|add_class:"value"}}
+                        {{service_form.service_note|add_class:"value"}}
                     </div>
                     <br>
                     <button type="submit" class="btn">Thêm</button>
@@ -84,11 +82,11 @@
     </div>
     {% if services %}
     <tr>
-        <td colspan="11"><button class="float-left submit-button btn" onclick="openForm('serviceForm')">Thêm xét nghiệm</button></td>
+        <td colspan="10"><button class="float-left submit-button btn" onclick="openForm('serviceForm')">Thêm xét nghiệm</button></td>
     </tr>
     {%else%}
     <tr>
-        <td colspan="10"><button class="float-left submit-button btn" onclick="openForm('serviceForm')">Thêm xét nghiệm</button></td>
+        <td colspan="9"><button class="float-left submit-button btn" onclick="openForm('serviceForm')">Thêm xét nghiệm</button></td>
     </tr>
     {%endif%}
 </table>

@@ -2,10 +2,7 @@
 {% block doctor %}
 {% load static %}
 <link rel="stylesheet" href="{% static 'css/fhir/doctor.css'%}">
-<link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
-<script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
 <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css" integrity="sha384-AYmEC3Yw5cVb3ZcuHtOA93w35dYTsvhLPVnYs9eStHfGJvOvKxVfELGroGkvsg+p" crossorigin="anonymous"/>
 <div class="top-menu">
     <ul class="menu">
@@ -28,7 +25,7 @@
         </li>
         <li>
             <div class="dropdown">
-                <a {%if request.user.role != "medical assistant" %}href="{% url 'fhir:manage_schedule' %}"{% else %}href="{% url 'fhir:schedule' %}" {% endif %}> Quản lí lịch khám </a>
+                <a {%if request.user.role == "medical assistant" %}href="{% url 'fhir:manage_schedule' %}"{% else %}href="{% url 'fhir:schedule' %}" {% endif %}> Quản lí lịch khám </a>
                 <div class="dropdown-content">
                     <a href="">TEXT</a>
                     <a href="">TEXT2</a>

@@ -140,6 +140,7 @@ class MedicationForm(forms.ModelForm):
 
 
 class ServiceRequestForm(forms.ModelForm):  
+    service_occurrence = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}))
     class Meta:
         model = ServiceRequestModel
         fields = (
@@ -152,53 +153,6 @@ class ServiceRequestForm(forms.ModelForm):
         }
         widgets = {
             'service_occurrence': DateInput()
-        }
-
-
-class RequestForImageForm(forms.ModelForm):
-    # CATEGORY_CHOICES = (
-    #     ('363679005', 'Imaging'),
-    #     ('409063005', 'Counselling'),
-    #     ('409073007', 'Education'),
-    #     ('387713003', 'Surgical procedure')
-    # )
-    class Meta:
-        model = ServiceRequestModel
-        fields = (
-            'service_code', 'service_occurrence', 'service_note'
-        )
-        labels = {
-            'service_code': 'Tên thủ thuật/phẫu thuật',
-            'service_occurrence': 'Ngày dự kiến thực hiện',
-            'service_note': 'Ghi chú thêm'
-        }
-        widgets = {
-            'service_occurrence': DateInput(),
-            # 'service_category': widgets.Select(choices=)
-        }
-
-
-class RequestForProcedureForm(forms.ModelForm):
-    # CATEGORY_CHOICES = (
-    #     ('363679005', 'Imaging'),
-    #     ('409063005', 'Counselling'),
-    #     ('409073007', 'Education'),
-    #     ('387713003', 'Surgical procedure')
-    # )
-    class Meta:
-        model = ServiceRequestModel
-        fields = (
-            'service_category','service_code', 'service_occurrence', 'service_note'
-        )
-        labels = {
-            'service_category': 'Phân loại thủ thuật/phẫu thuật',
-            'service_code': 'Tên thủ thuật/phẫu thuật',
-            'service_occurrence': 'Ngày dự kiến thực hiện',
-            'service_note': 'Ghi chú thêm'
-        }
-        widgets = {
-            'service_occurrence': DateInput(),
-            # 'service_category': widgets.Select(choices=)
         }
 
 

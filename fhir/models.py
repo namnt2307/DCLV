@@ -118,7 +118,7 @@ class ConditionModel(models.Model):
     encounter_identifier = models.ForeignKey(
         EncounterModel, on_delete=models.CASCADE)
     condition_identifier = models.CharField(max_length=100, primary_key=True)
-    condition_code = models.CharField(max_length=100, default='')
+    condition_code = models.CharField(max_length=1000, default='')
     condition_clinical_status = models.CharField(
         max_length=100, choices=CLINICAL_CHOICES, blank=True)
     condition_verification_status = models.CharField(max_length=100, default='confirmed')
@@ -315,21 +315,21 @@ class DiagnosticReportModel(models.Model):
     diagnostic_version = models.IntegerField(default=0)
 
 
-class DischargeDiseases(models.Model):
+class DischargeDisease(models.Model):
     disease_code = models.CharField(max_length=10)
     disease_name = models.CharField(max_length=100)    
     disease_search = models.CharField(max_length=100)
 
 
-class ComorbidityDiseases(models.Model):
-    discharge_diseases = models.ForeignKey(DischargeDiseases, on_delete=models.CASCADE)
+class ComorbidityDisease(models.Model):
+    discharge_diseases = models.ForeignKey(DischargeDisease, on_delete=models.CASCADE)
     disease_code = models.CharField(max_length=10)
     disease_name = models.CharField(max_length=100)
     disease_search = models.CharField(max_length=100)
     
 
 
-class ScheduleModel(models.Model):
+class Schedule(models.Model):
     practitioner_name = models.CharField(max_length=100)
     practitioner_identifier = models.CharField(max_length=20)
     practitioner_location = models.CharField(max_length=100, null=True)
@@ -338,5 +338,16 @@ class ScheduleModel(models.Model):
     start_time = models.TimeField()
     end_time = models.TimeField()
     
+class AssignedEncounter(models.Model):
+    practitioner_name = models.CharField(max_length=100)
+    practitioner_identifier = models.CharField(max_length=20)
+    practitioner_location = models.CharField(max_length=100, null=True)
+    assigned_encounter = models.OneToOneField(EncounterModel, on_delete=models.CASCADE)
+    encounter_date = models.DateField()
+    session = models.CharField(max_length=20)
     
     
+class Medicine(models.Model):
+    medicine_name = models.CharField(max_length=200, unique=True)
+    medicine_unit = models.CharField(max_length=50, null=True)
+    medicine_price_on_unit = models.IntegerField(null=True)

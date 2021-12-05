@@ -658,8 +658,7 @@
         <div class="container">
             <div class="container-header">
                 <table style="width: 100%;"> 
-                    <tr class="column-header">
-                        
+                    <tr class="column-header">                        
                         <td>
                             <table class="column-header-container">
                                 <tbody>
@@ -730,9 +729,13 @@
                                                             <button class="btn" >Xóa</button>
                                                         </form>
                                                     {% endfor %}
-                                                   
-                                                        <button class="btn" onclick="changeDisplay('form-container', '0', 'morning')">Thêm</button>
-                                                   
+                                                    <button class="btn" onclick="changeDisplay('form-container', '0', 'morning')">Thêm</button>
+                                                    <br>
+                                                    {% if assigned_encounters.Monday.morning %}
+                                                        {% for encounter in assigned_encounters.Monday.morning %}
+                                                            <a href="{% url 'fhir:hanhchinh' encounter.assigned_encounter.patient.identifier encounter.assigned_encounter.encounter_identifier %}">{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</a>
+                                                        {% endfor %}
+                                                    {% endif %}
                                                 {% endif %}
                                             </td>
                                             <td {% if schedule_dates.Tuesday.morning %}class="available-time"{% else %}class="not-available-time" onclick="changeDisplay('form-container', '1', 'morning')"{% endif %}>
@@ -750,6 +753,12 @@
                                                         </form>
                                                     {% endfor %}
                                                     <button class="btn" onclick="changeDisplay('form-container', '1', 'morning')">Thêm</button>
+                                                    <br>
+                                                    {% if assigned_encounters.Tuesday.morning %}
+                                                        {% for encounter in assigned_encounters.Tuesday.morning %}
+                                                            <a href="{% url 'fhir:hanhchinh' encounter.assigned_encounter.patient.identifier encounter.assigned_encounter.encounter_identifier %}">{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</a>
+                                                        {% endfor %}
+                                                    {% endif %}
                                                 {% endif %}                                                
                                             </td>
                                             <td {% if schedule_dates.Wednesday.morning %}class="available-time"{% else %}class="not-available-time" onclick="changeDisplay('form-container', '2', 'morning')"{% endif %}>
@@ -767,6 +776,12 @@
                                                         </form>
                                                     {% endfor %}
                                                     <button class="btn" onclick="changeDisplay('form-container', '2', 'morning')">Thêm</button>
+                                                    <br>
+                                                    {% if assigned_encounters.Wednesday.morning %}
+                                                        {% for encounter in assigned_encounters.Wednesday.morning %}
+                                                            <a href="{% url 'fhir:hanhchinh' encounter.assigned_encounter.patient.identifier encounter.assigned_encounter.encounter_identifier %}">{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</a>
+                                                        {% endfor %}
+                                                    {% endif %}
                                                 {% endif %}                                                
                                             </td>
                                             <td {% if schedule_dates.Thursday.morning %}class="available-time"{% else %}class="not-available-time" onclick="changeDisplay('form-container', '3', 'morning')"{% endif %}>
@@ -784,6 +799,12 @@
                                                         </form>
                                                     {% endfor %}
                                                     <button class="btn" onclick="changeDisplay('form-container', '3', 'morning')">Thêm</button>
+                                                    <br>
+                                                    {% if assigned_encounters.Thursday.morning %}
+                                                        {% for encounter in assigned_encounters.Thursday.morning %}
+                                                            <a href="{% url 'fhir:hanhchinh' encounter.assigned_encounter.patient.identifier encounter.assigned_encounter.encounter_identifier %}">{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</a>
+                                                        {% endfor %}
+                                                    {% endif %}
                                                 {% endif %}                                                
                                             </td>
                                             <td {% if schedule_dates.Friday.morning %}class="available-time"{% else %}class="not-available-time" onclick="changeDisplay('form-container', '4', 'morning')"{% endif %}>
@@ -801,6 +822,12 @@
                                                         </form>
                                                     {% endfor %}
                                                     <button class="btn" onclick="changeDisplay('form-container', '4', 'morning')">Thêm</button>
+                                                    <br>
+                                                    {% if assigned_encounters.Friday.morning %}
+                                                        {% for encounter in assigned_encounters.Friday.morning %}
+                                                            <a href="{% url 'fhir:hanhchinh' encounter.assigned_encounter.patient.identifier encounter.assigned_encounter.encounter_identifier %}">{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</a>
+                                                        {% endfor %}
+                                                    {% endif %}
                                                 {% endif %}                                                
                                             </td>
                                             <td {% if schedule_dates.Saturday.morning %}class="available-time"{% else %}class="not-available-time" onclick="changeDisplay('form-container', '5', 'morning')"{% endif %}>
@@ -818,6 +845,12 @@
                                                         </form>
                                                     {% endfor %}
                                                     <button class="btn" onclick="changeDisplay('form-container', '5', 'morning')">Thêm</button>
+                                                    <br>
+                                                    {% if assigned_encounters.Saturday.morning %}
+                                                        {% for encounter in assigned_encounters.Saturday.morning %}
+                                                            <a href="{% url 'fhir:hanhchinh' encounter.assigned_encounter.patient.identifier encounter.assigned_encounter.encounter_identifier %}">{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</a>
+                                                        {% endfor %}
+                                                    {% endif %}
                                                 {% endif %}                                                
                                             </td>
                                         </tr>
@@ -837,6 +870,12 @@
                                                         </form>
                                                     {% endfor %}
                                                     <button class="btn" onclick="changeDisplay('form-container', '0', 'afternoon')">Thêm</button>
+                                                    <br>
+                                                    {% if assigned_encounters.Monday.afternoon %}
+                                                        {% for encounter in assigned_encounters.Monday.afternoon %}
+                                                            <a href="{% url 'fhir:hanhchinh' encounter.assigned_encounter.patient.identifier encounter.assigned_encounter.encounter_identifier %}">{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</a>
+                                                        {% endfor %}
+                                                    {% endif %}
                                                 {% endif %}                                                
                                             </td>
                                             <td {% if schedule_dates.Tuesday.afternoon %}class="available-time"{% else %}class="not-available-time" onclick="changeDisplay('form-container', '1', 'afternoon')"{% endif %}>
@@ -854,6 +893,12 @@
                                                         </form>
                                                     {% endfor %}
                                                     <button class="btn" onclick="changeDisplay('form-container', '1', 'afternoon')">Thêm</button>
+                                                    <br>
+                                                    {% if assigned_encounters.Tuesday.afternoon %}
+                                                        {% for encounter in assigned_encounters.Tuesday.afternoon %}
+                                                            <a href="{% url 'fhir:hanhchinh' encounter.assigned_encounter.patient.identifier encounter.assigned_encounter.encounter_identifier %}">{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</a>
+                                                        {% endfor %}
+                                                    {% endif %}
                                                 {% endif %}                                                                                       
                                             </td>
                                             <td {% if schedule_dates.Wednesday.afternoon %}class="available-time"{% else %}class="not-available-time" onclick="changeDisplay('form-container', '2', 'afternoon')"{% endif %}>
@@ -871,6 +916,12 @@
                                                         </form>
                                                     {% endfor %}
                                                     <button class="btn" onclick="changeDisplay('form-container', '2', 'afternoon')">Thêm</button>
+                                                    <br>
+                                                    {% if assigned_encounters.Wednesday.afternoon %}
+                                                        {% for encounter in assigned_encounters.Wednesday.afternoon %}                                                            
+                                                            <a href="{% url 'fhir:hanhchinh' encounter.assigned_encounter.patient.identifier encounter.assigned_encounter.encounter_identifier %}">{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</a>
+                                                        {% endfor %}
+                                                    {% endif %}
                                                 {% endif %}                                                                                       
                                             </td>
                                             <td {% if schedule_dates.Thursday.afternoon %}class="available-time"{% else %}class="not-available-time" onclick="changeDisplay('form-container', '3', 'afternoon')"{% endif %}>
@@ -888,6 +939,12 @@
                                                         </form>
                                                     {% endfor %}
                                                     <button class="btn" onclick="changeDisplay('form-container', '3', 'afternoon')">Thêm</button>
+                                                    <br>
+                                                    {% if assigned_encounters.Thursday.afternoon %}
+                                                        {% for encounter in assigned_encounters.Thursday.afternoon %}
+                                                            <a href="{% url 'fhir:hanhchinh' encounter.assigned_encounter.patient.identifier encounter.assigned_encounter.encounter_identifier %}">{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</a>
+                                                        {% endfor %}
+                                                    {% endif %}
                                                 {% endif %}                                                                                       
                                             </td>
                                             <td {% if schedule_dates.Friday.afternoon %}class="available-time"{% else %}class="not-available-time" onclick="changeDisplay('form-container', '4', 'afternoon')"{% endif %}>
@@ -905,6 +962,12 @@
                                                         </form>
                                                     {% endfor %}
                                                     <button class="btn" onclick="changeDisplay('form-container', '4', 'afternoon')">Thêm</button>
+                                                    <br>
+                                                    {% if assigned_encounters.Friday.afternoon %}
+                                                        {% for encounter in assigned_encounters.Friday.afternoon %}
+                                                            <a href="{% url 'fhir:hanhchinh' encounter.assigned_encounter.patient.identifier encounter.assigned_encounter.encounter_identifier %}">{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</a>
+                                                        {% endfor %}
+                                                    {% endif %}
                                                 {% endif %}                                                                                       
                                             </td>
                                             <td {% if schedule_dates.Saturday.afternoon %}class="available-time"{% else %}class="not-available-time" onclick="changeDisplay('form-container', '5', 'afternoon')"{% endif %}>
@@ -922,6 +985,12 @@
                                                         </form>
                                                     {% endfor %}
                                                     <button class="btn" onclick="changeDisplay('form-container', '5', 'afternoon')">Thêm</button>
+                                                    <br>
+                                                    {% if assigned_encounters.Saturday.afternoon %}
+                                                        {% for encounter in assigned_encounters.Saturday.afternoon %}
+                                                            <a href="{% url 'fhir:hanhchinh' encounter.assigned_encounter.patient.identifier encounter.assigned_encounter.encounter_identifier %}">{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</a>
+                                                        {% endfor %}
+                                                    {% endif %}
                                                 {% endif %}                                                                                       
                                             </td>
                                         </tr>

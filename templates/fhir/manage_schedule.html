@@ -723,9 +723,14 @@
                                                 <td {% if schedule_dates.Monday.morning %}class="available-time"{% else %}class="not-available-time"{% endif %}>
                                                     {% if schedule_dates.Monday.morning %}
                                                         {% for date in schedule_dates.Monday.morning %}
-                                                            <h4>{{date.practitioner_name}} {{date.practitioner_identifier}} {{date.start_time|time:'H:i'}} - {{date.end_time|time:'H:i'}}</h4>
+                                                        <div id="container">
+                                                            <i id="icon" class="fa fa-arrow-right"></i>
+                                                            <h4 style="display: inline;">{{date.practitioner_name}} {{date.practitioner_identifier}} {{date.start_time|time:'H:i'}} - {{date.end_time|time:'H:i'}}</h4>                                                            
                                                             <input type="hidden" name="practitioner" value="{{date.practitioner_identifier}}">
+                                                            <input type="hidden" name="schedule_date" value="{{days_of_week.Monday|date:'Y-m-d'}}">
+                                                            <input type="hidden" name="session" value="morning">
                                                             <button type="submit">Chỉ định</button>
+                                                        </div>
                                                         {% endfor %}                                              
                                                     {% endif %}
                                                 </td>
@@ -734,6 +739,8 @@
                                                         {% for date in schedule_dates.Tuesday.morning %}
                                                             <h4>{{date.practitioner_name}} {{date.practitioner_identifier}}: {{date.start_time|time:'H:i'}} - {{date.end_time|time:'H:i'}}</h4>
                                                             <input type="hidden" name="practitioner" value="{{date.practitioner_identifier}}">
+                                                            <input type="hidden" name="schedule_date" value="{{days_of_week.Tuesday|date:'Y-m-d'}}">
+                                                            <input type="hidden" name="session" value="morning">
                                                             <button type="submit">Chỉ định</button>
                                                         {% endfor %}                                              
                                                     {% endif %}                                            
@@ -743,6 +750,8 @@
                                                         {% for date in schedule_dates.Wednesday.morning %}
                                                             <h4>{{date.practitioner_name}} {{date.practitioner_identifier}}: {{date.start_time|time:'H:i'}} - {{date.end_time|time:'H:i'}}</h4>
                                                             <input type="hidden" name="practitioner" value="{{date.practitioner_identifier}}">
+                                                            <input type="hidden" name="schedule_date" value="{{days_of_week.Wednesday|date:'Y-m-d'}}">
+                                                            <input type="hidden" name="session" value="morning">
                                                             <button type="submit">Chỉ định</button>
                                                         {% endfor %}                                              
                                                     {% endif %}                                               
@@ -752,6 +761,8 @@
                                                         {% for date in schedule_dates.Thursday.morning %}
                                                             <h4>{{date.practitioner_name}} {{date.practitioner_identifier}}: {{date.start_time|time:'H:i'}} - {{date.end_time|time:'H:i'}}</h4>
                                                             <input type="hidden" name="practitioner" value="{{date.practitioner_identifier}}">
+                                                            <input type="hidden" name="schedule_date" value="{{days_of_week.Thursday|date:'Y-m-d'}}">
+                                                            <input type="hidden" name="session" value="morning">
                                                             <button type="submit">Chỉ định</button>
                                                         {% endfor %}                                              
                                                     {% endif %}                                              
@@ -761,6 +772,8 @@
                                                         {% for date in schedule_dates.Friday.morning %}
                                                             <h4>{{date.practitioner_name}} {{date.practitioner_identifier}}: {{date.start_time|time:'H:i'}} - {{date.end_time|time:'H:i'}}</h4>
                                                             <input type="hidden" name="practitioner" value="{{date.practitioner_identifier}}">
+                                                            <input type="hidden" name="schedule_date" value="{{days_of_week.Friday|date:'Y-m-d'}}">
+                                                            <input type="hidden" name="session" value="morning">
                                                             <button type="submit">Chỉ định</button>
                                                         {% endfor %}                                              
                                                     {% endif %}                                              
@@ -770,6 +783,8 @@
                                                         {% for date in schedule_dates.Saturday.morning %}
                                                             <h4>{{date.practitioner_name}} {{date.practitioner_identifier}}: {{date.start_time|time:'H:i'}} - {{date.end_time|time:'H:i'}}</h4>
                                                             <input type="hidden" name="practitioner" value="{{date.practitioner_identifier}}">
+                                                            <input type="hidden" name="schedule_date" value="{{days_of_week.Saturday|date:'Y-m-d'}}">
+                                                            <input type="hidden" name="session" value="morning">
                                                             <button type="submit">Chỉ định</button>
                                                         {% endfor %}                                              
                                                     {% endif %}                                              
@@ -781,6 +796,8 @@
                                                         {% for date in schedule_dates.Monday.afternoon %}
                                                             <h4>{{date.practitioner_name}} {{date.practitioner_identifier}}: {{date.start_time|time:'H:i'}} - {{date.end_time|time:'H:i'}}</h4>
                                                             <input type="hidden" name="practitioner" value="{{date.practitioner_identifier}}">
+                                                            <input type="hidden" name="schedule_date" value="{{days_of_week.Monday|date:'Y-m-d'}}">
+                                                            <input type="hidden" name="session" value="afternoon">
                                                             <button type="submit">Chỉ định</button>
                                                         {% endfor %}                                              
                                                     {% endif %}                                              
@@ -790,6 +807,8 @@
                                                         {% for date in schedule_dates.Tuesday.afternoon %}
                                                             <h4>{{date.practitioner_name}} {{date.practitioner_identifier}}: {{date.start_time|time:'H:i'}} - {{date.end_time|time:'H:i'}}</h4>
                                                             <input type="hidden" name="practitioner" value="{{date.practitioner_identifier}}">
+                                                            <input type="hidden" name="schedule_date" value="{{days_of_week.Tuesday|date:'Y-m-d'}}">
+                                                            <input type="hidden" name="session" value="afternoon">
                                                             <button type="submit">Chỉ định</button>
                                                         {% endfor %}                                              
                                                     {% endif %}                                                                                           
@@ -799,6 +818,8 @@
                                                         {% for date in schedule_dates.Wednesday.afternoon %}
                                                             <h4>{{date.practitioner_name}} {{date.practitioner_identifier}}: {{date.start_time|time:'H:i'}} - {{date.end_time|time:'H:i'}}</h4>
                                                             <input type="hidden" name="practitioner" value="{{date.practitioner_identifier}}">
+                                                            <input type="hidden" name="schedule_date" value="{{days_of_week.Wednesday|date:'Y-m-d'}}">
+                                                            <input type="hidden" name="session" value="afternoon">
                                                             <button type="submit">Chỉ định</button>
                                                         {% endfor %}                                              
                                                     {% endif %}                                                                                          
@@ -808,6 +829,8 @@
                                                         {% for date in schedule_dates.Thursday.afternoon %}
                                                             <h4>{{date.practitioner_name}} {{date.practitioner_identifier}}: {{date.start_time|time:'H:i'}} - {{date.end_time|time:'H:i'}}</h4>
                                                             <input type="hidden" name="practitioner" value="{{date.practitioner_identifier}}">
+                                                            <input type="hidden" name="schedule_date" value="{{days_of_week.Thursday|date:'Y-m-d'}}">
+                                                            <input type="hidden" name="session" value="afternoon">
                                                             <button type="submit">Chỉ định</button>
                                                         {% endfor %}                                              
                                                     {% endif %}                                                                                          
@@ -817,6 +840,8 @@
                                                         {% for date in schedule_dates.Friday.afternoon %}
                                                             <h4>{{date.practitioner_name}} {{date.practitioner_identifier}}: {{date.start_time|time:'H:i'}} - {{date.end_time|time:'H:i'}}</h4>
                                                             <input type="hidden" name="practitioner" value="{{date.practitioner_identifier}}">
+                                                            <input type="hidden" name="schedule_date" value="{{days_of_week.Friday|date:'Y-m-d'}}">
+                                                            <input type="hidden" name="session" value="afternoon">
                                                             <button type="submit">Chỉ định</button>
                                                         {% endfor %}                                              
                                                     {% endif %}                                                                                           
@@ -826,6 +851,8 @@
                                                         {% for date in schedule_dates.Saturday.afternoon %}
                                                             <h4>{{date.practitioner_name}} {{date.practitioner_identifier}}: {{date.start_time|time:'H:i'}} - {{date.end_time|time:'H:i'}}</h4>
                                                             <input type="hidden" name="practitioner" value="{{date.practitioner_identifier}}">
+                                                            <input type="hidden" name="schedule_date" value="{{days_of_week.Saturday|date:'Y-m-d'}}">
+                                                            <input type="hidden" name="session" value="afternoon">
                                                             <button type="submit">Chỉ định</button>
                                                         {% endfor %}                                              
                                                     {% endif %}                                                                                          
@@ -874,6 +901,7 @@
             </div>
         </form>
     </div>
+
     <script>
         function changeDisplay(elementId,weekDay, sessionValue){
             element = document.getElementById(elementId);
@@ -940,5 +968,18 @@
             end = document.getElementById("end_time");
             console.log(end.value);
         }
+        var div = document.getElementById('container');
+        var icon = document.getElementById('icon');
+        var open = false;
+        
+        div.addEventListener('click', function(){
+          if(open){
+            icon.className = 'fa fa-arrow-right';  
+          } else{
+            icon.className = 'fa fa-arrow-right open';
+          }
+          
+          open = !open;
+        });
     </script>
 {% endblock %}

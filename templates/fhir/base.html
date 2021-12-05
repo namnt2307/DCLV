@@ -4,10 +4,17 @@
 {% load widget_tweaks %}
 <link rel="stylesheet" href="{% static 'css/fhir/khambenh.css'%}">
 <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
-<script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-
+<script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
+<link rel="stylesheet" href="{% static 'css/fhir/jquery.flexdatalist.min.css' %}">
+<script src="//code.jquery.com/jquery.min.js"></script>
+<script src="{% static 'js/fhir/jquery.flexdatalist.min.js' %}"></script>
+<script>
+    $('.flexdatalist').flexdatalist({
+        minLength: 1
+    });
+</script>
 <div class="top-menu">
   <ul class="menu">
       <li>
@@ -29,7 +36,7 @@
       </li>
       <li>
           <div class="dropdown">
-              <a href="{% url 'fhir:upload'  %}"> Quản lí lịch khám </a>
+              <a {%if request.user.role == "medical assistant" %}href="{% url 'fhir:manage_schedule' %}"{% else %}href="{% url 'fhir:schedule' %}" {% endif %}> Quản lí lịch khám </a>
               <div class="dropdown-content">
                   <a href="">TEXT</a>
                   <a href="">TEXT2</a>
@@ -51,7 +58,7 @@
             <hr>
             <li class="left-body__list-item"><a href={%block url5%}{%endblock%}> Các xét nghiệm</a></li>
             <hr>
-            <li class="left-body__list-item"><a href={%block url6%}{%endblock%}> Hình ảnh</a></li>
+            <li class="left-body__list-item"><a href={%block url6%}{%endblock%}> Chẩn đoán hình ảnh</a></li>
             <hr>
             <li class="left-body__list-item"><a href={%block url7%}{%endblock%}> Thuốc</a></li>
             <hr>

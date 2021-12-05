@@ -429,7 +429,7 @@ def create_practitioner_resource(practitioner):
         id_.set('value', practitioner['id'])
     if practitioner.get('identifier'):
         identifier_resource = ET.SubElement(root, 'identifier')
-        identifier_type(identifier_resource, 'urn:trinhcongminh', 'P' + practitioner['identifier'], 'usual', [
+        identifier_type(identifier_resource, 'urn:trinhcongminh', practitioner['identifier'], 'usual', [
                         {'system': 'http://terminology.hl7.org/CodeSystem/v2-0203', 'code': 'EI'}])
     if practitioner.get('name'):
         name = ET.SubElement(root, 'name')
@@ -457,7 +457,7 @@ def create_practitioner_resource(practitioner):
     return ET.tostring(root, encoding="us-ascii", method="xml", xml_declaration=None, default_namespace=None, short_empty_elements=True)
 
 
-def create_encounter_resource(encounter, patient_id, patient_name, practitioner_id):
+def create_encounter_resource(encounter, patient_id, patient_name, practitioner_id, practitioner_name):
     root = ET.Element('Encounter')
     tree = ET.ElementTree(root)
     root.set("xmlns", "http://hl7.org/fhir")
@@ -495,7 +495,7 @@ def create_encounter_resource(encounter, patient_id, patient_name, practitioner_
                    'Patient', display=patient_name)
     participant = ET.SubElement(root, 'participant')
     reference_type(participant, 'Practitioner/' +
-                   practitioner_id, 'Practitioner')
+                   practitioner_id, 'Practitioner', display=practitioner_name)
     if encounter.get('period'):
         period = ET.SubElement(root, 'period')
         period_type(period, encounter['period'].get(
@@ -541,8 +541,18 @@ def create_condition_resource(condition, patient_id, patient_name, encounter_id)
         codeable_concept(severity, [{'system': 'http://snomed.info/sct',
                          'code': condition['severity'], 'version': '4.0.1'}], text=condition['severity'])
     if condition.get('code'):
-        code = ET.SubElement(root, 'code')
-        codeable_concept(code, text=condition['code'])
+        if condition.get('display_code'):
+            code = ET.SubElement(root, 'code')
+            codes = [
+            {
+                'system': "http://hl7.org/fhir/sid/icd-10",
+                'code': condition['code']
+            }
+            ]
+            codeable_concept(code, codes=codes, text=condition['code'] + ": " + condition['display_code'])
+        else:
+            code = ET.SubElement(root, 'code')
+            codeable_concept(code, text=condition['code'])
     subject = ET.SubElement(root, 'subject')
     reference_type(subject, 'Patient/' + patient_id,
                    'Patient', display=patient_name)
@@ -554,6 +564,9 @@ def create_condition_resource(condition, patient_id, patient_name, encounter_id)
     if condition.get('abatement'):
         abatement = ET.SubElement(root, 'abatementDateTime')
         abatement.set('value', condition['abatement'])
+    if condition.get('asserter'):
+        asserter = ET.SubElement(root, 'asserter')
+        reference_type(asserter, condition['type'] + "/" + condition['asserter']['id'], condition['asserter']['type'], display=condition['asserter']['name'])
     if condition.get('note'):
         note = ET.SubElement(root, 'note')
         annotation_type(note, text=condition['note'])
@@ -597,7 +610,10 @@ def create_service_resource(service, patient_id, patient_name, encounter_id):
     if service.get('requester'):
         requester = ET.SubElement(root, 'requester')
         reference_type(requester, 'Practitioner/' +
-                       service['requester'], 'Practitioner')
+                       service['requester']['id'], 'Practitioner', display=service['requester']['name'])
+    if service.get('performer'):
+        performer = ET.SubElement(root, 'performer')
+        reference_type(performer, 'Practitioner/' + service['performer']['id'], 'Practitioner', display=service['performer']['name'])
     if service.get('note'):
         note = ET.SubElement(root, 'note')
         annotation_type(note, text=service['note'])
@@ -640,7 +656,7 @@ def create_observation_resource(observation, patient_id, patient_name, encounter
     if observation.get('performer'):
         performer = ET.SubElement(root, 'performer')
         reference_type(performer, 'Practitioner/' +
-                       observation['performer'], 'Practitioner')
+                       observation['performer']['id'], 'Practitioner', display=observation['performer']['name'])
     if observation.get('value_quantity'):
         valueQuantity = ET.SubElement(root, 'valueQuantity')
         quantity_type(
@@ -690,11 +706,11 @@ def create_procedure_resource(procedure, patient_id, patient_name, encounter_id,
     if procedure.get('asserter'):
         asserter = ET.SubElement(root, 'asserter')
         reference_type(asserter, 'Practitioner/' +
-                       procedure['asserter'], 'Practitioner')
+                       procedure['asserter']['id'], 'Practitioner', display=procedure['asserter']['name'])
     if procedure.get('performer'):
         performer = ET.SubElement(root, 'performer')
         reference_type(performer, 'Practitioner/' +
-                       procedure['performer'], 'Practitioner')
+                       procedure['performer']['id'], 'Practitioner', display=procedure['performer']['name'])
     if procedure.get('reason_code'):
         reasonCode = ET.SubElement(root, 'reasonCode')
         codeable_concept(reasonCode, text=procedure['reasonCode'])
@@ -811,7 +827,7 @@ def create_diagnostic_report_resource(diagnostic_report, patient_id, patient_nam
     if diagnostic_report.get('performer'):
         performer = ET.SubElement(root, 'performer')
         reference_type(performer, 'Practitioner/' +
-                       diagnostic_report['performer'], 'Practitioner')
+                       diagnostic_report['performer']['id'], 'Practitioner', diagnostic_report['performer']['name'])
     if diagnostic_report.get('conclusion'):
         conclusion = ET.SubElement(root, 'conclusion')
         conclusion.set('value', diagnostic_report['conclusion'])

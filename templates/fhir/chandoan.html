@@ -9,7 +9,7 @@
 {%block url6%}'{%url 'fhir:hinhanh'  data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
 {% load widget_tweaks %}
 {%block function%}
-<h1>THÔNG TIN CHẨN ĐOÁN CHO {{service.service_code|upper}}</h1>
+<h1>THÔNG TIN CHẨN ĐOÁN</h1>
     {% if diagnostic_report %}
         <div id="data">    
             <p>Chẩn đoán có hiệu lực từ: {{diagnostic_report.diagnostic_effective|date:'H:i:s d-m-Y'}}</p>
@@ -20,13 +20,11 @@
             <form action="" method="POST">
                 {% csrf_token %}
                 <input type="hidden" name="diagnostic_identifier" value="{{diagnostic_report.diagnostic_identifier}}">
-
                 {%with 'value:'|add:diagnostic_report.diagnostic_conclusion as code%}
                     <label for="id_diagnostic_conclusion">Chẩn đoán</label>
                     <br>
                     {{diagnostic_form.diagnostic_conclusion|attr:code}}
                 {% endwith %}
-
                 <button type="submit">Lưu lại</button>
             </form>
         </div>
@@ -54,13 +52,12 @@
             }
         </script>
     {%else%}
-        <div class="diagnosticForm">
-            <h4>Chẩn đoán của bác sĩ</h4>
+        <div class="diagnosticForm" style="text-align: center;">
             <form action="" method="POST">
                 {% csrf_token %}
                 {{diagnostic_form.diagnostic_conclusion}}
                 <br>
-                <button type="submit">Lưu lại</button>
+                <button class="btn" style="width: 90%; margin: auto 0;" type="submit">Lưu lại</button>
             </form>
         </div>
     {% endif %}
