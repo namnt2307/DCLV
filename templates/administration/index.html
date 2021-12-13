@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
+    <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    {% load static %}    
+    <link rel="stylesheet" href="{% static 'css/administration/administration.css' %}">
+    <title>Trang Quản lý</title>
+</head>
+<body>
+    <div class="header">
+        <div class="left-header">
+            <img src="{% static 'img/logo.png'%}" alt="logo-bach-khoa">
+            <h3>TRANG QUẢN LÝ</h3>
+        </div>
+        <div class="right-header">
+            <a href="{% url 'login:change_password' %}">Đổi mật khẩu</a>
+            <a href="{% url 'login:logout' %}">Đăng xuất</a>
+        </div>
+    </div>
+    <div class="top-menu">
+        <ul class="menu">
+            <li>
+                <div class="dropdown">
+                    <a href="{% url 'administration:administration'%}"><i class="fa fa-home"
+                            aria-hidden="true"></i></a>
+                </div>
+            </li>
+            <li>
+                <div class="dropdown">
+                    <a href="{% url 'fhir:register' %}"> Quản lý nhân sự </a>
+                    <div class="dropdown-content">
+                        <a href="{% url 'administration:staff' %}">Xem danh sách</a>
+                        <a href="{% url 'administration:add_staff' %}">Thêm nhân viên</a>
+                    </div>
+                    <!-- #328be4; -->
+                </div>
+            </li>
+            <li>
+                <div class="dropdown">
+                    <a href="{% url 'fhir:upload' %}"> Quản lí lịch khám </a>
+                    <div class="dropdown-content">
+                        <a href="">TEXT</a>
+                        <a href="">TEXT2</a>
+                    </div>
+                </div>
+            </li>
+        </ul>
+    </div>
+    <div class="content">
+        {%block content%}
+        {% endblock%}
+    </div>
+</body>
+</html>

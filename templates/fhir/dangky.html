@@ -1,0 +1,92 @@
+{%extends 'fhir/base.html'%}
+{%block url1%}'{%url 'fhir:hanhchinh'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url2%}'{%url 'fhir:dangky'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url3%}'{%url 'fhir:hoibenh'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url5%}'{%url 'fhir:xetnghiem'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url4%}'{%url 'fhir:toanthan'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%comment%}{%block url8%}'{%url 'fhir:thuthuat'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}{%endcomment%}{%block url7%}'{%url 'fhir:thuoc'  data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
+{%block url6%}'{%url 'fhir:hinhanh'  data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
+{% load widget_tweaks %}
+{%block function%}
+    {%if data.Encounter_Info %}
+    <h1>THÔNG TIN ĐĂNG KÝ KHÁM</h1>
+    <div id='data'>
+        <div class="flex_container">
+            <p class="title">Loại hình thăm khám:</p> <p>{{data.Encounter_Info.get_encounter_class_display}}</p>
+        </div>
+        <div class="flex_container">
+            <p class="title">Loại bệnh án:</p> <p>{{data.Encounter_Info.encounter_type}}</p>
+        </div>
+        <div class="flex_container">
+            <p class="title">Dịch vụ khám bệnh:</p> <p>{{data.Encounter_Info.encounter_service}}</p>
+        </div>
+        <div class="flex_container">
+            <p class="title">Mức độ ưu tiên:</p> <p>{{data.Encounter_Info.get_encounter_priority_display}}</p>
+        </div>
+        <div class="flex_container">
+            <p class="title">Lý do đến khám:</p> <p>{{data.Encounter_Info.encounter_reason}}</p>
+        </div>
+        <button id="clickButton" class="btn edit" onclick="changeDisplay()" style="width:100px">Chỉnh sửa</button>
+    </div>
+        <div id='form' style="display: none;">
+            <form action="" method="POST">
+                {%csrf_token%}
+            {%with 'value:'|add:data.Encounter.identifier as code%}
+                {{form.encounter_identifier|attr:code|attr:'type:hidden'}}
+            {%endwith%}
+            {%with 'value:'|add:data.Encounter_Info.encounter_class as code%}
+            <div class="flex_container">
+                <p class="title">Loại hình thăm khám:</p>
+                <p>{{form.encounter_class|attr:code}}</p>
+            </div>
+            {%endwith%}
+            {%with 'value:'|add:data.Encounter_Info.encounter_type as code%}
+            <div class="flex_container">
+                <p class="title">Loại bệnh án:</p>
+                <p>{{form.encounter_type|attr:code}}</p>
+            </div>
+            {%endwith%}
+            {%with 'value:'|add:data.Encounter_Info.encounter_service as code%}
+            <div class="flex_container">
+                <p class="title">Dịch vụ khám bệnh:</p>
+                <p>{{form.encounter_service|attr:code}}</p>
+            </div>
+            {%endwith%}
+            {%with 'value:'|add:data.Encounter_Info.encounter_priority as code%}
+            <div class="flex_container">
+                <p class="title">Mức độ ưu tiên:</p>
+                <p>{{form.encounter_priority|attr:code}}</p>
+            </div>
+            {%endwith%}
+            {%with 'value:'|add:data.Encounter_Info.encounter_reason as code%}
+            <div class="flex_container">
+                <p class="title">Lý do đến khám:</p>
+                <p>{{form.encounter_reason|attr:code}}</p>
+            </div>
+            {%endwith%}
+            <button type="submit" class="btn" style="width:100px">Lưu lại</button>
+            <button type="button" class="btn cancel" onclick="changeDisplay()" style="width:100px">Huỷ bỏ</button>
+        </form>
+        </div>
+        <script>
+            function changeDisplay(){
+                data = document.getElementById('data');
+                form = document.getElementById('form');
+                if (form.style.display == "none"){
+                    data.style.display = "none";
+                    form.style.display = "block";            
+                }
+                else{
+                    data.style.display = "block";
+                    form.style.display = "none";
+                }
+            }
+        </script>
+    {%else%}
+    <form action="{% url 'fhir:dangky'  data.Patient.identifier data.Encounter.identifier %}" method="POST">
+        {%csrf_token%}
+        {{form.as_p}}
+        <input type="submit" value="Submit">
+    </form>
+    {%endif%}
+{%endblock%}

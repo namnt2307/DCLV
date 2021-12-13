@@ -1,0 +1,64 @@
+{%extends 'fhir/base.html'%}
+{%block url1%}'{%url 'fhir:hanhchinh'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url2%}'{%url 'fhir:dangky'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url3%}'{%url 'fhir:hoibenh'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url5%}'{%url 'fhir:xetnghiem'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url4%}'{%url 'fhir:toanthan'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%comment%}{%block url8%}'{%url 'fhir:thuthuat'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}{%endcomment%}
+{%block url7%}'{%url 'fhir:thuoc'  data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
+{%block url6%}'{%url 'fhir:hinhanh'  data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
+{% load widget_tweaks %}
+{%block function%}
+<h1>THÔNG TIN CHẨN ĐOÁN</h1>
+    {% if diagnostic_report %}
+        <div id="data">    
+            <p>Chẩn đoán có hiệu lực từ: {{diagnostic_report.diagnostic_effective|date:'H:i:s d-m-Y'}}</p>
+            <p>Chẩn đoán: {{diagnostic_report.diagnostic_conclusion}}</p>
+            <p>Bác sĩ chẩn đoán: {{diagnostic_report.diagnostic_performer}}</p>
+        </div>
+        <div id="form" style="display:None;">
+            <form action="" method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="diagnostic_identifier" value="{{diagnostic_report.diagnostic_identifier}}">
+                {%with 'value:'|add:diagnostic_report.diagnostic_conclusion as code%}
+                    <label for="id_diagnostic_conclusion">Chẩn đoán</label>
+                    <br>
+                    {{diagnostic_form.diagnostic_conclusion|attr:code}}
+                {% endwith %}
+                <button type="submit">Lưu lại</button>
+            </form>
+        </div>
+
+        <div class="button">
+            <button id="clickButton" onclick="changeDisplay()">Chỉnh sửa</button>
+        </div>
+
+        <script>
+            function changeDisplay(){
+                button = document.getElementById('clickButton');
+                data = document.getElementById('data');
+                form = document.getElementById('form');
+                console.log(button.textContent);
+                if (button.textContent == "Chỉnh sửa"){
+                    data.style.display = "none";
+                    form.style.display = "block";
+                    button.textContent = "Hủy bỏ"
+                }
+                else{
+                    data.style.display = "block";
+                    form.style.display = "none";
+                    button.textContent = "Chỉnh sửa"
+                }
+            }
+        </script>
+    {%else%}
+        <div class="diagnosticForm" style="text-align: center;">
+            <form action="" method="POST">
+                {% csrf_token %}
+                {{diagnostic_form.diagnostic_conclusion}}
+                <br>
+                <button class="btn" style="width: 90%; margin: auto 0;" type="submit">Lưu lại</button>
+            </form>
+        </div>
+    {% endif %}
+{%endblock%}

@@ -1,0 +1,86 @@
+{%extends 'fhir/base.html'%}
+{%block url1%}'{%url 'fhir:hanhchinh'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url2%}'{%url 'fhir:dangky'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url3%}'{%url 'fhir:hoibenh'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url5%}'{%url 'fhir:xetnghiem'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url4%}'{%url 'fhir:toanthan'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%comment%}{%block url8%}'{%url 'fhir:thuthuat'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}{%endcomment%}
+{%block url7%}'{%url 'fhir:thuoc'  data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
+{%block url6%}'{%url 'fhir:hinhanh'  data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
+{%block function%}
+{{services}}
+<h1>CÁC THỦ THUẬT ĐƯỢC THỰC HIỆN </h1>
+<table>
+    <thead>
+        <th>Mã thủ thuật, dịch vụ</th>
+        <th>Phân loại thủ thuật</th>
+        <th>Phương pháp thực hiện</th>
+        <th>Người yêu cầu</th>
+        <th>Người thực hiện</th>
+        <th>Tình trạng thủ thuật</th>
+    </thead>
+    <tbody>
+    {% if procedures %}
+        {% for procedure in procedures %}
+        <tr>
+            <td><a href="{%url 'fhir:chitietthuthuat'  data.Patient.identifier data.Encounter.identifier procedure.procedure_identifier%}">{{procedure.procedure_identifier}}</a></td>
+            <td>{{procedure.procedure_category}}</td>
+            <td>{{procedure.procedure_code}}</td>
+            <td>{{procedure.procedure_asserter}}</td>
+            <td>{{procedure.procedure_performer}}</td>
+            <td>{{procedure.procedure_status}}</td>
+        </tr>
+        {% endfor %}
+    {% endif %}
+</tbody>
+    <tr>
+        <td colspan="6"><button class="float-left submit-button" onclick="openForm('procPopupForm')">Thêm thủ thuật</button></td>
+    </tr>
+</table>
+<div class="formPopup" id="procPopupForm">
+    <form action="{% url 'fhir:thuthuat'  data.Patient.identifier data.Encounter.identifier%}" class="formContainer"
+        method="POST">
+        {%csrf_token%}
+        {{form.as_p}}
+        <button type="submit" class="btn">Add</button>
+        <button type="button" class="btn cancel" onclick="closeForm('procPopupForm')">Close</button>
+    </form>
+</div>
+<h1>CÁC THỦ THUẬT KHÁC</h1>
+<table>
+    <thead>
+        <th>ID xét nghiệm</th>
+        <th>Tên xét nghiệm</th>
+        <th>Tình trạng</th>
+        <th>Ngày dự kiến thực hiện</th>
+        <th>Ngày yêu cầu</th>
+        <th>Bác sĩ yêu cầu</th>
+        <th>Ghi chú</th>
+    </thead>
+    <tbody>
+</tbody>
+    <div>
+        <div class="formPopup" id="serviceForm">
+        <div class="formContainer">
+        <form action="" method="POST">
+            {%csrf_token%}
+            {{service_form.as_p}}
+            <button type="submit" class="btn">Add</button>
+            <button type="button" class="btn cancel" onclick="closeForm('serviceForm')">Close</button>
+        </form>
+    </div>
+    </div>
+    </div>
+    <tr>
+        <td colspan="7"><button class="float-left submit-button" onclick="openForm('serviceForm')">Thêm thủ thuật, phẫu thuật</button></td>
+    </tr>
+</table>
+
+
+<script type="text/javascript">
+document.getElementById("myButton").onclick = function () {
+    location.href = "{% url 'fhir:encounter'  data.Patient.identifier%} ";
+};
+</script>
+</div>
+{%endblock%}

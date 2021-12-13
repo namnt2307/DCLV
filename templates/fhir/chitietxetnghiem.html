@@ -1,0 +1,103 @@
+{%extends 'fhir/base.html'%}
+{%block url1%}'{%url 'fhir:hanhchinh'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url2%}'{%url 'fhir:dangky'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url3%}'{%url 'fhir:hoibenh'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url5%}'{%url 'fhir:xetnghiem'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%block url4%}'{%url 'fhir:toanthan'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
+{%comment%}{%block url8%}'{%url 'fhir:thuthuat'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}{%endcomment%}{%block url7%}'{%url 'fhir:thuoc'  data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
+{%block url6%}'{%url 'fhir:hinhanh'  data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
+{%block function%}
+    {% if service %}
+        <h1>KẾT QUẢ XÉT NGHIỆM</h1>
+        <table>
+            <thead>
+                <th>Tên xét nghiệm</th>
+                <th>Kết quả</th>
+                <th>Trị số bình thường</th>
+                <th>Đơn vị</th>
+            </thead>
+            <tr>
+                <td colspan="4"><b>{{service.service_code}}</b></td>
+            </tr>
+            
+            {% if service.service_status == 'active'%}
+            <tbody>
+                <form action="" method="POST">
+                {%csrf_token%}
+                {%for observation in observations%}
+                <tr>
+                    <td>{{observation.observation_code}}</td>
+                    {% if request.user.role == 'medical laboratory technician' %}
+                        <td><input type="text" name="{{observation.observation_identifier}}"></td>
+                    {% else %}
+                    <td><input type="text" name="{{observation.observation_identifier}}" disabled></td>
+                    {% endif %}
+                    <td>{{observation.observation_reference_range}}</td>
+                    <td>{{observation.observation_value_unit}}</td>
+                </tr>
+                {%endfor%}
+                <tr>
+                    <td colspan="4"><button type="submit">Lưu lại</button></td>
+                </tr>
+            </form>
+        </tbody>
+            {%else%}
+                <tbody id='data'>
+                {%for observation in observations%}
+                <tr>
+                    <td>{{observation.observation_code}}</td>
+                    <td>{{observation.observation_value_quantity}}</td>
+                    <td>{{observation.observation_reference_range}}</td>
+                    <td>{{observation.observation_value_unit}}</td>
+                </tr>
+                {%endfor%}
+                </tbody>
+                
+                <tbody id='form' style="display: none;">
+                    <form action="" method="POST">
+                        {%csrf_token%}
+                        {%for observation in observations%}
+                        <tr>
+                            <td>{{observation.observation_code}}</td>
+                            <td><input type="text" name="{{observation.observation_identifier}}" value="{{observation.observation_value_quantity}}"></td>
+                            <td>{{observation.observation_reference_range}}</td>
+                            <td>{{observation.observation_value_unit}}</td>
+                        </tr>
+                        {%endfor%}
+                        <tr>
+                            {% if request.user.role == 'medical laboratory technician' %}
+                                <td colspan="4"><button type="submit">Lưu lại</button></td>
+                            {% else %}
+                                <td colspan="4"><button type="submit" disabled="disabled">Lưu lại</button></td>
+                            {% endif %}
+                        </tr>
+                    </form>
+                </tbody>
+                {% if request.user.role == 'medical laboratory technician' %}
+                    <td colspan="4"><button id="clickButton" onclick="changeDisplay()">Chỉnh sửa</button></td>
+                {% else %}
+                    <td colspan="4"><button id="clickButton" disabled="disabled" onclick="changeDisplay()">Chỉnh sửa</button></td>
+                {% endif %}
+            {%endif%}
+            
+        </table>
+        <h1>Bác sĩ làm xét nghiệm: {{service.service_performer}}</h1>
+        <script>
+            function changeDisplay(){
+                button = document.getElementById('clickButton');
+                data = document.getElementById('data');
+                form = document.getElementById('form');
+                if (button.textContent == "Chỉnh sửa"){
+                    data.style.display = "none";
+                    form.style.display = "table-row-group";
+                    button.textContent = "Hủy bỏ"
+                }
+                else{
+                    data.style.display = "table-row-group";
+                    form.style.display = "none";
+                    button.textContent = "Chỉnh sửa"
+                }
+            }
+        </script>
+    {%endif%}
+{%endblock%}

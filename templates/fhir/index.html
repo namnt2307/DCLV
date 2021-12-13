@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+    <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
+    <title>Trang Khám bệnh</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/fhir/index.css'%}">
+</head>
+<body>
+    <div class="header">
+        <div class="left-header">
+            <img src="{% static 'img/logo.png'%}" alt="logo-bach-khoa">
+            <h3>Bệnh viện Bình Thạnh</h3>
+        </div>
+        <div class="right-header">
+            <a href="{% url 'login:change_password' %}">Đổi mật khẩu</a>
+            <a href="{% url 'login:logout' %}">Đăng xuất</a>
+        </div>
+    </div>
+
+        {% block doctor %}
+        {% endblock %}
+        {% block patient %}
+        {% endblock %}
+    
+    <div class="footer">
+
+    </div>
+</body>
+</html>

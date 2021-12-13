@@ -1,0 +1,107 @@
+.right-body__head{
+    display: flex;
+    width: 100%;
+    justify-content: space-around;
+}
+
+.right-body__head .right-body__head-left{
+    margin: 12px 30px 12px 12px;
+    flex:1;
+}
+.right-body__head .right-body__head-center{
+    flex:2;
+    margin: auto auto;
+    text-align: center;
+    padding: 0 12px;
+}
+.right-body__head .right-body__head-right{
+    margin: 12px 12px 12px 30px;
+    flex:1;
+}
+.right-body__body-section{
+    position: relative;
+}
+.right-body__body-section__flexcontainer{
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+}
+
+.right-body__body-section__flexitem{
+    min-width: 50%;
+}
+.right-body__body-section__item-content{
+    width: 100%;
+    min-height: 20px;
+    border: 1px solid black;
+    margin-bottom: 10px;
+    padding: 12px;
+}
+
+.right-body__body-section__item-content--flex{
+    border: none;
+    display: flex;
+    justify-content: space-between;
+}
+.right-body__body-section__item-content--flex--align-center{
+    align-items: flex-start;
+}
+.right-body__body-section__item-content--flex-column{
+    flex-direction: column;
+    justify-content: space-between;
+}
+.right-body__body-section__item-content--flex__item{
+    flex: 1;
+}
+.right-body__body-section__item-content--flex__item--2{
+    flex: 2;
+}
+
+.right-body__body-section__item-content--flex__item--with-border{
+    border: 1px solid black;
+    padding: 12px;
+}
+
+.right-body__body-section__item-content table{
+    border: 1px solid black;
+}
+.right-body__body-section__item-content table tr,td,th{
+    border: 1px solid black;
+    padding: 0 10px;
+    
+}
+.right-body__body-section__item-content table th{
+    text-align: center;
+}
+
+
+.signature{
+    display: flex;
+    justify-content: flex-end;
+    margin: 50px;
+}
+.signature__content{
+    text-align: center;
+    margin-bottom: 50px;
+}
+.history-container{
+    position: relative;
+}
+.history{
+    background-color: white;
+    border: 1px solid black;
+    padding: 12px;
+    position: absolute;
+    width: 80%;
+    margin: 0px auto;
+    top: 20px;
+    left: 0;
+    right: 0;
+    height: 300px;
+    overflow: scroll;
+    z-index: 1;
+}
+.history-header{
+    display: flex;
+    justify-content: space-between;
+}

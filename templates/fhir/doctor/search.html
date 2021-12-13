@@ -1,0 +1,74 @@
+{% extends 'fhir/doctor.html' %}
+{% block function %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/fhir/search.css'%}">
+<link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+<script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
+<script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+{% if messages %}
+    {% for message in messages %}
+        <script>
+            alert('{{message}}');
+        </script>
+    {% endfor %}
+{% endif %}
+<div class="searchpage">
+  
+
+  <div  class="search">
+    <form action="{% url 'fhir:search'  %}" method="get">
+      <div class="search_type_container">
+        <label for="">Tìm kiếm theo</label>
+          <div>
+          <input type="radio" name="search_type" id="identifier_type" value="identifier_type" required>
+          <label for="identifier_type">Mã y tế</label>
+        </div>
+        <div>
+          
+          <input type="radio" name="search_type" id="name_type" value="name_type">
+          <label for="name_type">Tên</label>
+        </div>
+      </div>
+      <div class="search-bar">
+        <label for="search_value">Tìm kiếm hồ sơ</label>
+        <input type="text" class="form-control input-sm" maxlength="64" placeholder="Search" name="search_value"
+        id="identifier" />
+      <button type="submit" class="btn btn-primary btn-sm">Search</button>
+    </div>
+    </form>
+  </div>
+  <div class="searchtable">
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">Mã y tế</th>
+          <th scope="col">Họ và tên</th>
+          <th scope="col">Giới tính</th>
+          <th scope="col">Ngày sinh</th>
+          <th scope="col">Địa chỉ</th>
+          <th scope="col">Nơi làm việc</th>
+          <th scope="col">Số điện thoại</th>
+        </tr>
+      </thead>
+      {% if data.Patient %}
+      {% for patient in data.Patient %}
+      <tbody>
+        <tr>
+          <td> <a
+              href="{% url 'fhir:display_detail' patient.identifier %}">{{patient.identifier}}</a>
+          </td>
+          <td>{{patient.name}}</td>
+          <td>{{patient.gender}}</td>
+          <td>{{patient.birthdate|date:'d-m-Y'}}</td>
+          <td>{{patient.home_address}}</td>
+          <td>{{patient.work_address}}</td>
+          <td>{{patient.telecom}}</td>
+        </tr>
+      </tbody>
+      {%endfor%}
+      {% endif%}
+    </table>
+  </div>
+</div>
+
+{% endblock %}

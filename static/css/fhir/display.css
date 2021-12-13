@@ -1,0 +1,87 @@
+.display-box {
+    background-color: rgb(255, 255, 255);
+    color: black;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    border-radius: 25px;
+    width: 80%;
+    padding-left: 50px;
+    padding-right: 50px;
+    padding-bottom: 30px;
+    margin: 20px auto 10px;
+    position: relative;
+
+}
+.display-box .display-data {
+    padding-top: 30px;
+    
+}
+.patient-data {
+    display: flex;
+}
+h1 {
+    border-bottom: 2px solid rgb(0, 0, 0);
+    width: fit-content;
+}
+.patient {
+    display: flex;
+}
+.name {
+    margin-top: 30px;
+}
+.title {
+    min-width: 150px;
+    font-weight: bold;
+    /* padding-left: 100px; */
+}
+.value{
+    flex:1;
+}
+.patient-image {
+    padding-top: 30px;
+    padding-left: 50px;
+}
+img {
+    width: 150px;
+    height: 170px;
+    margin-right:12px;
+}
+table{
+    width: 100%;
+}
+table, th, td {
+    
+    border: 1px solid black;
+    /* border-collapse: collapse; */
+    padding: 5px;
+ }
+ .formPopup {
+    display: none;
+    position: absolute;
+    left: calc(50% - 180px);
+    top:10px;
+    background-color: #fff;
+    
+    }
+    .formContainer {
+    padding: 20px;
+    background-color: #fff;
+    border: 1px solid black;
+    }
+    .formContainer .btn {
+    padding: 12px 20px;
+    border: none;
+    background-color: #8ebf42;
+    color: #fff;
+    cursor: pointer;
+    width: 100%;
+    margin-bottom: 15px;
+    opacity: 0.8;
+    
+    }
+    .formContainer .cancel {
+    background-color: #cc0000;
+    }
+    .formContainer .btn:hover,
+    .openButton:hover {
+    opacity: 1;
+}

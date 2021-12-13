@@ -1,0 +1,1106 @@
+{% extends 'fhir/doctor.html' %}
+{% block function %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/fhir/schedule.css' %}">
+{% for date in schedule_dates %}
+    {{date.start_time|time:'H'}}
+    {% if date.start_time|time:'H'|add:'0' == 0 %}
+        {{date.start_time}}
+    {% endif %}
+    {{date.end_time|time:'H'}}
+{% endfor %}
+    <div class="schedule">
+        {% comment %}
+        <div class="container">
+            <div class="search-bar">
+                <input type="text" id="search" onkeyup="onPageSearch()" placeholder="Tìm kiếm">
+            </div
+            <div class="container-header">
+                <table style="width: 100%;"> 
+                    <tr class="column-header">
+                        <td style="width:50px;"></td>
+                        <td style="width: 10px;"></td>
+                        <td>
+                            <table class="column-header-container">
+                                <tbody>
+                                    <tr class="header-data">
+                                        <td>
+                                            <p>Thứ Hai</p>
+                                            <p>{{days_of_week.Monday|date:'d-m-Y'}}</p>
+                                        </td>
+                                        <td>
+                                            <p>Thứ Ba</p>
+                                            <p>{{days_of_week.Tuesday|date:'d-m-Y'}}</p>
+                                        </td>
+                                        <td>
+                                            <p>Thứ Tư</p>
+                                            <p>{{days_of_week.Wednesday|date:'d-m-Y'}}</p>
+                                        </td>
+                                        <td>
+                                            <p>Thứ Năm</p>
+                                            <p>{{days_of_week.Thursday|date:'d-m-Y'}}</p>
+                                        </td>
+                                        <td>
+                                            <p>Thứ Sáu</p>
+                                            <p>{{days_of_week.Friday|date:'d-m-Y'}}</p>
+                                        </td>
+                                        <td>
+                                            <p>Thứ Bảy</p>
+                                            <p>{{days_of_week.Saturday|date:'d-m-Y'}}</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </td>
+                        <td style="width: 17px;"></td>
+                    </tr>
+                </table>
+            </div>
+            <div class="container-body" id="container-body" onclick="changeDisplay('form-container')">
+                <table style="width: 100%;">
+                    <tbody>             
+                            <tr>
+                                <td class="row-header">
+                                    <table class="row-header-container">
+                                        <tbody>
+                                            <tr>
+                                                <td>01:00</td>
+                                            </tr>
+                                            <tr>
+                                                <td>02:00</td>
+                                            </tr>
+                                            <tr>
+                                                <td>03:00</td>
+                                            </tr>
+                                            <tr>
+                                                <td>04:00</td>
+                                            </tr>
+                                            <tr>
+                                                <td>05:00</td>
+                                            </tr>
+                                            <tr>
+                                                <td>06:00</td>
+                                            </tr>
+                                            <tr>
+                                                <td>07:00</td>
+                                            </tr>
+                                            <tr>
+                                                <td>08:00</td>
+                                            </tr>
+                                            <tr>
+                                                <td>09:00</td>
+                                            </tr>
+                                            <tr>
+                                                <td>10:00</td>
+                                            </tr>
+                                            <tr>
+                                                <td>11:00</td>
+                                            </tr>
+                                            <tr>
+                                                <td>12:00</td>
+                                            </tr>
+                                            <tr>
+                                                <td>13:00</td>
+                                            </tr>
+                                            <tr>
+                                                <td>14:00</td>
+                                            </tr>
+                                            <tr>
+                                                <td>15:00</td>
+                                            </tr>
+                                            <tr>
+                                                <td>16:00</td>
+                                            </tr>
+                                            <tr>
+                                                <td>17:00</td>
+                                            </tr>
+                                            <tr>
+                                                <td>18:00</td>
+                                            </tr>
+                                            <tr>
+                                                <td>19:00</td>
+                                            </tr>
+                                            <tr>
+                                                <td>20:00</td>
+                                            </tr>
+                                            <tr>
+                                                <td>21:00</td>
+                                            </tr>
+                                            <tr>
+                                                <td>22:00</td>
+                                            </tr>
+                                            <tr>
+                                                <td>23:00</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                                <td class="line">
+                                    <table style="width: 10px;">
+                                        <tr>
+                                            <td style="border-top: solid white 0.1px"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border-bottom: solid white 0.1px"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border-top: solid white 0.1px"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border-bottom: solid white 0.1px"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border-top: solid white 0.1px"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border-bottom: solid white 0.1px"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border-top: solid white 0.1px"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border-bottom: solid white 0.1px"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border-top: solid white 0.1px"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border-bottom: solid white 0.1px"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border-top: solid white 0.1px"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border-bottom: solid white 0.1px"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border-top: solid white 0.1px"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border-bottom: solid white 0.1px"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border-top: solid white 0.1px"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border-bottom: solid white 0.1px"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border-top: solid white 0.1px"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border-bottom: solid white 0.1px"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border-top: solid white 0.1px"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border-bottom: solid white 0.1px"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border-top: solid white 0.1px"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border-bottom: solid white 0.1px"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border-top: solid white 0.1px"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border-bottom: solid white 0.1px"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border-top: solid white 0.1px"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border-bottom: solid white 0.1px"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border-top: solid white 0.1px"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border-bottom: solid white 0.1px"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border-top: solid white 0.1px"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border-bottom: solid white 0.1px"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border-top: solid white 0.1px"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border-bottom: solid white 0.1px"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border-top: solid white 0.1px"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border-bottom: solid white 0.1px"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border-top: solid white 0.1px"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border-bottom: solid white 0.1px"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border-top: solid white 0.1px"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border-bottom: solid white 0.1px"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border-top: solid white 0.1px"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border-bottom: solid white 0.1px"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border-top: solid white 0.1px"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border-bottom: solid white 0.1px"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border-top: solid white 0.1px"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border-bottom: solid white 0.1px"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border-top: solid white 0.1px"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border-bottom: solid white 0.1px"></td>
+                                        </tr>
+                                    </table>
+                                </td>
+                                <td class="table-data">
+                                    <table class="data-container">
+                                        <tr>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                    </tbody>
+                </table>
+            </div>  
+        </div>
+        {% endcomment %}
+        <div class="container">
+            <div class="container-header">
+                <table style="width: 100%;"> 
+                    <tr class="column-header">                        
+                        <td>
+                            <table class="column-header-container">
+                                <tbody>
+                                    <tr class="header-data">
+                                        <td style="width:50px;"></td>
+                                        <td>
+                                            <p>Thứ Hai</p>
+                                            <p>{{days_of_week.Monday|date:'d-m-Y'}}</p>
+                                        </td>
+                                        <td>
+                                            <p>Thứ Ba</p>
+                                            <p>{{days_of_week.Tuesday|date:'d-m-Y'}}</p>
+                                        </td>
+                                        <td>
+                                            <p>Thứ Tư</p>
+                                            <p>{{days_of_week.Wednesday|date:'d-m-Y'}}</p>
+                                        </td>
+                                        <td>
+                                            <p>Thứ Năm</p>
+                                            <p>{{days_of_week.Thursday|date:'d-m-Y'}}</p>
+                                        </td>
+                                        <td>
+                                            <p>Thứ Sáu</p>
+                                            <p>{{days_of_week.Friday|date:'d-m-Y'}}</p>
+                                        </td>
+                                        <td>
+                                            <p>Thứ Bảy</p>
+                                            <p>{{days_of_week.Saturday|date:'d-m-Y'}}</p>
+                                        </td>
+                                        <td style="width: 17px;"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </td>  
+                    </tr>
+                </table>
+            </div>
+            <div class="container-body" id="container-body">
+                <table style="width: 100%;">
+                    <tbody>             
+                            <tr>
+                                <td class="row-header">
+                                    <table class="row-header-container">
+                                        <tbody>
+                                            <tr>
+                                                <td>Sáng</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Chiều</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                                <td class="table-data">
+                                    <table class="data-container">
+                                        <tr>
+                                            <td {% if schedule_dates.Monday.morning %}class="available-time"{% else %}class="not-available-time" onclick="changeDisplay('form-container', '0', 'morning')"{% endif %}>
+                                                {% if schedule_dates.Monday.morning %}
+                                                    {% for date in schedule_dates.Monday.morning %}
+                                                        <p>Từ {{date.start_time|time:'H:i'}} Đến {{date.end_time|time:'H:i'}}</p>
+                                                        <form action="{% url 'fhir:delete' %}" method="post">
+                                                            {% csrf_token %}
+                                                            <input type="hidden" name="resource_type" value="schedule_value">
+                                                            <input type="hidden" name="resource_identifier" id="" value="">
+                                                            <input type="hidden" name="start_time" value="{{date.start_time|time:'H:i:s'}}">
+                                                            <input type="hidden" name="end_time" value="{{date.end_time|time:'H:i:s'}}">
+                                                            <input type="hidden" name="url_next" value="{{request.path}}">
+                                                            <button class="btn" >Xóa</button>
+                                                        </form>
+                                                    {% endfor %}
+                                                    <button class="btn" onclick="changeDisplay('form-container', '0', 'morning')">Thêm</button>
+                                                    <br>
+                                                    {% if assigned_encounters.Monday.morning %}
+                                                        {% for encounter in assigned_encounters.Monday.morning %}
+                                                            <a href="{% url 'fhir:hanhchinh' encounter.assigned_encounter.patient.identifier encounter.assigned_encounter.encounter_identifier %}">{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</a>
+                                                        {% endfor %}
+                                                    {% endif %}
+                                                {% endif %}
+                                            </td>
+                                            <td {% if schedule_dates.Tuesday.morning %}class="available-time"{% else %}class="not-available-time" onclick="changeDisplay('form-container', '1', 'morning')"{% endif %}>
+                                                {% if schedule_dates.Tuesday.morning %}
+                                                    {% for date in schedule_dates.Tuesday.morning %}
+                                                        <p>Từ {{date.start_time|time:'H:i'}} Đến {{date.end_time|time:'H:i'}}</p>
+                                                        <form action="{% url 'fhir:delete' %}" method="post">
+                                                            {% csrf_token %}
+                                                            <input type="hidden" name="resource_type" value="schedule_value">
+                                                            <input type="hidden" name="resource_identifier" id="" value="">
+                                                            <input type="hidden" name="start_time" value="{{date.start_time|time:'H:i:s'}}">
+                                                            <input type="hidden" name="end_time" value="{{date.end_time|time:'H:i:s'}}">
+                                                            <input type="hidden" name="url_next" value="{{request.path}}">
+                                                            <button class="btn" >Xóa</button>
+                                                        </form>
+                                                    {% endfor %}
+                                                    <button class="btn" onclick="changeDisplay('form-container', '1', 'morning')">Thêm</button>
+                                                    <br>
+                                                    {% if assigned_encounters.Tuesday.morning %}
+                                                        {% for encounter in assigned_encounters.Tuesday.morning %}
+                                                            <a href="{% url 'fhir:hanhchinh' encounter.assigned_encounter.patient.identifier encounter.assigned_encounter.encounter_identifier %}">{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</a>
+                                                        {% endfor %}
+                                                    {% endif %}
+                                                {% endif %}                                                
+                                            </td>
+                                            <td {% if schedule_dates.Wednesday.morning %}class="available-time"{% else %}class="not-available-time" onclick="changeDisplay('form-container', '2', 'morning')"{% endif %}>
+                                                {% if schedule_dates.Wednesday.morning %}
+                                                    {% for date in schedule_dates.Wednesday.morning %}
+                                                        <p>Từ {{date.start_time|time:'H:i'}} Đến {{date.end_time|time:'H:i'}}</p>
+                                                        <form action="{% url 'fhir:delete' %}" method="post">
+                                                            {% csrf_token %}
+                                                            <input type="hidden" name="resource_type" value="schedule_value">
+                                                            <input type="hidden" name="resource_identifier" id="" value="">
+                                                            <input type="hidden" name="start_time" value="{{date.start_time|time:'H:i:s'}}">
+                                                            <input type="hidden" name="end_time" value="{{date.end_time|time:'H:i:s'}}">
+                                                            <input type="hidden" name="url_next" value="{{request.path}}">
+                                                            <button class="btn" >Xóa</button>
+                                                        </form>
+                                                    {% endfor %}
+                                                    <button class="btn" onclick="changeDisplay('form-container', '2', 'morning')">Thêm</button>
+                                                    <br>
+                                                    {% if assigned_encounters.Wednesday.morning %}
+                                                        {% for encounter in assigned_encounters.Wednesday.morning %}
+                                                            <a href="{% url 'fhir:hanhchinh' encounter.assigned_encounter.patient.identifier encounter.assigned_encounter.encounter_identifier %}">{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</a>
+                                                        {% endfor %}
+                                                    {% endif %}
+                                                {% endif %}                                                
+                                            </td>
+                                            <td {% if schedule_dates.Thursday.morning %}class="available-time"{% else %}class="not-available-time" onclick="changeDisplay('form-container', '3', 'morning')"{% endif %}>
+                                                {% if schedule_dates.Thursday.morning %}
+                                                    {% for date in schedule_dates.Thursday.morning %}
+                                                        <p>Từ {{date.start_time|time:'H:i'}} Đến {{date.end_time|time:'H:i'}}</p>
+                                                        <form action="{% url 'fhir:delete' %}" method="post">
+                                                            {% csrf_token %}
+                                                            <input type="hidden" name="resource_type" value="schedule_value">
+                                                            <input type="hidden" name="resource_identifier" id="" value="">
+                                                            <input type="hidden" name="start_time" value="{{date.start_time|time:'H:i:s'}}">
+                                                            <input type="hidden" name="end_time" value="{{date.end_time|time:'H:i:s'}}">
+                                                            <input type="hidden" name="url_next" value="{{request.path}}">
+                                                            <button class="btn" >Xóa</button>
+                                                        </form>
+                                                    {% endfor %}
+                                                    <button class="btn" onclick="changeDisplay('form-container', '3', 'morning')">Thêm</button>
+                                                    <br>
+                                                    {% if assigned_encounters.Thursday.morning %}
+                                                        {% for encounter in assigned_encounters.Thursday.morning %}
+                                                            <a href="{% url 'fhir:hanhchinh' encounter.assigned_encounter.patient.identifier encounter.assigned_encounter.encounter_identifier %}">{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</a>
+                                                        {% endfor %}
+                                                    {% endif %}
+                                                {% endif %}                                                
+                                            </td>
+                                            <td {% if schedule_dates.Friday.morning %}class="available-time"{% else %}class="not-available-time" onclick="changeDisplay('form-container', '4', 'morning')"{% endif %}>
+                                                {% if schedule_dates.Friday.morning %}
+                                                    {% for date in schedule_dates.Friday.morning %}
+                                                        <p>Từ {{date.start_time|time:'H:i'}} Đến {{date.end_time|time:'H:i'}}</p>
+                                                        <form action="{% url 'fhir:delete' %}" method="post">
+                                                            {% csrf_token %}
+                                                            <input type="hidden" name="resource_type" value="schedule_value">
+                                                            <input type="hidden" name="resource_identifier" id="" value="">
+                                                            <input type="hidden" name="start_time" value="{{date.start_time|time:'H:i:s'}}">
+                                                            <input type="hidden" name="end_time" value="{{date.end_time|time:'H:i:s'}}">
+                                                            <input type="hidden" name="url_next" value="{{request.path}}">
+                                                            <button class="btn" >Xóa</button>
+                                                        </form>
+                                                    {% endfor %}
+                                                    <button class="btn" onclick="changeDisplay('form-container', '4', 'morning')">Thêm</button>
+                                                    <br>
+                                                    {% if assigned_encounters.Friday.morning %}
+                                                        {% for encounter in assigned_encounters.Friday.morning %}
+                                                            <a href="{% url 'fhir:hanhchinh' encounter.assigned_encounter.patient.identifier encounter.assigned_encounter.encounter_identifier %}">{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</a>
+                                                        {% endfor %}
+                                                    {% endif %}
+                                                {% endif %}                                                
+                                            </td>
+                                            <td {% if schedule_dates.Saturday.morning %}class="available-time"{% else %}class="not-available-time" onclick="changeDisplay('form-container', '5', 'morning')"{% endif %}>
+                                                {% if schedule_dates.Saturday.morning %}
+                                                    {% for date in schedule_dates.Saturday.morning %}
+                                                        <p>Từ {{date.start_time|time:'H:i'}} Đến {{date.end_time|time:'H:i'}}</p>
+                                                        <form action="{% url 'fhir:delete' %}" method="post">
+                                                            {% csrf_token %}
+                                                            <input type="hidden" name="resource_type" value="schedule_value">
+                                                            <input type="hidden" name="resource_identifier" id="" value="">
+                                                            <input type="hidden" name="start_time" value="{{date.start_time|time:'H:i:s'}}">
+                                                            <input type="hidden" name="end_time" value="{{date.end_time|time:'H:i:s'}}">
+                                                            <input type="hidden" name="url_next" value="{{request.path}}">
+                                                            <button class="btn" >Xóa</button>
+                                                        </form>
+                                                    {% endfor %}
+                                                    <button class="btn" onclick="changeDisplay('form-container', '5', 'morning')">Thêm</button>
+                                                    <br>
+                                                    {% if assigned_encounters.Saturday.morning %}
+                                                        {% for encounter in assigned_encounters.Saturday.morning %}
+                                                            <a href="{% url 'fhir:hanhchinh' encounter.assigned_encounter.patient.identifier encounter.assigned_encounter.encounter_identifier %}">{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</a>
+                                                        {% endfor %}
+                                                    {% endif %}
+                                                {% endif %}                                                
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td {% if schedule_dates.Monday.afternoon %}class="available-time"{% else %}class="not-available-time" onclick="changeDisplay('form-container', '0', 'afternoon')"{% endif %}>
+                                                {% if schedule_dates.Monday.afternoon %}
+                                                    {% for date in schedule_dates.Monday.afternoon %}
+                                                        <p>Từ {{date.start_time|time:'H:i'}} Đến {{date.end_time|time:'H:i'}}</p>
+                                                        <form action="{% url 'fhir:delete' %}" method="post">
+                                                            {% csrf_token %}
+                                                            <input type="hidden" name="resource_type" value="schedule_value">
+                                                            <input type="hidden" name="resource_identifier" id="" value="">
+                                                            <input type="hidden" name="start_time" value="{{date.start_time|time:'H:i:s'}}">
+                                                            <input type="hidden" name="end_time" value="{{date.end_time|time:'H:i:s'}}">
+                                                            <input type="hidden" name="url_next" value="{{request.path}}">
+                                                            <button class="btn" >Xóa</button>
+                                                        </form>
+                                                    {% endfor %}
+                                                    <button class="btn" onclick="changeDisplay('form-container', '0', 'afternoon')">Thêm</button>
+                                                    <br>
+                                                    {% if assigned_encounters.Monday.afternoon %}
+                                                        {% for encounter in assigned_encounters.Monday.afternoon %}
+                                                            <a href="{% url 'fhir:hanhchinh' encounter.assigned_encounter.patient.identifier encounter.assigned_encounter.encounter_identifier %}">{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</a>
+                                                        {% endfor %}
+                                                    {% endif %}
+                                                {% endif %}                                                
+                                            </td>
+                                            <td {% if schedule_dates.Tuesday.afternoon %}class="available-time"{% else %}class="not-available-time" onclick="changeDisplay('form-container', '1', 'afternoon')"{% endif %}>
+                                                {% if schedule_dates.Tuesday.afternoon %}
+                                                    {% for date in schedule_dates.Tuesday.afternoon %}
+                                                        <p>Từ {{date.start_time|time:'H:i'}} Đến {{date.end_time|time:'H:i'}}</p>
+                                                        <form action="{% url 'fhir:delete' %}" method="post">
+                                                            {% csrf_token %}
+                                                            <input type="hidden" name="resource_type" value="schedule_value">
+                                                            <input type="hidden" name="resource_identifier" id="" value="">
+                                                            <input type="hidden" name="start_time" value="{{date.start_time|time:'H:i:s'}}">
+                                                            <input type="hidden" name="end_time" value="{{date.end_time|time:'H:i:s'}}">
+                                                            <input type="hidden" name="url_next" value="{{request.path}}">
+                                                            <button class="btn" >Xóa</button>
+                                                        </form>
+                                                    {% endfor %}
+                                                    <button class="btn" onclick="changeDisplay('form-container', '1', 'afternoon')">Thêm</button>
+                                                    <br>
+                                                    {% if assigned_encounters.Tuesday.afternoon %}
+                                                        {% for encounter in assigned_encounters.Tuesday.afternoon %}
+                                                            <a href="{% url 'fhir:hanhchinh' encounter.assigned_encounter.patient.identifier encounter.assigned_encounter.encounter_identifier %}">{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</a>
+                                                        {% endfor %}
+                                                    {% endif %}
+                                                {% endif %}                                                                                       
+                                            </td>
+                                            <td {% if schedule_dates.Wednesday.afternoon %}class="available-time"{% else %}class="not-available-time" onclick="changeDisplay('form-container', '2', 'afternoon')"{% endif %}>
+                                                {% if schedule_dates.Wednesday.afternoon %}
+                                                    {% for date in schedule_dates.Wednesday.afternoon %}
+                                                        <p>Từ {{date.start_time|time:'H:i'}} Đến {{date.end_time|time:'H:i'}}</p>
+                                                        <form action="{% url 'fhir:delete' %}" method="post">
+                                                            {% csrf_token %}
+                                                            <input type="hidden" name="resource_type" value="schedule_value">
+                                                            <input type="hidden" name="resource_identifier" id="" value="">
+                                                            <input type="hidden" name="start_time" value="{{date.start_time|time:'H:i:s'}}">
+                                                            <input type="hidden" name="end_time" value="{{date.end_time|time:'H:i:s'}}">
+                                                            <input type="hidden" name="url_next" value="{{request.path}}">
+                                                            <button class="btn" >Xóa</button>
+                                                        </form>
+                                                    {% endfor %}
+                                                    <button class="btn" onclick="changeDisplay('form-container', '2', 'afternoon')">Thêm</button>
+                                                    <br>
+                                                    {% if assigned_encounters.Wednesday.afternoon %}
+                                                        {% for encounter in assigned_encounters.Wednesday.afternoon %}                                                            
+                                                            <a href="{% url 'fhir:hanhchinh' encounter.assigned_encounter.patient.identifier encounter.assigned_encounter.encounter_identifier %}">{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</a>
+                                                        {% endfor %}
+                                                    {% endif %}
+                                                {% endif %}                                                                                       
+                                            </td>
+                                            <td {% if schedule_dates.Thursday.afternoon %}class="available-time"{% else %}class="not-available-time" onclick="changeDisplay('form-container', '3', 'afternoon')"{% endif %}>
+                                                {% if schedule_dates.Thursday.afternoon %}
+                                                    {% for date in schedule_dates.Thursday.afternoon %}
+                                                        <p>Từ {{date.start_time|time:'H:i'}} Đến {{date.end_time|time:'H:i'}}</p>
+                                                        <form action="{% url 'fhir:delete' %}" method="post">
+                                                            {% csrf_token %}
+                                                            <input type="hidden" name="resource_type" value="schedule_value">
+                                                            <input type="hidden" name="resource_identifier" id="" value="">
+                                                            <input type="hidden" name="start_time" value="{{date.start_time|time:'H:i:s'}}">
+                                                            <input type="hidden" name="end_time" value="{{date.end_time|time:'H:i:s'}}">
+                                                            <input type="hidden" name="url_next" value="{{request.path}}">
+                                                            <button class="btn" >Xóa</button>
+                                                        </form>
+                                                    {% endfor %}
+                                                    <button class="btn" onclick="changeDisplay('form-container', '3', 'afternoon')">Thêm</button>
+                                                    <br>
+                                                    {% if assigned_encounters.Thursday.afternoon %}
+                                                        {% for encounter in assigned_encounters.Thursday.afternoon %}
+                                                            <a href="{% url 'fhir:hanhchinh' encounter.assigned_encounter.patient.identifier encounter.assigned_encounter.encounter_identifier %}">{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</a>
+                                                        {% endfor %}
+                                                    {% endif %}
+                                                {% endif %}                                                                                       
+                                            </td>
+                                            <td {% if schedule_dates.Friday.afternoon %}class="available-time"{% else %}class="not-available-time" onclick="changeDisplay('form-container', '4', 'afternoon')"{% endif %}>
+                                                {% if schedule_dates.Friday.afternoon %}
+                                                    {% for date in schedule_dates.Friday.afternoon %}
+                                                        <p>Từ {{date.start_time|time:'H:i'}} Đến {{date.end_time|time:'H:i'}}</p>
+                                                        <form action="{% url 'fhir:delete' %}" method="post">
+                                                            {% csrf_token %}
+                                                            <input type="hidden" name="resource_type" value="schedule_value">
+                                                            <input type="hidden" name="resource_identifier" id="" value="">
+                                                            <input type="hidden" name="start_time" value="{{date.start_time|time:'H:i:s'}}">
+                                                            <input type="hidden" name="end_time" value="{{date.end_time|time:'H:i:s'}}">
+                                                            <input type="hidden" name="url_next" value="{{request.path}}">
+                                                            <button class="btn" >Xóa</button>
+                                                        </form>
+                                                    {% endfor %}
+                                                    <button class="btn" onclick="changeDisplay('form-container', '4', 'afternoon')">Thêm</button>
+                                                    <br>
+                                                    {% if assigned_encounters.Friday.afternoon %}
+                                                        {% for encounter in assigned_encounters.Friday.afternoon %}
+                                                            <a href="{% url 'fhir:hanhchinh' encounter.assigned_encounter.patient.identifier encounter.assigned_encounter.encounter_identifier %}">{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</a>
+                                                        {% endfor %}
+                                                    {% endif %}
+                                                {% endif %}                                                                                       
+                                            </td>
+                                            <td {% if schedule_dates.Saturday.afternoon %}class="available-time"{% else %}class="not-available-time" onclick="changeDisplay('form-container', '5', 'afternoon')"{% endif %}>
+                                                {% if schedule_dates.Saturday.afternoon %}
+                                                    {% for date in schedule_dates.Saturday.afternoon %}
+                                                        <p>Từ {{date.start_time|time:'H:i'}} Đến {{date.end_time|time:'H:i'}}</p>
+                                                        <form action="{% url 'fhir:delete' %}" method="post">
+                                                            {% csrf_token %}
+                                                            <input type="hidden" name="resource_type" value="schedule_value">
+                                                            <input type="hidden" name="resource_identifier" id="" value="">
+                                                            <input type="hidden" name="start_time" value="{{date.start_time|time:'H:i:s'}}">
+                                                            <input type="hidden" name="end_time" value="{{date.end_time|time:'H:i:s'}}">
+                                                            <input type="hidden" name="url_next" value="{{request.path}}">
+                                                            <button class="btn" >Xóa</button>
+                                                        </form>
+                                                    {% endfor %}
+                                                    <button class="btn" onclick="changeDisplay('form-container', '5', 'afternoon')">Thêm</button>
+                                                    <br>
+                                                    {% if assigned_encounters.Saturday.afternoon %}
+                                                        {% for encounter in assigned_encounters.Saturday.afternoon %}
+                                                            <a href="{% url 'fhir:hanhchinh' encounter.assigned_encounter.patient.identifier encounter.assigned_encounter.encounter_identifier %}">{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</a>
+                                                        {% endfor %}
+                                                    {% endif %}
+                                                {% endif %}                                                                                       
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                    </tbody>
+                </table>
+            </div>  
+        </div>        
+    </div>
+    <div class="form-container" id="form-container" style="display: none;">
+        <form id="form" action="" method="post">
+            {% csrf_token %}
+            <div class="form-header">
+                <i class="fas fa-grip-lines"></i>
+                <i onclick="changeDisplay('form-container')" class="fas fa-times"></i>
+            </div>
+            <div class="form-body">
+                <label for="day_of_work">Ngày làm việc:</label>
+                <select name="day_of_work" id="day_of_work">
+                    <option value="0">Thứ Hai</option>
+                    <option value="1">Thứ Ba</option>
+                    <option value="2">Thứ Tư</option>
+                    <option value="3">Thứ Năm</option>
+                    <option value="4">Thứ Sáu</option>
+                    <option value="5">Thứ Bảy</option>
+                </select>
+                <br>
+                <label for="session">Buổi:</label>
+                <select name="session" id="session">
+                    <option value="morning">Sáng</option>
+                    <option value="afternoon">Chiều</option>
+                </select>
+                <br>
+                <label for="">Thời gian:</label>
+                <label for="start_time">Từ</label>
+                <input type="time" name="start_time" id="start_time" min="7:00" max="12:00" value="07:00">
+                <label for="end_time">Đến</label>
+                <input type="time" name="end_time" id="end_time" min="7:00" max="12:00" value="12:00" onchange="timeCheck()">
+                <br>
+                <button class="btn" style="margin: 2px 130px 0px ;">Thêm</button>
+            </div>
+        </form>
+    </div>
+    <script>
+        function changeDisplay(elementId,weekDay, sessionValue){
+            element = document.getElementById(elementId);
+            dayElement = document.getElementById("day_of_work");
+            sessionElement = document.getElementById("session");
+            startTime = document.getElementById("start_time");
+            endTime = document.getElementById("end_time");
+            if (element.style.display == "none"){
+                element.style.display = "flex";
+                dayElement.value = weekDay;
+                sessionElement.value = sessionValue;
+                if (sessionValue == "morning"){
+                    startTime.setAttribute("min", "07:00");
+                    startTime.setAttribute("max", "12:00");
+                    endTime.setAttribute("min", "07:00");
+                    endTime.setAttribute("max", "12:00");
+                    startTime.value = "07:00";
+                    endTime.value = "12:00";
+                }else if (sessionValue == "afternoon"){
+                    startTime.setAttribute("min", "13:00");
+                    startTime.setAttribute("max", "17:00");
+                    endTime.setAttribute("min", "13:00");
+                    endTime.setAttribute("max", "17:00");
+                    startTime.value = "13:00";
+                    endTime.value = "17:00";
+                }
+            }
+            else {
+                element.style.display = "none";
+            }
+        }
+        var watchClickOnMeElement = document.getElementById('form-container');
+    
+        document.addEventListener('click', function(event) {
+            if (event.target == watchClickOnMeElement) {
+                watchClickOnMeElement.style.display = "none";
+        }
+        });
+
+        
+        function setMinMax(){
+            var session = document.getElementById("session");
+            var start = document.getElementById("start_time");
+            var end = document.getElementById("end_time");
+            if (session.options[session.selectedIndex].value == "morning"){
+                start.setAttribute("min", "07:00");
+                start.setAttribute("max", "12:00");
+                end.setAttribute("min", "07:00");
+                end.setAttribute("max", "12:00");
+                start.value="07:00";
+                end.value="12:00";
+            }else if (session.options[session.selectedIndex].value == "afternoon"){
+                start.setAttribute("min", "13:00");
+                start.setAttribute("max", "17:00");
+                end.setAttribute("min", "13:00");
+                end.setAttribute("max", "17:00");
+                start.value="13:00";
+                end.value="17:00";
+            }
+        }
+        function timeCheck(){
+            start = document.getElementById("start_time");
+            console.log(start.value);
+            end = document.getElementById("end_time");
+            console.log(end.value);
+        }
+    </script>
+{% endblock %}
