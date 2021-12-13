@@ -1,0 +1,22 @@
+---
+- hosts: "{{host}}"
+  become: 
+  tasks:
+    - name: pull image
+      community.docker.docker_image:
+        name: "{{IMAGE_TAG}}"
+        source: pull
+    - name: stop old container
+      community.docker.docker_container: 
+        name: dclv
+        state: absent
+    - name: run new container
+      community.docker.docker_container:
+        name: dclv
+        image: "{{IMAGE_TAG}}"
+        network_mode: host   
+    - name: remove old images
+      community.docker.docker_prune:
+        images: yes
+        images_filters:
+          until: 30m
