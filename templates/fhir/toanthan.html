@@ -13,10 +13,10 @@
     <div>
         <h2>1. Toàn thân</h2>
             <table>
-                <th>Tên triệu chứng</th>
-                <th>Mức độ</th>
-                {%if conditions.toanthan%}
+                <th class="cell-data-2">Tên triệu chứng</th>
+                <th class="cell-data-2">Mức độ</th>
                 <th></th>
+                {%if conditions.toanthan%}                
                 <th></th>
                 {%endif%}
                 {% for condition in conditions.toanthan %}
@@ -73,12 +73,12 @@
         <h2>2. Các cơ quan</h2>
             <div>
                 <div>
-                    <h3>+ Tuần hoàn</h3>
+                    <h3><i id="icon" class="fa fa-arrow-right" style="font-size: 18px; line-height:24px"></i> Tuần hoàn</h3>
                     <table>
-                        <th>Tên triệu chứng</th>
-                        <th>Mức độ</th>
-                        {%if conditions.tuanhoan %}
+                        <th class="cell-data-2">Tên triệu chứng</th>
+                        <th class="cell-data-2">Mức độ</th>
                         <th></th>
+                        {%if conditions.tuanhoan %}                        
                         <th></th>
                         {%endif%}
                         {% for condition in conditions.tuanhoan %}
@@ -193,12 +193,12 @@
                 </div>
             </div> 
             <div>
-                <h3>+ Hô hấp</h3>
+                <h3><i id="icon" class="fa fa-arrow-right" style="font-size: 18px; line-height:24px"></i> Hô hấp</h3>
                 <table>
-                    <th>Tên triệu chứng</th>
-                    <th>Mức độ</th>
-                    {%if conditions.hohap %}
+                    <th class="cell-data-2">Tên triệu chứng</th>
+                    <th class="cell-data-2">Mức độ</th>
                     <th></th>
+                    {%if conditions.hohap %}                   
                     <th></th>
                     {%endif%}
                     {% for condition in conditions.hohap %}
@@ -239,7 +239,7 @@
                             <input type="hidden" name="condition_category" id="" value="hohap">
                             <td class="cell-data-2">{{condition_form.condition_code}}</td>
                             <td class="cell-data-2">{{condition_form.condition_severity}}</td>
-                            {%if conditions.tuanhoan%}
+                            {%if conditions.hohap%}
                             <td><button type="submit" class="btn">Thêm</button></td>
                             <td></td>
                             {%else%}
@@ -250,12 +250,12 @@
                 </table>
             </div> 
             <div>
-                <h3>+ Tiêu hóa</h3>
+                <h3><i id="icon" class="fa fa-arrow-right" style="font-size: 18px; line-height:24px"></i> Tiêu hóa</h3>
                 <table>
-                    <th>Tên triệu chứng</th>
-                    <th>Mức độ</th>
-                    {%if conditions.tieuhoa%}
+                    <th class="cell-data-2">Tên triệu chứng</th>
+                    <th class="cell-data-2">Mức độ</th>
                     <th></th>
+                    {%if conditions.tieuhoa%}                    
                     <th></th>
                     {%endif%}
                     {% for condition in conditions.tieuhoa %}
@@ -309,12 +309,12 @@
                 </table>
             </div>   
             <div>
-                <h3>+ Thận - Tiết niệu - Sinh dục</h3>
+                <h3><i id="icon" class="fa fa-arrow-right" style="font-size: 18px; line-height:24px"></i> Thận - Tiết niệu - Sinh dục</h3>
                 <table>
-                    <th>Tên triệu chứng</th>
-                    <th>Mức độ</th>
-                    {%if conditions.tts%}
+                    <th class="cell-data-2">Tên triệu chứng</th>
+                    <th class="cell-data-2">Mức độ</th>
                     <th></th>
+                    {%if conditions.tts%}                    
                     <th></th>
                     {%endif%}
                     {% for condition in conditions.tts %}
@@ -368,12 +368,12 @@
                 </table>
             </div> 
             <div>
-                <h3>+ Thần kinh</h3>
+                <h3><i id="icon" class="fa fa-arrow-right" style="font-size: 18px; line-height:24px"></i> Thần kinh</h3>
                 <table>
-                    <th>Tên triệu chứng</th>
-                    <th>Mức độ</th>
-                    {%if conditions.thankinh%}
+                    <th class="cell-data-2">Tên triệu chứng</th>
+                    <th class="cell-data-2">Mức độ</th>
                     <th></th>
+                    {%if conditions.thankinh%}                    
                     <th></th>
                     {%endif%}
                     {% for condition in conditions.thankinh %}
@@ -428,12 +428,12 @@
             </div> 
             <div>
                 <div>
-                <h3>+ Cơ Xương Khớp</h3>
+                <h3><i id="icon" class="fa fa-arrow-right" style="font-size: 18px; line-height:24px"></i> Cơ - Xương - Khớp</h3>
                 <table>
-                    <th>Tên triệu chứng</th>
-                    <th>Mức độ</th>
-                    {%if conditions.cxk%}
+                    <th class="cell-data-2">Tên triệu chứng</th>
+                    <th class="cell-data-2">Mức độ</th>
                     <th></th>
+                    {%if conditions.cxk%}                    
                     <th></th>
                     {%endif%}
                     {% for condition in conditions.cxk %}
@@ -487,12 +487,12 @@
                 </table>
             </div> 
             <div>            
-                <h3>+ Tai - Mũi - Họng</h3>
+                <h3><i id="icon" class="fa fa-arrow-right" style="font-size: 18px; line-height:24px"></i> Tai - Mũi - Họng</h3>
                 <table>
-                    <th>Tên triệu chứng</th>
-                    <th>Mức độ</th>
-                    {%if conditions.tmh%}
+                    <th class="cell-data-2">Tên triệu chứng</th>
+                    <th class="cell-data-2">Mức độ</th>
                     <th></th>
+                    {%if conditions.tmh%}                    
                     <th></th>
                     {%endif%}
                     {% for condition in conditions.tmh %}
@@ -546,12 +546,12 @@
                 </table>
             </div>            
             <div>            
-                <h3>+ Răng - Hàm - Mặt</h3>
+                <h3><i id="icon" class="fa fa-arrow-right" style="font-size: 18px; line-height:24px"></i> Răng - Hàm - Mặt</h3>
                 <table>
-                    <th>Tên triệu chứng</th>
-                    <th>Mức độ</th>
-                    {%if conditions.rhm%}
+                    <th class="cell-data-2">Tên triệu chứng</th>
+                    <th class="cell-data-2">Mức độ</th>
                     <th></th>
+                    {%if conditions.rhm%}                    
                     <th></th>
                     {%endif%}
                     {% for condition in conditions.rhm %}
@@ -605,12 +605,12 @@
                 </table>
             </div>    
             <div>
-                <h3>+ Mắt</h3>
+                <h3><i id="icon" class="fa fa-arrow-right" style="font-size: 18px; line-height:24px"></i> Mắt</h3>
                 <table>
-                    <th>Tên triệu chứng</th>
-                    <th>Mức độ</th>
-                    {%if conditions.mat%}
+                    <th class="cell-data-2">Tên triệu chứng</th>
+                    <th class="cell-data-2">Mức độ</th>
                     <th></th>
+                    {%if conditions.mat%}                   
                     <th></th>
                     {%endif%}
                     {% for condition in conditions.mat %}
@@ -664,12 +664,12 @@
                 </table>
             </div> 
             <div>
-                <h3>+ Nội tiết, dinh dưỡng và các bệnh lý khác</h3>
+                <h3><i id="icon" class="fa fa-arrow-right" style="font-size: 18px; line-height:24px"></i> Nội tiết, dinh dưỡng và các bệnh lý khác</h3>
                 <table>
-                    <th>Tên triệu chứng</th>
-                    <th>Mức độ</th>
-                    {%if conditions.noitiet%}
+                    <th class="cell-data-2">Tên triệu chứng</th>
+                    <th class="cell-data-2">Mức độ</th>
                     <th></th>
+                    {%if conditions.noitiet%}                    
                     <th></th>
                     {%endif%}
                     {% for condition in conditions.noitiet %}

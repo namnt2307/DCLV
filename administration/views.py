@@ -47,7 +47,7 @@ class add_staff(LoginRequiredMixin, View):
         form = PractitionerForm(request.POST or None)
         if form.is_valid():
             form.save()
-            new_user = get_user_model().objects.create_user(username=request.POST['identifier'], password="1")
+            new_user = get_user_model().objects.create_user(username=request.POST['identifier'], role=request.POST['practitioner_role'], password="1")
             new_practitioner = dt.create_practitioner_resource(request.POST)
             if new_practitioner:
                 post_practitioner = requests.post(fhir_server + "/Practitioner/", headers={

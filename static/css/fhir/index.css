@@ -2,15 +2,20 @@
     padding: 0;
     margin: 0;
     box-sizing: border-box;
-    font-family: 'Times New Roman', Times, serif;
+    font-family: 'Times New Roman', Times, serif;    
+    font-size: 15px;
 }
 html, body {
     min-height: 100%;
     font-family: Arial;
     line-height: 1.5;
 }
-p {
-    font-size: 18px;
+
+textarea {
+    display: block;
+    width: 90%;
+    margin-left: auto !important;
+    margin-right: auto !important;
 }
 .header {
     display: flex;
@@ -50,6 +55,3 @@ p {
     font-size: 40px;
 }
 
-textarea{
-    width: 80%;
-}

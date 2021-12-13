@@ -1,5 +1,6 @@
 import openpyxl as xl
-from .models import DischargeDiseases, ComorbidityDiseases
+import re
+from .models import DischargeDisease, ComorbidityDisease, Medicine
 
 
 #Get discharge diseases:
@@ -8,13 +9,29 @@ sh = wb['ICD10']
 max_row = sh.max_row
 for i in range(4, max_row + 1):
     name_cell = sh.cell(row=i, column=20)
-    print(name_cell.value)
     code_cell = sh.cell(row=i, column=18)
     name = name_cell.value
     code = code_cell.value
-    DischargeDiseases.objects.create(disease_code=code, disease_name=name, disease_search = name + ' ' + code)
+    if len(code) == 4:
+        code = list(code)
+        code.insert(-1, '.')
+        code = ''.join(code)
+        print(code)
+        DischargeDisease.objects.create(disease_code=code, disease_name=name, disease_search = name + ' ' + code)
 
-
+#Get medicines:
+wb = xl.load_workbook('fhir/Medicine.xlsx', data_only=True)
+sh = wb['Medicine']
+max_row = sh.max_row
+for i in range(4, max_row + 1):
+    medicine_name_cell = sh.cell(row=i, column=2)
+    medicine_name = medicine_name_cell.value
+    modified_string = re.sub(r"\([^()]*\)", "", medicine_name)
+    try:
+        Medicine.objects.create(medicine_name=modified_string)
+    except:
+        pass
+    
 #Get comorbidity diseases:
 sh = wb['A1']
 max_row = sh.max_row

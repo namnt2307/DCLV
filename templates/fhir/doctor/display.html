@@ -15,6 +15,8 @@
 {%block function %}
 {% load static %}
 <link rel="stylesheet" href="{% static 'css/fhir/display.css'%}">
+{{request.user.username}}
+
 <div class="display-box">
     <div class="display-data">
         <h1>THÔNG TIN BỆNH NHÂN</h1>
@@ -47,7 +49,7 @@
                 <h1>THÔNG TIN NGƯỜI LIÊN HỆ, BÁO TIN</h1>
                 <div class="contact patient">
                     <h4 class="title">Quan hệ:</h4>
-                    <h4 class="value">{{relationship|get_item:data.Patient.contact_relationship}}</h4>
+                    <h4 class="value">{{data.Patient.get_contact_relationship_display}}</h4>
                 </div>                
                 <div class="contact patient">
                     <h4 class="title">Họ và tên:</h4>
@@ -88,13 +90,13 @@
             <tr>
                 <td>{{encounter.encounter_start|date:"d-m-Y H:i:s"}}</td>
                 {% if encounter.encounter_storage == 'local' %}
-                <td><a
-                        href="{% url 'fhir:hanhchinh'  data.Patient.identifier encounter.encounter_identifier %}">{{encounter.encounter_identifier}}</a>
+                <td>
+                    <a href="{% url 'fhir:hanhchinh'  data.Patient.identifier encounter.encounter_identifier %}">{{encounter.encounter_identifier}}</a>
                 </td>
                 {% elif encounter.encounter_storage == 'hapi' %}
                 <td>{{encounter.encounter_identifier}}</td>
                 {% endif %}
-                <td>{{class|get_item:encounter.encounter_class}}</td>
+                <td>{{encounter.get_encounter_class_display}}</td>
                 {% if encounter.encounter_status == 'in-progress' %}
                 <td> Đang Khám</td>
                 {%elif encounter.encounter_status == 'finished'%}

@@ -27,7 +27,11 @@
                 {%for observation in observations%}
                 <tr>
                     <td>{{observation.observation_code}}</td>
-                    <td><input type="text" name="{{observation.observation_identifier}}"></td>
+                    {% if request.user.role == 'medical laboratory technician' %}
+                        <td><input type="text" name="{{observation.observation_identifier}}"></td>
+                    {% else %}
+                    <td><input type="text" name="{{observation.observation_identifier}}" disabled></td>
+                    {% endif %}
                     <td>{{observation.observation_reference_range}}</td>
                     <td>{{observation.observation_value_unit}}</td>
                 </tr>
@@ -61,11 +65,19 @@
                         </tr>
                         {%endfor%}
                         <tr>
-                            <td colspan="4"><button type="submit">Lưu lại</button></td>
+                            {% if request.user.role == 'medical laboratory technician' %}
+                                <td colspan="4"><button type="submit">Lưu lại</button></td>
+                            {% else %}
+                                <td colspan="4"><button type="submit" disabled="disabled">Lưu lại</button></td>
+                            {% endif %}
                         </tr>
                     </form>
                 </tbody>
-                <td colspan="4"><button id="clickButton" onclick="changeDisplay()">Chỉnh sửa</button></td>
+                {% if request.user.role == 'medical laboratory technician' %}
+                    <td colspan="4"><button id="clickButton" onclick="changeDisplay()">Chỉnh sửa</button></td>
+                {% else %}
+                    <td colspan="4"><button id="clickButton" disabled="disabled" onclick="changeDisplay()">Chỉnh sửa</button></td>
+                {% endif %}
             {%endif%}
             
         </table>

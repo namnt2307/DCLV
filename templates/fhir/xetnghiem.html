@@ -13,17 +13,19 @@
 <h1>CÁC XÉT NGHIỆM</h1>
 <table>
     <thead>
-        <th class="cell-data-8">ID xét nghiệm</th>
-        <th class="cell-data-8">Tên xét nghiệm</th>
-        <th class="cell-data-8">Tình trạng xét nghiệm</th>
-        <th class="cell-data-8">Ngày dự kiến thực hiện xét nghiệm</th>
-        <th class="cell-data-8">Ngày yêu cầu xét nghiệm</th>
-        <th class="cell-data-8">Bác sĩ yêu cầu xét nghiệm</th>
-        <th class="cell-data-8">Ghi chú cho xét nghiệm</th>
-        <th class="cell-data-8">Chẩn đoán</th>
-        {%if services %}
-        <th></th>
-        {%endif%}
+        <tr>
+            <th class="cell-data-8">ID xét nghiệm</th>
+            <th class="cell-data-8">Tên xét nghiệm</th>
+            <th class="cell-data-8">Tình trạng xét nghiệm</th>
+            <th class="cell-data-8">Ngày dự kiến thực hiện xét nghiệm</th>
+            <th class="cell-data-8">Ngày yêu cầu xét nghiệm</th>
+            <th class="cell-data-8">Bác sĩ yêu cầu xét nghiệm</th>
+            <th class="cell-data-8">Ghi chú cho xét nghiệm</th>
+            <th class="cell-data-8">Chẩn đoán</th>
+            {%if services %}
+            <th></th>
+            {%endif%}
+        </tr>
     </thead>
     <tbody>
     {% if services %}
@@ -31,7 +33,7 @@
         <tr>
             <td class="cell-data-8"><a href="{%url 'fhir:chitietxetnghiem'  data.Patient.identifier data.Encounter.identifier service.service_identifier%}"">{{service.service_identifier}}</a></td>
             <td class="cell-data-8">{{service.service_code}}</td>
-            <td class="cell-data-8">{{status|get_item:service.service_status}}</td>
+            <td class="cell-data-8">{{service.get_service_status_display}}</td>
             <td class="cell-data-8">{{service.service_occurrence|date:"d-m-Y"}}</td>
             <td class="cell-data-8">{{service.service_authored|date:"d-m-Y"}}</td>
             <td class="cell-data-8">{{service.service_requester}}</td>
@@ -53,29 +55,29 @@
 </tbody>
     <div>
         <div class="formPopup" id="serviceForm">
-        <div class="formContainer">
-        <form action="" method="POST">
-            {%csrf_token%}
-            <div class="flex_container">
-                <label class="title">Tên xét nghiệm:</label>
-               {{form.service_code|add_class:"value"}}
+            <div class="formContainer">
+                <form action="" method="POST">
+                    {%csrf_token%}
+                    <div class="flex_container">
+                        <label class="title">Tên xét nghiệm:</label>
+                    {{form.service_code|add_class:"value"}}
+                    </div>
+                    <br>
+                    <div class="flex_container">
+                        <label class="title">Ngày dự kiến thực hiện:</label>
+                        {{form.service_occurrence|add_class:"value"}}
+                    </div>
+                    <br>
+                    <div class="flex_container">
+                        <label class="title">Ghi chú thêm:</label>
+                        {{form.service_note|add_class:"value"}}
+                    </div>
+                    <br>
+                    <button type="submit" class="btn">Thêm</button>
+                    <button type="button" class="btn cancel" onclick="closeForm('serviceForm')">Hủy</button>
+                </form>
             </div>
-            <br>
-            <div class="flex_container">
-                <label class="title">Ngày dự kiến thực hiện:</label>
-                {{form.service_code|add_class:"value"}}
-            </div>
-            <br>
-            <div class="flex_container">
-                <label class="title">Ghi chú thêm:</label>
-                {{form.service_code|add_class:"value"}}
-            </div>
-            <br>
-            <button type="submit" class="btn">Thêm</button>
-            <button type="button" class="btn cancel" onclick="closeForm('serviceForm')">Hủy</button>
-        </form>
-    </div>
-    </div>
+        </div>
     </div>
     {%if services%}
     <tr style="width: 30%;">
@@ -86,5 +88,6 @@
         <td colspan="8"><button class="float-left submit-button btn" onclick="openForm('serviceForm')">Thêm xét nghiệm</button></td>
     </tr>
     {%endif%}
+
 </table>
-{%endblock%}
+{%endblock%}    

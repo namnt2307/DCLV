@@ -47,10 +47,9 @@ table{
 .row-header-container{
     width: 50px;
     background-color: rgba(201, 201, 201, 0.8);
+    height: 100%;
 }
-.row-header-container tr{
-    height: 300px;
-}
+
 .row-header-container td{
     border: solid grey 0.1px;
     width: 50px;
@@ -58,6 +57,7 @@ table{
     padding-right: 10px;
     background-color: rgba(201, 201, 201, 0.8);
     padding: 5px;
+    height: 300px;
 }
 .table-data .data-container{
     width: 100%;
@@ -67,7 +67,7 @@ table{
     border: solid grey 0.1px;
     height: 300px;
     width: 16.66%;
-    vertical-align: text-top;
+    vertical-align: top;
     background-clip: content-box;
     padding: 5px;
     box-shadow: 
@@ -130,3 +130,25 @@ table{
 .form-header i:hover{
     cursor: pointer;
 }
+
+.fa-arrow-right{
+    transform: rotate(0deg);
+    transition: transform 0.5s linear;
+  }
+  
+  .fa-arrow-right.open{
+    transform: rotate(90deg);
+    transition: transform 0.5s linear;
+  }
+
+
+  .m-fadeOut {
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 0s linear 300ms, opacity 300ms;
+  }
+  .m-fadeIn {
+    visibility: visible;
+    opacity: 1;
+    transition: visibility 0s linear 0s, opacity 300ms;
+  }
