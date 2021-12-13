@@ -9,7 +9,7 @@ variables:
   stage: publish
   script:
     - export APP_VER=${CI_PIPELINE_ID}-${CI_COMMIT_SHORT_SHA}
-    - export IMAGE_TAG=namnguyen2307/${CI_ENVIRONMENT_NAME}/${APP_NAME}:${APP_VER}
+    - export IMAGE_TAG=namnguyen2307/${APP_NAME}:${APP_VER}
     - docker login -u namnguyen2307 -p abcxyz123
     - docker build -t ${IMAGE_TAG} -f Dockerfile .
     - docker push ${IMAGE_TAG}
@@ -44,18 +44,18 @@ deploy:binhthanh:
     - .deploy
   script:
     - export APP_VER=${CI_PIPELINE_ID}-${CI_COMMIT_SHORT_SHA}
-    - export IMAGE_TAG=namnguyen2307/${CI_ENVIRONMENT_NAME}/${APP_NAME}:${APP_VER}
+    - export IMAGE_TAG=namnguyen2307/${APP_NAME}:${APP_VER}
     - ansible-playbook /etc/ansible/deploy.yml -e "host=binhthanh" -e "IMAGE_TAG=${IMAGE_TAG}"
   only:
     refs:
       - benhvienbinhthanh
 
-.deploy:thuduc:
+deploy:thuduc:
   extends:
     - .deploy
   script:
     - export APP_VER=${CI_PIPELINE_ID}-${CI_COMMIT_SHORT_SHA}
-    - export IMAGE_TAG=namnguyen2307/${CI_ENVIRONMENT_NAME}/${APP_NAME}:${APP_VER}
+    - export IMAGE_TAG=namnguyen2307/${APP_NAME}:${APP_VER}
     - ansible-playbook /etc/ansible/deploy.yml -e "host=thuduc" -e "IMAGE_TAG=${IMAGE_TAG}"
   only:
     refs:
