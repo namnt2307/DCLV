@@ -19,11 +19,12 @@ class DateInput(forms.DateInput):
 class EncounterForm(forms.ModelForm):
     class Meta:
         model = EncounterModel
-        fields = ('encounter_class', 'encounter_type',
+        fields = ('encounter_class', 'encounter_type', 'encounter_location',
                   'encounter_service', 'encounter_priority', 'encounter_reason')
         labels = {
             'encounter_class': 'Loại hình thăm khám',
             'encounter_type': 'Loại bệnh án',
+            'encounter_location': 'Khoa Khám bệnh',
             'encounter_service': 'Dịch vụ khám bệnh',
             'encounter_priority': 'Mức độ ưu tiên',
             'encounter_reason': 'Lý do đến khám',
@@ -116,7 +117,7 @@ class MedicationForm(forms.ModelForm):
         )
         model = MedicationModel
         fields = (
-            'medication_medication', 'medication_reason_code', 'dosage_frequency', 'dosage_period', 'dosage_period_unit', 'dosage_duration', 'dosage_duration_unit', 'dosage_route', 'dosage_quantity', 'dosage_when', 'dosage_offset', 'dosage_additional_instruction', 'dosage_patient_instruction'
+            'medication_medication', 'medication_reason_code', 'dosage_frequency', 'dosage_period', 'dosage_period_unit', 'dosage_duration', 'dosage_duration_unit', 'dosage_route', 'dosage_quantity', 'dosage_quantity_unit','dosage_when', 'dosage_offset', 'dosage_additional_instruction', 'dosage_patient_instruction'
         )
         labels = {
             'medication_medication': 'Thuốc chỉ định',
@@ -128,6 +129,7 @@ class MedicationForm(forms.ModelForm):
             'dosage_duration_unit': '',
             'dosage_route': 'Đường dùng thuốc',
             'dosage_quantity': 'Số lượng mỗi lần dùng',
+            'dosage_quantity_unit': '',
             'dosage_when': 'Thời điểm dùng thuốc (thời điểm)',
             'dosage_offset': 'Thời điểm dùng thuốc (số phút từ/đến thời điểm dùng thuốc)',
             'dosage_additional_instruction': 'Hướng dẫn thêm',

@@ -145,7 +145,7 @@
                             </div>
                         {% endif %}
                         <p>{{diagnostic_report.diagnostic_conclusion}}</p>
-                        <p>BÁC SĨ CHẨN ĐOÁN: {{diagnostic_performer}}</p>
+                        <p>BÁC SĨ CHẨN ĐOÁN: {{diagnostic_report.diagnostic_performer}}</p>
                         {% if diagnostic_reports_history|get_item:diagnostic_report.diagnostic_identifier %}
                             <button onclick="displayHistory('{{diagnostic_report.diagnostic_identifier}}-history')">xem lich su</button>
                         {% endif %}

@@ -30,6 +30,7 @@ h1{
 table{
     width: 80%;
     margin: 10px auto;
+    table-layout: fixed;
 }
 table th{
     background-color: #58a6f5;
@@ -38,7 +39,11 @@ table tbody{
     width: 100%;
 }
 table th,td {
+    width: 14.2%;
+    text-overflow: ellipsis;
+    word-break: normal;
     padding: 5px;
     border: 1px solid;
     text-align: center;
+    overflow: hidden;
 }

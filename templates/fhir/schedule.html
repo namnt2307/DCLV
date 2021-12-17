@@ -663,30 +663,30 @@
                             <table class="column-header-container">
                                 <tbody>
                                     <tr class="header-data">
-                                        <td style="width:50px;"></td>
+                                        <td style="width:55px;"></td>
                                         <td>
                                             <p>Thứ Hai</p>
-                                            <p>{{days_of_week.Monday|date:'d-m-Y'}}</p>
+                                            <p>{{days_of_week.Monday.date|date:'d-m-Y'}}</p>
                                         </td>
                                         <td>
                                             <p>Thứ Ba</p>
-                                            <p>{{days_of_week.Tuesday|date:'d-m-Y'}}</p>
+                                            <p>{{days_of_week.Tuesday.date|date:'d-m-Y'}}</p>
                                         </td>
                                         <td>
                                             <p>Thứ Tư</p>
-                                            <p>{{days_of_week.Wednesday|date:'d-m-Y'}}</p>
+                                            <p>{{days_of_week.Wednesday.date|date:'d-m-Y'}}</p>
                                         </td>
                                         <td>
                                             <p>Thứ Năm</p>
-                                            <p>{{days_of_week.Thursday|date:'d-m-Y'}}</p>
+                                            <p>{{days_of_week.Thursday.date|date:'d-m-Y'}}</p>
                                         </td>
                                         <td>
                                             <p>Thứ Sáu</p>
-                                            <p>{{days_of_week.Friday|date:'d-m-Y'}}</p>
+                                            <p>{{days_of_week.Friday.date|date:'d-m-Y'}}</p>
                                         </td>
                                         <td>
                                             <p>Thứ Bảy</p>
-                                            <p>{{days_of_week.Saturday|date:'d-m-Y'}}</p>
+                                            <p>{{days_of_week.Saturday.date|date:'d-m-Y'}}</p>
                                         </td>
                                         <td style="width: 17px;"></td>
                                     </tr>
@@ -715,284 +715,152 @@
                                 <td class="table-data">
                                     <table class="data-container">
                                         <tr>
-                                            <td {% if schedule_dates.Monday.morning %}class="available-time"{% else %}class="not-available-time" onclick="changeDisplay('form-container', '0', 'morning')"{% endif %}>
-                                                {% if schedule_dates.Monday.morning %}
-                                                    {% for date in schedule_dates.Monday.morning %}
-                                                        <p>Từ {{date.start_time|time:'H:i'}} Đến {{date.end_time|time:'H:i'}}</p>
-                                                        <form action="{% url 'fhir:delete' %}" method="post">
-                                                            {% csrf_token %}
-                                                            <input type="hidden" name="resource_type" value="schedule_value">
-                                                            <input type="hidden" name="resource_identifier" id="" value="">
-                                                            <input type="hidden" name="start_time" value="{{date.start_time|time:'H:i:s'}}">
-                                                            <input type="hidden" name="end_time" value="{{date.end_time|time:'H:i:s'}}">
-                                                            <input type="hidden" name="url_next" value="{{request.path}}">
-                                                            <button class="btn" >Xóa</button>
-                                                        </form>
-                                                    {% endfor %}
-                                                    <button class="btn" onclick="changeDisplay('form-container', '0', 'morning')">Thêm</button>
-                                                    <br>
+                                            {% with days_of_week.Monday.date|date:'Y-m-d' as date_to_submit %}
+                                            <td {% if days_of_week.Monday.is_future %}{% if schedule_dates.Monday.morning %}class="available-time" {% if not assigned_encounters.Monday.morning %} onclick="changeDisplay('delete-form', '{{date_to_submit}}', 'morning')" {% endif %}{% else %}class="not-available-time"  onclick="changeDisplay('form-container', '0', 'morning')" {% endif %} {% endif %}>
+                                                {% if schedule_dates.Monday.morning %}                                                
                                                     {% if assigned_encounters.Monday.morning %}
+                                                        <p>Danh sách bệnh nhân</p>
                                                         {% for encounter in assigned_encounters.Monday.morning %}
-                                                            <a href="{% url 'fhir:hanhchinh' encounter.assigned_encounter.patient.identifier encounter.assigned_encounter.encounter_identifier %}">{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</a>
+                                                            <p><a href="{% url 'fhir:hanhchinh' encounter.assigned_encounter.patient.identifier encounter.assigned_encounter.encounter_identifier %}">{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</a></p>
                                                         {% endfor %}
                                                     {% endif %}
                                                 {% endif %}
                                             </td>
-                                            <td {% if schedule_dates.Tuesday.morning %}class="available-time"{% else %}class="not-available-time" onclick="changeDisplay('form-container', '1', 'morning')"{% endif %}>
+                                            {% endwith %}
+                                            {% with days_of_week.Tuesday.date|date:'Y-m-d' as date_to_submit %}
+                                            <td {% if days_of_week.Tuesday.is_future %}{% if schedule_dates.Tuesday.morning %}class="available-time" {% if not assigned_encounters.Tuesday.morning %} onclick="changeDisplay('delete-form', '{{date_to_submit}}', 'morning')" {% endif %}{% else %}class="not-available-time"  onclick="changeDisplay('form-container', '1', 'morning')" {% endif %} {% endif %}>
                                                 {% if schedule_dates.Tuesday.morning %}
-                                                    {% for date in schedule_dates.Tuesday.morning %}
-                                                        <p>Từ {{date.start_time|time:'H:i'}} Đến {{date.end_time|time:'H:i'}}</p>
-                                                        <form action="{% url 'fhir:delete' %}" method="post">
-                                                            {% csrf_token %}
-                                                            <input type="hidden" name="resource_type" value="schedule_value">
-                                                            <input type="hidden" name="resource_identifier" id="" value="">
-                                                            <input type="hidden" name="start_time" value="{{date.start_time|time:'H:i:s'}}">
-                                                            <input type="hidden" name="end_time" value="{{date.end_time|time:'H:i:s'}}">
-                                                            <input type="hidden" name="url_next" value="{{request.path}}">
-                                                            <button class="btn" >Xóa</button>
-                                                        </form>
-                                                    {% endfor %}
-                                                    <button class="btn" onclick="changeDisplay('form-container', '1', 'morning')">Thêm</button>
-                                                    <br>
                                                     {% if assigned_encounters.Tuesday.morning %}
+                                                        <p>Danh sách bệnh nhân</p>
                                                         {% for encounter in assigned_encounters.Tuesday.morning %}
-                                                            <a href="{% url 'fhir:hanhchinh' encounter.assigned_encounter.patient.identifier encounter.assigned_encounter.encounter_identifier %}">{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</a>
+                                                        <p><a href="{% url 'fhir:hanhchinh' encounter.assigned_encounter.patient.identifier encounter.assigned_encounter.encounter_identifier %}">{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</a></p>
                                                         {% endfor %}
                                                     {% endif %}
                                                 {% endif %}                                                
                                             </td>
-                                            <td {% if schedule_dates.Wednesday.morning %}class="available-time"{% else %}class="not-available-time" onclick="changeDisplay('form-container', '2', 'morning')"{% endif %}>
-                                                {% if schedule_dates.Wednesday.morning %}
-                                                    {% for date in schedule_dates.Wednesday.morning %}
-                                                        <p>Từ {{date.start_time|time:'H:i'}} Đến {{date.end_time|time:'H:i'}}</p>
-                                                        <form action="{% url 'fhir:delete' %}" method="post">
-                                                            {% csrf_token %}
-                                                            <input type="hidden" name="resource_type" value="schedule_value">
-                                                            <input type="hidden" name="resource_identifier" id="" value="">
-                                                            <input type="hidden" name="start_time" value="{{date.start_time|time:'H:i:s'}}">
-                                                            <input type="hidden" name="end_time" value="{{date.end_time|time:'H:i:s'}}">
-                                                            <input type="hidden" name="url_next" value="{{request.path}}">
-                                                            <button class="btn" >Xóa</button>
-                                                        </form>
-                                                    {% endfor %}
-                                                    <button class="btn" onclick="changeDisplay('form-container', '2', 'morning')">Thêm</button>
-                                                    <br>
+                                            {% endwith %}
+                                            {% with days_of_week.Wednesday.date|date:'Y-m-d' as date_to_submit %}
+                                            <td {% if days_of_week.Wednesday.is_future %}{% if schedule_dates.Wednesday.morning %}class="available-time" {% if not assigned_encounters.Wednesday.morning %} onclick="changeDisplay('delete-form', '{{date_to_submit}}', 'morning')" {% endif %}{% else %}class="not-available-time"  onclick="changeDisplay('form-container', '2', 'morning')" {% endif %} {% endif %}>
+                                                {% if schedule_dates.Wednesday.morning %}                                    
                                                     {% if assigned_encounters.Wednesday.morning %}
+                                                        <p>Danh sách bệnh nhân</p>                                                                                                                
                                                         {% for encounter in assigned_encounters.Wednesday.morning %}
-                                                            <a href="{% url 'fhir:hanhchinh' encounter.assigned_encounter.patient.identifier encounter.assigned_encounter.encounter_identifier %}">{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</a>
+                                                        <p><a href="{% url 'fhir:hanhchinh' encounter.assigned_encounter.patient.identifier encounter.assigned_encounter.encounter_identifier %}">{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</a></p>
                                                         {% endfor %}
                                                     {% endif %}
                                                 {% endif %}                                                
                                             </td>
-                                            <td {% if schedule_dates.Thursday.morning %}class="available-time"{% else %}class="not-available-time" onclick="changeDisplay('form-container', '3', 'morning')"{% endif %}>
-                                                {% if schedule_dates.Thursday.morning %}
-                                                    {% for date in schedule_dates.Thursday.morning %}
-                                                        <p>Từ {{date.start_time|time:'H:i'}} Đến {{date.end_time|time:'H:i'}}</p>
-                                                        <form action="{% url 'fhir:delete' %}" method="post">
-                                                            {% csrf_token %}
-                                                            <input type="hidden" name="resource_type" value="schedule_value">
-                                                            <input type="hidden" name="resource_identifier" id="" value="">
-                                                            <input type="hidden" name="start_time" value="{{date.start_time|time:'H:i:s'}}">
-                                                            <input type="hidden" name="end_time" value="{{date.end_time|time:'H:i:s'}}">
-                                                            <input type="hidden" name="url_next" value="{{request.path}}">
-                                                            <button class="btn" >Xóa</button>
-                                                        </form>
-                                                    {% endfor %}
-                                                    <button class="btn" onclick="changeDisplay('form-container', '3', 'morning')">Thêm</button>
-                                                    <br>
+                                            {% endwith %}
+                                            {% with days_of_week.Thursday.date|date:'Y-m-d' as date_to_submit %}
+                                            <td {% if days_of_week.Thursday.is_future %}{% if schedule_dates.Thursday.morning %}class="available-time" {% if not assigned_encounters.Thursday.morning %} onclick="changeDisplay('delete-form', '{{date_to_submit}}', 'morning')" {% endif %}{% else %}class="not-available-time"  onclick="changeDisplay('form-container', '3', 'morning')" {% endif %} {% endif %}>
+                                                {% if schedule_dates.Thursday.morning %}                                                    
                                                     {% if assigned_encounters.Thursday.morning %}
+                                                        <p>Danh sách bệnh nhân</p>
                                                         {% for encounter in assigned_encounters.Thursday.morning %}
-                                                            <a href="{% url 'fhir:hanhchinh' encounter.assigned_encounter.patient.identifier encounter.assigned_encounter.encounter_identifier %}">{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</a>
+                                                        <p><a href="{% url 'fhir:hanhchinh' encounter.assigned_encounter.patient.identifier encounter.assigned_encounter.encounter_identifier %}">{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</a></p>
                                                         {% endfor %}
                                                     {% endif %}
                                                 {% endif %}                                                
                                             </td>
-                                            <td {% if schedule_dates.Friday.morning %}class="available-time"{% else %}class="not-available-time" onclick="changeDisplay('form-container', '4', 'morning')"{% endif %}>
-                                                {% if schedule_dates.Friday.morning %}
-                                                    {% for date in schedule_dates.Friday.morning %}
-                                                        <p>Từ {{date.start_time|time:'H:i'}} Đến {{date.end_time|time:'H:i'}}</p>
-                                                        <form action="{% url 'fhir:delete' %}" method="post">
-                                                            {% csrf_token %}
-                                                            <input type="hidden" name="resource_type" value="schedule_value">
-                                                            <input type="hidden" name="resource_identifier" id="" value="">
-                                                            <input type="hidden" name="start_time" value="{{date.start_time|time:'H:i:s'}}">
-                                                            <input type="hidden" name="end_time" value="{{date.end_time|time:'H:i:s'}}">
-                                                            <input type="hidden" name="url_next" value="{{request.path}}">
-                                                            <button class="btn" >Xóa</button>
-                                                        </form>
-                                                    {% endfor %}
-                                                    <button class="btn" onclick="changeDisplay('form-container', '4', 'morning')">Thêm</button>
-                                                    <br>
+                                            {% endwith %}
+                                            {% with days_of_week.Friday.date|date:'Y-m-d' as date_to_submit %}
+                                            <td {% if days_of_week.Friday.is_future %}{% if schedule_dates.Friday.morning %}class="available-time" {% if not assigned_encounters.Friday.morning %} onclick="changeDisplay('delete-form', '{{date_to_submit}}', 'morning')" {% endif %}{% else %}class="not-available-time"  onclick="changeDisplay('form-container', '4', 'morning')" {% endif %} {% endif %}>
+                                                {% if schedule_dates.Friday.morning %}                                                    
                                                     {% if assigned_encounters.Friday.morning %}
+                                                        <p>Danh sách bệnh nhân</p>
                                                         {% for encounter in assigned_encounters.Friday.morning %}
-                                                            <a href="{% url 'fhir:hanhchinh' encounter.assigned_encounter.patient.identifier encounter.assigned_encounter.encounter_identifier %}">{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</a>
+                                                        <p><a href="{% url 'fhir:hanhchinh' encounter.assigned_encounter.patient.identifier encounter.assigned_encounter.encounter_identifier %}">{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</a></p>
                                                         {% endfor %}
                                                     {% endif %}
                                                 {% endif %}                                                
                                             </td>
-                                            <td {% if schedule_dates.Saturday.morning %}class="available-time"{% else %}class="not-available-time" onclick="changeDisplay('form-container', '5', 'morning')"{% endif %}>
+                                            {% endwith %}
+                                            {% with days_of_week.Saturday.date|date:'Y-m-d' as date_to_submit %}
+                                            <td {% if days_of_week.Saturday.is_future %}{% if schedule_dates.Saturday.morning %}class="available-time" {% if not assigned_encounters.Saturday.morning %} onclick="changeDisplay('delete-form', '{{date_to_submit}}', 'morning')" {% endif %}{% else %}class="not-available-time"  onclick="changeDisplay('form-container', '5', 'morning')" {% endif %} {% endif %}>
                                                 {% if schedule_dates.Saturday.morning %}
-                                                    {% for date in schedule_dates.Saturday.morning %}
-                                                        <p>Từ {{date.start_time|time:'H:i'}} Đến {{date.end_time|time:'H:i'}}</p>
-                                                        <form action="{% url 'fhir:delete' %}" method="post">
-                                                            {% csrf_token %}
-                                                            <input type="hidden" name="resource_type" value="schedule_value">
-                                                            <input type="hidden" name="resource_identifier" id="" value="">
-                                                            <input type="hidden" name="start_time" value="{{date.start_time|time:'H:i:s'}}">
-                                                            <input type="hidden" name="end_time" value="{{date.end_time|time:'H:i:s'}}">
-                                                            <input type="hidden" name="url_next" value="{{request.path}}">
-                                                            <button class="btn" >Xóa</button>
-                                                        </form>
-                                                    {% endfor %}
-                                                    <button class="btn" onclick="changeDisplay('form-container', '5', 'morning')">Thêm</button>
-                                                    <br>
                                                     {% if assigned_encounters.Saturday.morning %}
+                                                        <p>Danh sách bệnh nhân</p>
                                                         {% for encounter in assigned_encounters.Saturday.morning %}
-                                                            <a href="{% url 'fhir:hanhchinh' encounter.assigned_encounter.patient.identifier encounter.assigned_encounter.encounter_identifier %}">{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</a>
+                                                        <p><a href="{% url 'fhir:hanhchinh' encounter.assigned_encounter.patient.identifier encounter.assigned_encounter.encounter_identifier %}">{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</a></p>
                                                         {% endfor %}
                                                     {% endif %}
                                                 {% endif %}                                                
                                             </td>
+                                            {% endwith %}
                                         </tr>
                                         <tr>
-                                            <td {% if schedule_dates.Monday.afternoon %}class="available-time"{% else %}class="not-available-time" onclick="changeDisplay('form-container', '0', 'afternoon')"{% endif %}>
+                                            {% with days_of_week.Monday.date|date:'Y-m-d' as date_to_submit %}
+                                            <td {% if days_of_week.Monday.is_future %}{% if schedule_dates.Monday.afternoon %}class="available-time" {% if not assigned_encounters.Monday.afternoon %} onclick="changeDisplay('delete-form', '{{date_to_submit}}', 'afternoon')" {% endif %}{% else %}class="not-available-time"  onclick="changeDisplay('form-container', '0', 'afternoon')" {% endif %} {% endif %}>
                                                 {% if schedule_dates.Monday.afternoon %}
-                                                    {% for date in schedule_dates.Monday.afternoon %}
-                                                        <p>Từ {{date.start_time|time:'H:i'}} Đến {{date.end_time|time:'H:i'}}</p>
-                                                        <form action="{% url 'fhir:delete' %}" method="post">
-                                                            {% csrf_token %}
-                                                            <input type="hidden" name="resource_type" value="schedule_value">
-                                                            <input type="hidden" name="resource_identifier" id="" value="">
-                                                            <input type="hidden" name="start_time" value="{{date.start_time|time:'H:i:s'}}">
-                                                            <input type="hidden" name="end_time" value="{{date.end_time|time:'H:i:s'}}">
-                                                            <input type="hidden" name="url_next" value="{{request.path}}">
-                                                            <button class="btn" >Xóa</button>
-                                                        </form>
-                                                    {% endfor %}
-                                                    <button class="btn" onclick="changeDisplay('form-container', '0', 'afternoon')">Thêm</button>
-                                                    <br>
                                                     {% if assigned_encounters.Monday.afternoon %}
+                                                        <p>Danh sách bệnh nhân</p>
                                                         {% for encounter in assigned_encounters.Monday.afternoon %}
-                                                            <a href="{% url 'fhir:hanhchinh' encounter.assigned_encounter.patient.identifier encounter.assigned_encounter.encounter_identifier %}">{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</a>
+                                                        <p><a href="{% url 'fhir:hanhchinh' encounter.assigned_encounter.patient.identifier encounter.assigned_encounter.encounter_identifier %}">{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</a></p>
                                                         {% endfor %}
                                                     {% endif %}
                                                 {% endif %}                                                
                                             </td>
-                                            <td {% if schedule_dates.Tuesday.afternoon %}class="available-time"{% else %}class="not-available-time" onclick="changeDisplay('form-container', '1', 'afternoon')"{% endif %}>
+                                            {% endwith %}
+                                            {% with days_of_week.Tuesday.date|date:'Y-m-d' as date_to_submit %}
+                                            <td {% if days_of_week.Tuesday.is_future %}{% if schedule_dates.Tuesday.afternoon %}class="available-time" {% if not assigned_encounters.Tuesday.afternoon %} onclick="changeDisplay('delete-form', '{{date_to_submit}}', 'afternoon')" {% endif %}{% else %}class="not-available-time"  onclick="changeDisplay('form-container', '1', 'afternoon')" {% endif %} {% endif %}>
                                                 {% if schedule_dates.Tuesday.afternoon %}
-                                                    {% for date in schedule_dates.Tuesday.afternoon %}
-                                                        <p>Từ {{date.start_time|time:'H:i'}} Đến {{date.end_time|time:'H:i'}}</p>
-                                                        <form action="{% url 'fhir:delete' %}" method="post">
-                                                            {% csrf_token %}
-                                                            <input type="hidden" name="resource_type" value="schedule_value">
-                                                            <input type="hidden" name="resource_identifier" id="" value="">
-                                                            <input type="hidden" name="start_time" value="{{date.start_time|time:'H:i:s'}}">
-                                                            <input type="hidden" name="end_time" value="{{date.end_time|time:'H:i:s'}}">
-                                                            <input type="hidden" name="url_next" value="{{request.path}}">
-                                                            <button class="btn" >Xóa</button>
-                                                        </form>
-                                                    {% endfor %}
-                                                    <button class="btn" onclick="changeDisplay('form-container', '1', 'afternoon')">Thêm</button>
-                                                    <br>
                                                     {% if assigned_encounters.Tuesday.afternoon %}
+                                                        <p>Danh sách bệnh nhân</p>                                    
                                                         {% for encounter in assigned_encounters.Tuesday.afternoon %}
-                                                            <a href="{% url 'fhir:hanhchinh' encounter.assigned_encounter.patient.identifier encounter.assigned_encounter.encounter_identifier %}">{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</a>
+                                                        <p><a href="{% url 'fhir:hanhchinh' encounter.assigned_encounter.patient.identifier encounter.assigned_encounter.encounter_identifier %}">{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</a></p>
                                                         {% endfor %}
                                                     {% endif %}
                                                 {% endif %}                                                                                       
                                             </td>
-                                            <td {% if schedule_dates.Wednesday.afternoon %}class="available-time"{% else %}class="not-available-time" onclick="changeDisplay('form-container', '2', 'afternoon')"{% endif %}>
+                                            {% endwith %}
+                                            {% with days_of_week.Wednesday.date|date:'Y-m-d' as date_to_submit %}
+                                            <td {% if days_of_week.Wednesday.is_future %}{% if schedule_dates.Wednesday.afternoon %}class="available-time" {% if not assigned_encounters.Wednesday.afternoon %} onclick="changeDisplay('delete-form', '{{date_to_submit}}', 'afternoon')" {% endif %}{% else %}class="not-available-time"  onclick="changeDisplay('form-container', '2', 'afternoon')" {% endif %} {% endif %}>
                                                 {% if schedule_dates.Wednesday.afternoon %}
-                                                    {% for date in schedule_dates.Wednesday.afternoon %}
-                                                        <p>Từ {{date.start_time|time:'H:i'}} Đến {{date.end_time|time:'H:i'}}</p>
-                                                        <form action="{% url 'fhir:delete' %}" method="post">
-                                                            {% csrf_token %}
-                                                            <input type="hidden" name="resource_type" value="schedule_value">
-                                                            <input type="hidden" name="resource_identifier" id="" value="">
-                                                            <input type="hidden" name="start_time" value="{{date.start_time|time:'H:i:s'}}">
-                                                            <input type="hidden" name="end_time" value="{{date.end_time|time:'H:i:s'}}">
-                                                            <input type="hidden" name="url_next" value="{{request.path}}">
-                                                            <button class="btn" >Xóa</button>
-                                                        </form>
-                                                    {% endfor %}
-                                                    <button class="btn" onclick="changeDisplay('form-container', '2', 'afternoon')">Thêm</button>
-                                                    <br>
                                                     {% if assigned_encounters.Wednesday.afternoon %}
+                                                        <p>Danh sách bệnh nhân</p>
                                                         {% for encounter in assigned_encounters.Wednesday.afternoon %}                                                            
-                                                            <a href="{% url 'fhir:hanhchinh' encounter.assigned_encounter.patient.identifier encounter.assigned_encounter.encounter_identifier %}">{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</a>
+                                                        <p><a href="{% url 'fhir:hanhchinh' encounter.assigned_encounter.patient.identifier encounter.assigned_encounter.encounter_identifier %}">{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</a></p>
                                                         {% endfor %}
                                                     {% endif %}
                                                 {% endif %}                                                                                       
                                             </td>
-                                            <td {% if schedule_dates.Thursday.afternoon %}class="available-time"{% else %}class="not-available-time" onclick="changeDisplay('form-container', '3', 'afternoon')"{% endif %}>
+                                            {% endwith %}
+                                            {% with days_of_week.Thursday.date|date:'Y-m-d' as date_to_submit %}
+                                            <td {% if days_of_week.Thursday.is_future %}{% if schedule_dates.Thursday.afternoon %}class="available-time" {% if not assigned_encounters.Thursday.afternoon %} onclick="changeDisplay('delete-form', '{{date_to_submit}}', 'afternoon')" {% endif %}{% else %}class="not-available-time"  onclick="changeDisplay('form-container', '3', 'afternoon')" {% endif %} {% endif %}>
                                                 {% if schedule_dates.Thursday.afternoon %}
-                                                    {% for date in schedule_dates.Thursday.afternoon %}
-                                                        <p>Từ {{date.start_time|time:'H:i'}} Đến {{date.end_time|time:'H:i'}}</p>
-                                                        <form action="{% url 'fhir:delete' %}" method="post">
-                                                            {% csrf_token %}
-                                                            <input type="hidden" name="resource_type" value="schedule_value">
-                                                            <input type="hidden" name="resource_identifier" id="" value="">
-                                                            <input type="hidden" name="start_time" value="{{date.start_time|time:'H:i:s'}}">
-                                                            <input type="hidden" name="end_time" value="{{date.end_time|time:'H:i:s'}}">
-                                                            <input type="hidden" name="url_next" value="{{request.path}}">
-                                                            <button class="btn" >Xóa</button>
-                                                        </form>
-                                                    {% endfor %}
-                                                    <button class="btn" onclick="changeDisplay('form-container', '3', 'afternoon')">Thêm</button>
-                                                    <br>
                                                     {% if assigned_encounters.Thursday.afternoon %}
+                                                        <p>Danh sách bệnh nhân</p>
                                                         {% for encounter in assigned_encounters.Thursday.afternoon %}
-                                                            <a href="{% url 'fhir:hanhchinh' encounter.assigned_encounter.patient.identifier encounter.assigned_encounter.encounter_identifier %}">{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</a>
+                                                        <p><a href="{% url 'fhir:hanhchinh' encounter.assigned_encounter.patient.identifier encounter.assigned_encounter.encounter_identifier %}">{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</a></p>
                                                         {% endfor %}
                                                     {% endif %}
                                                 {% endif %}                                                                                       
                                             </td>
-                                            <td {% if schedule_dates.Friday.afternoon %}class="available-time"{% else %}class="not-available-time" onclick="changeDisplay('form-container', '4', 'afternoon')"{% endif %}>
+                                            {% endwith %}
+                                            {% with days_of_week.Friday.date|date:'Y-m-d' as date_to_submit %}
+                                            <td {% if days_of_week.Friday.is_future %}{% if schedule_dates.Friday.afternoon %}class="available-time" {% if not assigned_encounters.Friday.afternoon %} onclick="changeDisplay('delete-form', '{{date_to_submit}}', 'afternoon')" {% endif %}{% else %}class="not-available-time"  onclick="changeDisplay('form-container', '4', 'afternoon')" {% endif %} {% endif %}>
                                                 {% if schedule_dates.Friday.afternoon %}
-                                                    {% for date in schedule_dates.Friday.afternoon %}
-                                                        <p>Từ {{date.start_time|time:'H:i'}} Đến {{date.end_time|time:'H:i'}}</p>
-                                                        <form action="{% url 'fhir:delete' %}" method="post">
-                                                            {% csrf_token %}
-                                                            <input type="hidden" name="resource_type" value="schedule_value">
-                                                            <input type="hidden" name="resource_identifier" id="" value="">
-                                                            <input type="hidden" name="start_time" value="{{date.start_time|time:'H:i:s'}}">
-                                                            <input type="hidden" name="end_time" value="{{date.end_time|time:'H:i:s'}}">
-                                                            <input type="hidden" name="url_next" value="{{request.path}}">
-                                                            <button class="btn" >Xóa</button>
-                                                        </form>
-                                                    {% endfor %}
-                                                    <button class="btn" onclick="changeDisplay('form-container', '4', 'afternoon')">Thêm</button>
-                                                    <br>
                                                     {% if assigned_encounters.Friday.afternoon %}
+                                                        <p>Danh sách bệnh nhân</p>
                                                         {% for encounter in assigned_encounters.Friday.afternoon %}
-                                                            <a href="{% url 'fhir:hanhchinh' encounter.assigned_encounter.patient.identifier encounter.assigned_encounter.encounter_identifier %}">{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</a>
+                                                        <p><a href="{% url 'fhir:hanhchinh' encounter.assigned_encounter.patient.identifier encounter.assigned_encounter.encounter_identifier %}">{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</a></p>
                                                         {% endfor %}
                                                     {% endif %}
                                                 {% endif %}                                                                                       
                                             </td>
-                                            <td {% if schedule_dates.Saturday.afternoon %}class="available-time"{% else %}class="not-available-time" onclick="changeDisplay('form-container', '5', 'afternoon')"{% endif %}>
+                                            {% endwith %}
+                                            {% with days_of_week.Saturday.date|date:'Y-m-d' as date_to_submit %}
+                                            <td {% if days_of_week.Saturday.is_future %}{% if schedule_dates.Saturday.afternoon %}class="available-time" {% if not assigned_encounters.Saturday.afternoon %} onclick="changeDisplay('delete-form', '{{date_to_submit}}', 'afternoon')" {% endif %}{% else %}class="not-available-time"  onclick="changeDisplay('form-container', '5', 'afternoon')" {% endif %} {% endif %}>
                                                 {% if schedule_dates.Saturday.afternoon %}
-                                                    {% for date in schedule_dates.Saturday.afternoon %}
-                                                        <p>Từ {{date.start_time|time:'H:i'}} Đến {{date.end_time|time:'H:i'}}</p>
-                                                        <form action="{% url 'fhir:delete' %}" method="post">
-                                                            {% csrf_token %}
-                                                            <input type="hidden" name="resource_type" value="schedule_value">
-                                                            <input type="hidden" name="resource_identifier" id="" value="">
-                                                            <input type="hidden" name="start_time" value="{{date.start_time|time:'H:i:s'}}">
-                                                            <input type="hidden" name="end_time" value="{{date.end_time|time:'H:i:s'}}">
-                                                            <input type="hidden" name="url_next" value="{{request.path}}">
-                                                            <button class="btn" >Xóa</button>
-                                                        </form>
-                                                    {% endfor %}
-                                                    <button class="btn" onclick="changeDisplay('form-container', '5', 'afternoon')">Thêm</button>
-                                                    <br>
                                                     {% if assigned_encounters.Saturday.afternoon %}
+                                                        <p>Danh sách bệnh nhân</p>
                                                         {% for encounter in assigned_encounters.Saturday.afternoon %}
-                                                            <a href="{% url 'fhir:hanhchinh' encounter.assigned_encounter.patient.identifier encounter.assigned_encounter.encounter_identifier %}">{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</a>
+                                                        <p><a href="{% url 'fhir:hanhchinh' encounter.assigned_encounter.patient.identifier encounter.assigned_encounter.encounter_identifier %}">{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</a></p>
                                                         {% endfor %}
                                                     {% endif %}
                                                 {% endif %}                                                                                       
                                             </td>
+                                            {% endwith %}
                                         </tr>
                                     </table>
                                 </td>
@@ -1012,12 +880,24 @@
             <div class="form-body">
                 <label for="day_of_work">Ngày làm việc:</label>
                 <select name="day_of_work" id="day_of_work">
-                    <option value="0">Thứ Hai</option>
-                    <option value="1">Thứ Ba</option>
-                    <option value="2">Thứ Tư</option>
-                    <option value="3">Thứ Năm</option>
-                    <option value="4">Thứ Sáu</option>
-                    <option value="5">Thứ Bảy</option>
+                    {% if days_of_week.Monday.is_future %}
+                        <option value="0">Thứ Hai</option>
+                    {% endif %}
+                    {% if days_of_week.Tuesday.is_future %}
+                        <option value="1">Thứ Ba</option>
+                    {% endif %}
+                    {% if days_of_week.Wednesday.is_future %}
+                        <option value="2">Thứ Tư</option>
+                    {% endif %}
+                    {% if days_of_week.Thursday.is_future %}}
+                        <option value="3">Thứ Năm</option>
+                    {% endif %}
+                    {% if days_of_week.Friday.is_future %}
+                        <option value="4">Thứ Sáu</option>
+                    {% endif %}
+                    {% if days_of_week.Saturday.is_future %}
+                        <option value="5">Thứ Bảy</option>
+                    {% endif %}
                 </select>
                 <br>
                 <label for="session">Buổi:</label>
@@ -1026,47 +906,87 @@
                     <option value="afternoon">Chiều</option>
                 </select>
                 <br>
-                <label for="">Thời gian:</label>
-                <label for="start_time">Từ</label>
-                <input type="time" name="start_time" id="start_time" min="7:00" max="12:00" value="07:00">
-                <label for="end_time">Đến</label>
-                <input type="time" name="end_time" id="end_time" min="7:00" max="12:00" value="12:00" onchange="timeCheck()">
-                <br>
-                <button class="btn" style="margin: 2px 130px 0px ;">Thêm</button>
+                <button class="btn" style="display: block; margin: 0 auto;">Thêm</button>
+            </div>
+        </form>
+    </div>
+    <div class="form-container" id="delete-form" style="display: none;">
+        <form action="{% url 'fhir:delete' %}" method="post">
+            <div class="form-header">
+                <i class="fas fa-grip-lines"></i>
+                <i onclick="changeDisplay('delete-form')" class="fas fa-times"></i>
+            </div>
+            {% csrf_token %}
+            <div class="form-body">
+                <p style="text-align: center;" id="confirmation-text"></p>
+                <input type="hidden" name="resource_type" id="resource_type" value="schedule_value">
+                <input type="hidden" name="practitioner_identifier" id="practitioner_identifier" value={{request.user.username}}>
+                <input type="hidden" name="delete_date" id="delete_date" value="">
+                <input type="hidden" name="delete_session" id="delete_session" value="">
+                <input type="hidden" name="url_next" value="{{request.path}}">
+                <button class="btn" style="display: block; margin: 0 auto">Xóa</button>
             </div>
         </form>
     </div>
     <script>
-        function changeDisplay(elementId,weekDay, sessionValue){
+        session = {
+            "morning": "sáng",
+            "afternoon": "chiều"
+        }
+        week = {
+            "0": "Thứ Hai",
+            "1": "Thứ Ba",
+            "2": "Thứ Tư",
+            "3": "Thứ Năm",
+            "4": "Thứ Sáu",
+            "5": "Thứ Bảy"
+        }
+        function changeDisplay(elementId, weekDay, sessionValue){
             element = document.getElementById(elementId);
-            dayElement = document.getElementById("day_of_work");
-            sessionElement = document.getElementById("session");
-            startTime = document.getElementById("start_time");
-            endTime = document.getElementById("end_time");
-            if (element.style.display == "none"){
-                element.style.display = "flex";
-                dayElement.value = weekDay;
-                sessionElement.value = sessionValue;
-                if (sessionValue == "morning"){
-                    startTime.setAttribute("min", "07:00");
-                    startTime.setAttribute("max", "12:00");
-                    endTime.setAttribute("min", "07:00");
-                    endTime.setAttribute("max", "12:00");
-                    startTime.value = "07:00";
-                    endTime.value = "12:00";
-                }else if (sessionValue == "afternoon"){
-                    startTime.setAttribute("min", "13:00");
-                    startTime.setAttribute("max", "17:00");
-                    endTime.setAttribute("min", "13:00");
-                    endTime.setAttribute("max", "17:00");
-                    startTime.value = "13:00";
-                    endTime.value = "17:00";
+            if (elementId == "form-container"){
+                dayElement = document.getElementById("day_of_work");
+                sessionElement = document.getElementById("session");
+                //startTime = document.getElementById("start_time");
+                //endTime = document.getElementById("end_time");
+                if (element.style.display == "none"){
+                    element.style.display = "flex";
+                    dayElement.value = weekDay;
+                    sessionElement.value = sessionValue;
+                //    if (sessionValue == "morning"){
+                //        startTime.setAttribute("min", "07:00");
+                //      startTime.setAttribute("max", "12:00");
+                //      endTime.setAttribute("min", "07:00");
+                //     endTime.setAttribute("max", "12:00");
+                //      startTime.value = "07:00";
+                //     endTime.value = "12:00";
+                //  }else if (sessionValue == "afternoon"){
+                //     startTime.setAttribute("min", "13:00");
+                    //    startTime.setAttribute("max", "17:00");
+                    //    endTime.setAttribute("min", "13:00");
+                    //    endTime.setAttribute("max", "17:00");
+                    //    startTime.value = "13:00";
+                    //    endTime.value = "17:00";
+                // }
+                }
+                else {
+                    element.style.display = "none";
                 }
             }
-            else {
-                element.style.display = "none";
+            else if (elementId == "delete-form"){
+
+                if (element.style.display == "none"){
+                    element.style.display = "flex";
+                    text = document.getElementById("confirmation-text")
+                    document.getElementById('delete_date').value = weekDay;
+                    document.getElementById('delete_session').value = sessionValue;
+                    text.innerHTML = "Bạn muốn thay đổi lịch khám ?";
+                }
+                else {
+                    element.style.display = "none";
+                }
             }
         }
+        
         var watchClickOnMeElement = document.getElementById('form-container');
     
         document.addEventListener('click', function(event) {
@@ -1074,6 +994,13 @@
                 watchClickOnMeElement.style.display = "none";
         }
         });
+
+        var deleteForm = document.getElementById('delete-form');
+        document.addEventListener('click', function(event) {
+            if (event.target == deleteForm) {
+                deleteForm.style.display = "none";
+        }
+        });        
 
         
         function setMinMax(){

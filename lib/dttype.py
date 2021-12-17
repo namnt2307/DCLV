@@ -1,11 +1,13 @@
 from fhir.models import EncounterModel
+import os
 import xml.etree.ElementTree as ET
 import requests
 import openpyxl as xl
 from datetime import datetime
+
 ns = {'d': "http://hl7.org/fhir"}
 
-fhir_server = "http://10.0.0.25:8080/fhir"
+fhir_server = os.getenv('FHIR_SERVER',"http://10.0.0.25:8080/fhir")
 
 
 def identifier_type(resource, system, value, use="usual", _type=None, period=None, assigner=None):
@@ -488,13 +490,23 @@ def create_encounter_resource(encounter, patient_id, patient_name, practitioner_
         codeable_concept(service_type, text=encounter['service_type'])
     if encounter.get('priority'):
         priority = ET.SubElement(root, 'priority')
-        codeable_concept(priority,[
-                         {'system': 'http://terminology.hl7.org/CodeSystem/v3-ActPriority', 'code': encounter['priority'], 'version':'2018-08-12'}], text=encounter['priority'])
+        priority_code = [
+                {'system': 'http://terminology.hl7.org/CodeSystem/v3-ActPriority', 'code': encounter['priority']['code'], 'version':'2018-08-12'}            
+        ]
+        codeable_concept(priority, priority_code, text=encounter['priority']['display'])
     subject = ET.SubElement(root, 'subject')
     reference_type(subject, 'Patient/' + patient_id,
                    'Patient', display=patient_name)
     participant = ET.SubElement(root, 'participant')
-    reference_type(participant, 'Practitioner/' +
+    participant_type = ET.SubElement(participant, 'type')
+    participant_type_codes = [
+        {
+            'system': 'http://terminology.hl7.org/CodeSystem/v3-ParticipationType', 'code': 'DIS', 'version': '2018-08-12'
+        }
+    ]
+    codeable_concept(participant_type, participant_type_codes)
+    individual = ET.SubElement(participant, 'individual')
+    reference_type(individual, 'Practitioner/' +
                    practitioner_id, 'Practitioner', display=practitioner_name)
     if encounter.get('period'):
         period = ET.SubElement(root, 'period')
@@ -539,7 +551,7 @@ def create_condition_resource(condition, patient_id, patient_name, encounter_id)
     if condition.get('severity'):
         severity = ET.SubElement(root, 'severity')
         codeable_concept(severity, [{'system': 'http://snomed.info/sct',
-                         'code': condition['severity'], 'version': '4.0.1'}], text=condition['severity'])
+                         'code': condition['severity']['code'], 'version': '4.0.1'}], text=condition['severity']['display'])
     if condition.get('code'):
         if condition.get('display_code'):
             code = ET.SubElement(root, 'code')
@@ -566,7 +578,7 @@ def create_condition_resource(condition, patient_id, patient_name, encounter_id)
         abatement.set('value', condition['abatement'])
     if condition.get('asserter'):
         asserter = ET.SubElement(root, 'asserter')
-        reference_type(asserter, condition['type'] + "/" + condition['asserter']['id'], condition['asserter']['type'], display=condition['asserter']['name'])
+        reference_type(asserter, condition['asserter']['type'] + "/" + condition['asserter']['id'], condition['asserter']['type'], display=condition['asserter']['name'])
     if condition.get('note'):
         note = ET.SubElement(root, 'note')
         annotation_type(note, text=condition['note'])
@@ -847,9 +859,9 @@ def create_allergy_resource(allergy, patient_id, patient_name, encounter_id):
     if allergy.get('clinical_status'):
         clinical_status = ET.SubElement(root, 'clinicalStatus')
         codes = [
-            {'system': 'http://terminology.hl7.org/CodeSystem/allergyintolerance-clinical', 'code': allergy['clinical_status'], 'version': '4.0.1'}
+            {'system': 'http://terminology.hl7.org/CodeSystem/allergyintolerance-clinical', 'code': allergy['clinical_status']['code'], 'version': '4.0.1'}
         ]
-        codeable_concept(clinical_status, codes, text=allergy['clinical_status'])
+        codeable_concept(clinical_status, codes, text=allergy['clinical_status']['display'])
     if allergy.get('verification_status'):
         verification_status = ET.SubElement(root, 'verificationStatus')
         codes = [
@@ -1005,9 +1017,13 @@ def query_encounter(encounter_identifier, query_type):
             if service_type:
                 encounter['encounter_service'] = service_type.find(
                     'd:text', ns).attrib['value']
-            # priority = encounter_resource.find('d:priority', ns)
-            # if priority:
-            #     encounter['encounter_priority'] = priority.find('d:text', ns).attrib['value']
+            priority = encounter_resource.find('d:priority', ns)
+            if priority:
+                encounter['encounter_priority'] = priority.find('d:text', ns).attrib['value']
+            participant = encounter_resource.find('d:participant', ns)
+            if participant != None:
+                individual = participant.find('d:individual', ns)
+                encounter['encounter_participant'] = individual.find('d:display', ns).attrib['value']
             period = encounter_resource.find('d:period', ns)
             if period:
                 encounter['encounter_start'] = period.find(
@@ -1317,6 +1333,7 @@ def query_practitioner(practitioner_identifier, query_type):
     get_practitioner = requests.get(fhir_server + '/Practitioner?identifier=urn:trinhcongminh|' +
                                     practitioner_identifier, headers={'Content-type': 'application/xml'})
     # print(get_practitioner.content.decode('utf-8'))
+
     if get_practitioner.status_code == 200 and 'entry' in get_practitioner.content.decode('utf-8'):
         get_root = ET.fromstring(get_practitioner.content.decode('utf-8'))
         entry = get_root.find('d:entry', ns)
@@ -1327,6 +1344,7 @@ def query_practitioner(practitioner_identifier, query_type):
             practitioner['version'] = meta.find('d:versionId', ns).attrib['value']
             practitioner['last_updated'] = meta.find('d:lastUpdated', ns).attrib['value']
         if query_type == 'id' or query_type == 'all':
+            print('have id')
             practitioner['id'] = practitioner_resource.find(
                 'd:id', ns).attrib['value']
         if query_type == 'data' or query_type == 'all':

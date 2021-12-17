@@ -31,7 +31,7 @@
 .search .search-bar input {
     padding-left: 20px;
     height: 35px;
-    width: 500px;
+    width: 700px;
     border-radius: 8px;
     font-size: medium;
 }
@@ -50,11 +50,14 @@ table {
 table, th, td {
     border: 1px solid black;
     border-collapse: collapse;
+    vertical-align: top !important;
+    min-width: 120px;
+    word-break: normal;
   }
 
 .searchtable {
     padding-top: 30px;
-    width: 80%;
+    width: 90%;
     /* justify-content: center; */
 }
 .searchtable thead {

@@ -3,11 +3,10 @@
     margin: 0;
     box-sizing: border-box;
     font-family: 'Times New Roman', Times, serif;    
-    font-size: 15px;
+    font-size: 18px;
 }
 html, body {
     min-height: 100%;
-    font-family: Arial;
     line-height: 1.5;
 }
 
@@ -17,6 +16,11 @@ textarea {
     margin-left: auto !important;
     margin-right: auto !important;
 }
+
+li {
+    list-style-position: inside !important;
+}
+
 .header {
     display: flex;
     height: 120px;
@@ -55,3 +59,26 @@ textarea {
     font-size: 40px;
 }
 
+.btn {
+    padding: 12px 20px;
+    border: none;
+    background-color: #8ebf42;
+    color: #fff;
+    cursor: pointer;
+    width: 100%;
+    margin-bottom: 15px;
+    opacity: 0.8;
+    text-align: center;
+    min-width: 80px;
+    max-width: 150px;
+}
+.cancel {
+    background-color: #cc0000;
+}
+.edit {
+    background-color: #808080;
+}
+.btn:hover,
+.openButton:hover {
+opacity: 1;
+}

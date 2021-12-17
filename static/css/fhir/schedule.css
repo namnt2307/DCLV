@@ -1,11 +1,8 @@
 .waiting-list{
-    text-align: center;
+    word-break: normal;
     padding: 0 15px;
 }
-.waiting-list input{
-    margin-top: -2px;
-    vertical-align: middle;
-}
+
 table{
     border-collapse: collapse;
 }
@@ -52,7 +49,7 @@ table{
 
 .row-header-container td{
     border: solid grey 0.1px;
-    width: 50px;
+    min-width: 55px;
     text-align: right;
     padding-right: 10px;
     background-color: rgba(201, 201, 201, 0.8);
@@ -68,7 +65,6 @@ table{
     height: 300px;
     width: 16.66%;
     vertical-align: top;
-    background-clip: content-box;
     padding: 5px;
     box-shadow: 
     0 1px 10px rgba(0, 0, 0, 0.2), /*bottom external highlight*/
@@ -76,10 +72,10 @@ table{
     inset 0 -1px 5px rgba(0,0,0,0.5), /*bottom internal shadow*/ 
     inset 0 1px 2px rgba(255,255,255,0.8); /*top internal highlight*/
     overflow: auto;
+    min-height: 290px;
+    word-break:break-all;
 }
-.data-container td p{
-    padding: 5px;
-}
+
 .container-body .line table td{
     width: 100%;
     height: 30px;
@@ -96,11 +92,11 @@ table{
     background-color:rgba(0, 0, 0, 0.2);
     display: flex;
     justify-content: center;
+    z-index: 100;
 }
 
 .form-container form{
-    width: 360px;
-    height: 160px;
+    width: 330px;
     margin:auto;
     background-color:white;
     border-radius: 7px;
@@ -109,6 +105,7 @@ table{
     0 -1px 1px rgba(233, 233, 233, 0.8), /*top external shadow*/ 
     inset 0 -1px 5px rgba(0,0,0,0.5), /*bottom internal shadow*/ 
     inset 0 1px 2px rgba(255,255,255,0.8); /*top internal highlight*/
+
 }
 .form-container .form-body{
     padding: 10px;
@@ -133,12 +130,12 @@ table{
 
 .fa-arrow-right{
     transform: rotate(0deg);
-    transition: transform 0.5s linear;
+    font-size: 13px;
   }
   
   .fa-arrow-right.open{
     transform: rotate(90deg);
-    transition: transform 0.5s linear;
+    font-size: 13px;
   }
 
 
@@ -151,4 +148,10 @@ table{
     visibility: visible;
     opacity: 1;
     transition: visibility 0s linear 0s, opacity 300ms;
+  }
+  .available-time{
+      background-color: rgba(0, 128, 0, 0.4);
+  }
+  .not-available-time{
+      background-color: rgba(186, 2, 2, 0.4);
   }

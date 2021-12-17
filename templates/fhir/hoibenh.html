@@ -1,11 +1,4 @@
 {%extends 'fhir/base.html'%}
-{%block url1%}'{%url 'fhir:hanhchinh'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%block url2%}'{%url 'fhir:dangky'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%block url3%}'{%url 'fhir:hoibenh'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%block url5%}'{%url 'fhir:xetnghiem'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%block url4%}'{%url 'fhir:toanthan'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%comment%}{%block url8%}'{%url 'fhir:thuthuat'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}{%endcomment%}{%block url7%}'{%url 'fhir:thuoc'  data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
-{%block url6%}'{%url 'fhir:hinhanh'  data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
 {% load widget_tweaks %}
 {%block function%}
 <div>
@@ -293,7 +286,7 @@
                                 <td rowspan="2"><button type="submit" class="btn">Thêm</button></td>
                             </tr>
                             <tr>
-                                <td colspan="7" style="text-align: left;">
+                                <td colspan="6" style="text-align: left;">
                                     <div class="flex_container">
                                         <p class="title">Thành phần dị ứng:</p> <p>{{allergy_form.allergy_reaction_substance}}</p>
                                     </div>

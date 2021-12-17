@@ -1,11 +1,4 @@
 {%extends 'fhir/base.html'%}
-{%block url1%}'{%url 'fhir:hanhchinh'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%block url2%}'{%url 'fhir:dangky'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%block url3%}'{%url 'fhir:hoibenh'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%block url5%}'{%url 'fhir:xetnghiem'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%block url4%}'{%url 'fhir:toanthan'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%comment%}{%block url8%}'{%url 'fhir:thuthuat'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}{%endcomment%}{%block url7%}'{%url 'fhir:thuoc'  data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
-{%block url6%}'{%url 'fhir:hinhanh'  data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
 {%block function%}
 {% load widget_tweaks %}
 <h1>THÔNG TIN KHÁM BỆNH</h1>
@@ -133,23 +126,67 @@
                 </div>
                 <div>
                     {% if observations %}
-                        <div class="vital-signs">
-                            <div class="flex_container">
-                                <p class="title"><b>Mạch:</b></p><p class="value"> {{ observations.mach.observation_value_quantity }} lần/ph</p>
-                            </div>
-                            <div class="flex_container">
-                                <p class="title"><b>Nhiệt độ:</b></p><p class="value">{{ observations.nhietdo.observation_value_quantity }} Cel</p>
-                            </div>
-                            <div class="flex_container">
-                                <p class="title"><b>Huyết áp:</b></p><p class="value">{{ observations.tamthu.observation_value_quantity }}/{{ observations.tamtruong.observation_value_quantity }} mmHg</p>
-                            </div>
-                            <div class="flex_container">
-                                <p class="title"><b>Nhịp thở:</b></p><p class="value">{{ observations.nhiptho.observation_value_quantity }} lần/ph</p>
-                            </div>
-                            <div class="flex_container">
-                                <p class="title"><b>Cân nặng:</b></p><p class="value">{{ observations.cannang.observation_value_quantity }} kg</p>
-                            </div>
-                        </div>
+                    <table>
+                        <tr id="vital-signs-data">
+                            <td>
+                                <div class="flex_container">
+                                    <p class="title title-short"><b>Mạch:</b></p><p class="value"> {{ observations.mach.observation_value_quantity }} lần/ph</p>
+                                </div>
+                                <div class="flex_container">
+                                    <p class="title title-short"><b>Nhiệt độ:</b></p><p class="value">{{ observations.nhietdo.observation_value_quantity }} Cel</p>
+                                </div>
+                                <div class="flex_container">
+                                    <p class="title title-short"><b>Huyết áp:</b></p><p class="value">{{ observations.tamthu.observation_value_quantity }}/{{ observations.tamtruong.observation_value_quantity }} mmHg</p>
+                                </div>
+                                <div class="flex_container">
+                                    <p class="title title-short"><b>Nhịp thở:</b></p><p class="value">{{ observations.nhiptho.observation_value_quantity }} lần/ph</p>
+                                </div>
+                                <div class="flex_container">
+                                    <p class="title title-short"><b>Cân nặng:</b></p><p class="value">{{ observations.cannang.observation_value_quantity }} kg</p>
+                                </div>                            
+                    
+                            </td>
+                            <td style='width:17%;'><button class="btn edit" onclick="toggleDisplay('vital-signs')">Chỉnh sửa</button></td>
+                        </tr>
+                        <tr id="vital-signs-form" style="display: none;">
+                                <form action="" method="POST">
+                                    <td>
+                                        <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+                                        <input type="hidden" name="classifier" id="" value="observation">
+                                        <div class="flex_container">
+                                            <label class="title title-short" for="mach">Mạch</label>
+                                            <input class="value" type="text" name="mach" id="mach" value="{{ observations.mach.observation_value_quantity }}">
+                                        </div>
+                                        
+                                        <div class="flex_container">
+                                            <label class="title title-short" for="nhietdo">Nhiệt độ</label>
+                                            <input class="value"  type="text" name="nhietdo" id="nhietdo" value="{{ observations.nhietdo.observation_value_quantity }}">
+                                        </div>
+                                        
+                                        <div class="flex_container">
+                                            <label class="title title-short" for="huyetap">Huyết áp</label>
+                                            <input class="value" type="text" name="huyetaptamthu" id="huyetaptamthu" value="{{ observations.tamthu.observation_value_quantity }}">/<input class="value"  type="text" name="huyetaptamtruong" id="huyetaptamtruong" value="{{ observations.tamtruong.observation_value_quantity }}">
+                                        </div>
+                                        
+                                        <div class="flex_container">
+                                            <label class="title title-short" for="nhiptho">Nhịp thở</label>
+                                            <input class="value" type="text" name="nhiptho" id="nhiptho" value="{{ observations.nhiptho.observation_value_quantity }}">
+                                        </div>
+                                        
+                                        <div class="flex_container">
+                                            <label class="title title-short" for="cannang">Cân nặng</label>
+                                            <input class="value" type="text" name="cannang" id="cannang" value="{{ observations.cannang.observation_value_quantity }}">      
+                                        </div>
+                                    </td>
+                                    <td style='width:17%;'>
+                                        <button type="submit" class="btn">Lưu lại</button>  
+                                        <br>
+                                        <br>
+                                        <button type="button" class="btn cancel" onclick="toggleDisplay('vital-signs')">Hủy bỏ</button>                
+                                    </td>
+                                </form>
+                        </tr>
+                    </table>
                     {% else %}
                     <table>
                         <tr>
@@ -158,37 +195,36 @@
                                     <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
                                     <input type="hidden" name="classifier" id="" value="observation">
                                     <div class="flex_container">
-                                        <label class="title" for="mach">Mạch</label>
+                                        <label class="title title-short" for="mach">Mạch</label>
                                         <input class="value" type="text" name="mach" id="mach">
                                     </div>
-                                    <br>
+                                    
                                     <div class="flex_container">
-                                        <label class="title" for="nhietdo">Nhiệt độ</label>
-                                        <input type="text" name="nhietdo" id="nhietdo">
+                                        <label class="title title-short" for="nhietdo">Nhiệt độ</label>
+                                        <input class="value"  type="text" name="nhietdo" id="nhietdo">
                                     </div>
-                                    <br>
+                                    
                                     <div class="flex_container">
-                                        <label class="title" for="huyetap">Huyết áp</label>
-                                        <input type="text" name="huyetaptamthu" id="huyetaptamthu">/<input type="text" name="huyetaptamtruong" id="huyetaptamtruong">
+                                        <label class="title title-short" for="huyetap">Huyết áp</label>
+                                        <input class="value" type="text" name="huyetaptamthu" id="huyetaptamthu">/<input class="value"  type="text" name="huyetaptamtruong" id="huyetaptamtruong">
                                     </div>
-                                    <br>
+                                    
                                     <div class="flex_container">
-                                        <label class="title" for="nhiptho">Nhịp thở</label>
-                                        <input type="text" name="nhiptho" id="nhiptho">
+                                        <label class="title title-short" for="nhiptho">Nhịp thở</label>
+                                        <input class="value" type="text" name="nhiptho" id="nhiptho">
                                     </div>
-                                    <br>
+                                    
                                     <div class="flex_container">
-                                        <label class="title" for="cannang">Cân nặng</label>
-                                        <input type="text" name="cannang" id="cannang">      
+                                        <label class="title title-short" for="cannang">Cân nặng</label>
+                                        <input class="value" type="text" name="cannang" id="cannang">      
                                     </div>
                                 </td>
-                                <td style='width:16%;'>
+                                <td style='width:17%;'>
                                     <button type="submit" class="btn">Lưu lại</button>                  
                                 </td>
                                 </form>
                                 </tr>
                                 </table>
-
                     {% endif %}
                 </div>
             </div> 
