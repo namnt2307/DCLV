@@ -1,0 +1,62 @@
+stages:
+  - publish
+  - deploy
+
+variables:
+  APP_NAME: dclv
+
+.dockerize:
+  stage: publish
+  script:
+    - export APP_VER=${CI_PIPELINE_ID}-${CI_COMMIT_SHORT_SHA}
+    - export IMAGE_TAG=namnguyen2307/${CI_ENVIRONMENT_NAME}/${APP_NAME}:${APP_VER}
+    - docker login -u namnguyen2307 -p abcxyz123
+    - docker build -t ${IMAGE_TAG} -f Dockerfile .
+    - docker push ${IMAGE_TAG}
+    - docker rmi -f ${IMAGE_TAG}
+  tags:
+    - "dclv"
+
+dockerize:binhthanh:
+  extends:
+    - .dockerize
+  only:
+    refs:
+      - benhvienbinhthanh
+
+dockerize:thuduc:
+  extends:
+    - .dockerize
+  only:
+    refs:
+      - benhvienthuduc
+
+.deploy:
+  image:
+    name: namnguyen2307/ansible:docker
+    entrypoint: [""]
+  stage: deploy
+  tags:
+    - "ansible"
+
+deploy:binhthanh:
+  extends:
+    - .deploy
+  script:
+    - export APP_VER=${CI_PIPELINE_ID}-${CI_COMMIT_SHORT_SHA}
+    - export IMAGE_TAG=namnguyen2307/${CI_ENVIRONMENT_NAME}/${APP_NAME}:${APP_VER}
+    - ansible-playbook /etc/ansible/deploy.yaml -e "host=binhthanh" -e "IMAGE_TAG=${IMAGE_TAG}"
+  only:
+    refs:
+      - benhvienbinhthanh
+
+.deploy:thuduc:
+  extends:
+    - .deploy
+  script:
+    - export APP_VER=${CI_PIPELINE_ID}-${CI_COMMIT_SHORT_SHA}
+    - export IMAGE_TAG=namnguyen2307/${CI_ENVIRONMENT_NAME}/${APP_NAME}:${APP_VER}
+    - ansible-playbook /etc/ansible/deploy.yaml -e "host=thuduc" -e "IMAGE_TAG=${IMAGE_TAG}"
+  only:
+    refs:
+      - benhvienthuduc

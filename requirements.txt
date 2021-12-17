@@ -2,3 +2,5 @@ djongo
 django
 django-restframework
 openpyxl
+django-widget-tweaks
+requests

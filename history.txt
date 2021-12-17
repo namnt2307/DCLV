@@ -1,0 +1,154 @@
+    echo fs.inotify.max_queued_events=1048576 | sudo tee -a /etc/sysctl.conf
+    echo fs.inotify.max_user_instances=1048576 | sudo tee -a /etc/sysctl.conf
+    echo fs.inotify.max_user_watches=1048576 | sudo tee -a /etc/sysctl.conf
+    echo vm.max_map_count=262144 | sudo tee -a /etc/sysctl.conf
+    echo vm.swappiness=1 | sudo tee -a /etc/sysctl.conf
+sudo sysctl -p
+    7  sudo -s
+    8  sudo -s
+    9  apt update
+   10  sudo apt update
+   11  sudo -s
+   12  sudo microstack init --auto --control
+   13  microstack.openstack
+   14  sudo iptables -t nat -A POSTROUTING -s 10.20.20.1/24 ! -d 10.20.20.1/24 -j MASQUERADE
+   15  sudo sysctl net.ipv4.ip_forward=1
+   16  microstack launch cirros --name test
+   17  ssh -i /home/nam/snap/microstack/common/.ssh/id_microstack cirros@10.20.20.57
+   18  sudo snap install juju --classic
+   19  OS_SERIES=bionic
+   20  OS_SERIES=focaol
+   21  OS_SERIES=focal
+  IMAGE_ID=$(curl \
+     http://cloud-images.ubuntu.com/$OS_SERIES/current/$OS_SERIES-server-cloudimg-amd64.img | \
+     microstack.openstack image create \
+     --public --container-format=bare --disk-format=qcow2 \
+     -f value -c id $OS_SERIES)
+   27  mkdir ~/simplestreams
+   28  OS_REGION=microstack
+   29  juju metadata generate-image -d ~/simplestreams    -i $IMAGE_ID -s $OS_SERIES -r $OS_REGION -u http://$KEYSTONE_IP:5000/v3
+   30  vim microstack.yml
+   31  juju add-cloud --client microstack -f microstack.yaml
+   32  juju add-cloud --client microstack -f microstack.yml
+   33  source /var/snap/microstack/common/etc/microstack.rc
+   34  juju autoload-credentials
+   35  juju credentials --show-secrets --format yaml
+   36  juju bootstrap --bootstrap-series=$OS_SERIES   --metadata-source=~/simplestreams   --model-default network=test   --model-default external-network=external   --model-default use-floating-ip=true   microstack microstack
+   37  echo $OS_SERIES
+   38  ls
+   39  vim microstack.yml 
+   40  juju credentials --show-secrets --format yaml
+   41  juju bootstrap --bootstrap-series=$OS_SERIES   --metadata-source=~/simplestreams   --model-default network=test   --model-default external-network=external   --model-default use-floating-ip=true   admin admin
+   42  juju bootstrap --bootstrap-series=$OS_SERIES   --metadata-source=~/simplestreams   --model-default network=test   --model-default external-network=external   --model-default use-floating-ip=true  microstack admin
+   43  juju bootstrap --bootstrap-series=$OS_SERIES   --metadata-source=~/simplestreams   --model-default network=test   --model-default external-network=external   --model-default use-floating-ip=true  admin microstack
+   44  juju bootstrap --bootstrap-series=$OS_SERIES   --metadata-source=~/simplestreams   --model-default network=test   --model-default external-network=external   --model-default use-floating-ip=true  microstack microstack
+   45  curl http://10.20.20.1:5000/v3/auth/tokens
+   46  curl https://10.20.20.1:5000/v3/auth/tokens
+   47  curl https://10.20.20.1:5000/v3/auth/tokens -k
+   48  ls
+   49  juju metadata generate-image --help
+   50  juju bootstrap --bootstrap-series=$OS_SERIES   --metadata-source=~/simplestreams   --model-default network=test   --model-default external-network=external   --model-default use-floating-ip=true   microstack microstack
+   51  juju bootstrap --bootstrap-series=$OS_SERIES   --metadata-source=~/simplestreams   --model-default network=test   --model-default external-network=external   --model-default allocate-public-ip=true   microstack microstack
+   52  juju autoload-credentials
+   53  juju credentials --show-secrets --format yaml
+   54  juju bootstrap --bootstrap-series=$OS_SERIES   --metadata-source=~/simplestreams   --model-default network=test   --model-default external-network=external   --model-default use-floating-ip=true   microstack microstack
+   55  microstack.openstack server list
+   56  microstack.openstack image list
+   57  microstack.openstack flavor list
+   58  microstack launch centos7 -n focal --flavor m1.small
+   59  microstack launch focal -n focal --flavor m1.small
+   60  ping 10.20.20.244
+   61  microstack.openstack server list
+   62  ping 10.20.20.244
+   63  microstack.openstack server show focal
+   64  ping
+   65  ping 10.20.20.244
+   66  ls
+   67  ssh -i /home/nam/snap/microstack/common/.ssh/id_microstack cirros@10.20.20.57
+   68  ssh -i /home/nam/snap/microstack/common/.ssh/id_microstack ubuntu@10.20.20.244
+   69  ssh -i /home/nam/snap/microstack/common/.ssh/id_microstack focal@10.20.20.244
+   70  microstack.openstack server show focal
+   71  ping 10.20.20.244
+   72  ssh -i /home/nam/snap/microstack/common/.ssh/id_microstack focal@10.20.20.244
+   73  ssh -i /home/nam/snap/microstack/common/.ssh/id_microstack ubuntu@10.20.20.244
+   74  ls
+   75  microstack.openstack server delete focal
+   76  microstack launch focal -n focal --flavor m1.medium
+   77  ping 10.20.20.60
+   78  microstack.openstack server show focal
+   79  microstack.openstack server list
+   80  ping 10.20.20.60
+   81  microstack launch focal -n focal1 --flavor m1.medium
+   82  ssh -i /home/nam/snap/microstack/common/.ssh/id_microstack ubuntu@10.20.20.233
+   83  ping 10.20.20.233
+   84  ping 10.20.20.244
+   85  ping 10.20.20.60
+   86  ping 10.20.20.233
+   87  ssh -i /home/nam/snap/microstack/common/.ssh/id_microstack ubuntu@10.20.20.233
+   88  ssh -i /home/nam/snap/microstack/common/.ssh/id_microstack ubuntu@10.20.20.60
+   89  ssh -i /home/nam/snap/microstack/common/.ssh/id_microstack ubuntu@10.20.20.233
+   90  ls
+   91  sudo -s
+   92  ls
+   93  ssh -i /home/nam/snap/microstack/common/.ssh/id_microstack ubuntu@10.20.20.233
+   94  ping 10.20.20.60
+   95  ssh -i /home/nam/snap/microstack/common/.ssh/id_microstack ubuntu@10.20.20.60
+   96  ssh -i /home/nam/snap/microstack/common/.ssh/id_microstack ubuntu@10.20.20.233
+   97  ls
+   98  sudo -s
+   99  ssh -i /home/nam/snap/microstack/common/.ssh/id_microstack ubuntu@10.20.20.60
+  100  ssh -i /home/nam/snap/microstack/common/.ssh/id_microstack ubuntu@10.20.20.233
+  101  ls
+  102  vim /etc/nginx/conf.d/benhvienbinhthanh.conf 
+  103  sudo -s
+  104  ssh -i /home/nam/snap/microstack/common/.ssh/id_microstack ubuntu@10.20.20.233
+  105  ssh -i /home/nam/snap/microstack/common/.ssh/id_microstack ubuntu@10.20.20.60
+  106  curl 10.20.20.1
+  107  sudo snap get microstack config.credentials.keystone-password
+  108  sudo netstat -nltup | grep hori
+  109  netstat
+  110  sudo -s
+  111  microstack.openstack server list
+  112  microstack.openstack server show focal
+  113  microstack
+  114  microstack.openstack flavor list
+  115  clear
+  116  vim ~/.bashrc 
+  117  openstack 
+  118  clear
+  119  openstack server list
+  120  openstack flavor list
+  121  openstack network list
+  122  openstack server show focal
+  123  curl ifconfig.me
+  124  sudo vim /etc/nginx/conf.d/benhvienbinhthanh.conf 
+  125  ssh -i /home/nam/snap/microstack/common/.ssh/id_microstack ubuntu@10.20.20.60
+  126  ls
+  127  docker ps
+  128  sudo -s
+  129  ssh k3
+  130  ls
+  131  sudo -s
+  132  ls
+  133  sudo -s
+  134  ls
+  135  sudo -s
+  136  ls
+  137  sudo -s
+  138  ssh terminal
+  139  ls
+  140  history
+  141  history > history.txt
+
+
+  (openstack) subnet set --dhcp external-subnet
+  (openstack) subnet set --dhcp test-subnet
+  (openstack) subnet set --dns-nameserver 8.8.8.8 external-subnet
+  (openstack) subnet set --dns-nameserver 8.8.8.8 test-subnet
+  (openstack) network set --share external
+  (openstack) network set --share test
+
+  microstack.openstack security group rule create --proto tcp --remote-ip 0.0.0.0/0 --dst-port 1:65525 9c6274c7-40eb-457b-ae8d-e4371679476f
+
+binhthanh: 126
+thuduc: 14
