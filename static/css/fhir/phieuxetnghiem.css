@@ -47,3 +47,30 @@ table th,td {
     text-align: center;
     overflow: hidden;
 }
+
+.flex_container{
+    display: flex;
+}
+
+.flex_container .value{
+    border-bottom: dotted black 2px;
+    flex: 1;
+    white-space: pre-wrap;
+}
+
+
+.text-line{
+    border-bottom: dotted black 2px;
+    min-height: 25px;
+}
+
+.signature{
+    display: flex;
+    justify-content: flex-end;
+    margin: 50px;
+}
+.signature__content{
+    text-align: center;
+    margin-bottom: 50px;
+    max-width: 250px;
+}

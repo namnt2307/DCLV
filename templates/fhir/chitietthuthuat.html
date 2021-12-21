@@ -2,132 +2,183 @@
 {% load widget_tweaks %}
 {%block function%}
         <h1>THÔNG TIN THỦ THUẬT</h1>
+        <h2>{{service.service_code}}</h2>
         {% if service.service_status == "draft" %}
         <h3>Chẩn đoán chưa được thực hiện</h3>
         {% elif service.service_status == "active" %}
-            {% if procedure.procedure_status == 'preparation'%}
-                <form action="" method="POST">
-                    {%csrf_token%} 
-                    <div style="margin: 0 auto">
-                        <div class="flex_container">
-                            <label class="title" style="min-width: 420px;">Kết quả thủ thuật, phẫu thuật</label>
-                            {{procedure_form.procedure_outcome|add_class:"value"}}
-                        </div>
-                        <div class="flex_container">
-                            <label class="title" style="min-width: 420px;">Các biến chứng sau thủ thuật, phẫu thuật</label>
-                            {{procedure_form.procedure_complication|add_class:"value"}}
-                        </div>
-                        <div class="flex_container">
-                            <label class="title" style="min-width: 420px;">Các hướng dẫn bệnh nhân sau thủ thuật, phẫu thuật</label>
-                            {{procedure_form.procedure_follow_up|add_class:"value"}}
-                        </div>
-                        <div class="flex_container">
-                            <label class="title" style="min-width: 420px;">Thiết bị sử dụng</label>
-                            {{procedure_form.procedure_used|add_class:"value"}}
-                        </div>
-                        <div class="flex_container">
-                            <label class="title" style="min-width: 420px;">Ghi chú của bác sĩ</label>
-                            {{procedure_form.procedure_note|add_class:"value"}}
-                        </div>
+            {% if request.user.role == 'diagnostic imaging technician' %}
+                {% if procedure.procedure_status == 'preparation'%}
+                    <div>
+                        <form action="" method="POST">
+                            {%csrf_token%} 
+                            <div style="margin: 0 auto">
+                                <div class="flex_container">
+                                    <label class="title title-long">Kết quả thủ thuật, phẫu thuật</label>
+                                    {{procedure_form.procedure_outcome|add_class:"value"}}
+                                </div>
+                                <div class="flex_container">
+                                    <label class="title title-long">Các biến chứng sau thủ thuật, phẫu thuật</label>
+                                    {{procedure_form.procedure_complication|add_class:"value"}}
+                                </div>
+                                <div class="flex_container">
+                                    <label class="title title-long">Các hướng dẫn bệnh nhân sau thủ thuật, phẫu thuật</label>
+                                    {{procedure_form.procedure_follow_up|add_class:"value"}}
+                                </div>
+                                <div class="flex_container">
+                                    <label class="title title-long">Thiết bị sử dụng</label>
+                                    {{procedure_form.procedure_used|add_class:"value"}}
+                                </div>
+                                <div class="flex_container">
+                                    <label class="title title-long">Ghi chú của bác sĩ</label>
+                                    {{procedure_form.procedure_note|add_class:"value"}}
+                                </div>
+                            </div>
+                            <div style="margin-top: 10px">
+                                <label for="id_diagnostic_report" style="height: 25px;">Chẩn đoán của bác sĩ</label>
+                                <textarea name="diagnostic_report_conclusion" id="id_diagnostic_report" cols="30" rows="10"></textarea>
+                                <div style="text-align: center; margin-top: 10px">
+                                    <button class="btn" type="submit">Lưu lại</button>
+                                </div>
+                            </div>
+                        </form>            
                     </div>
-                    <div style="margin-top: 10px">
-                        <label for="id_diagnostic_report" style="height: 25px;">Chẩn đoán của bác sĩ</label>
-                        <textarea name="diagnostic_report_conclusion" id="id_diagnostic_report" cols="30" rows="10"></textarea>
-                        <div style="text-align: center; margin-top: 10px">
-                            <button class="btn" type="submit">Lưu lại</button>
+                {%elif procedure.procedure_status == 'completed'%}
+                    <div id="data">
+                        <div class="flex_container">
+                            <p class="title title-long" ><b>Ngày thực hiện:</b></p> <p class="value">{{procedure.procedure_performed_datetime|date:"d-m-Y H:i:s"}}</p>
                         </div>
+                        <div class="flex_container">
+                            <p class="title title-long"><b>Kết quả thủ thuật, phẫu thuật:</b></p> <p class="value">{{procedure.get_procedure_outcome_display}}</p>
+                        </div>
+                        <div class="flex_container">
+                            <p class="title title-long"><b>Các biến chứng sau thủ thuật, phẫu thuật:</b></p> <p class="value">{{procedure.procedure_complication}}</p>
+                        </div>
+                        <div class="flex_container">
+                            <p class="title title-long"><b>Các hướng dẫn bệnh nhân sau thủ thuật, phẫu thuật:</b></p> <p class="value">{{procedure.procedure_follow_up}}</p>
+                        </div>
+                        <div class="flex_container">
+                            <p class="title title-long"><b>Thiết bị thực hiện thủ thuật, phẫu thuật:</b></p> <p class="value">{{procedure.procedure_used}}</p>
+                        </div>
+                        <div class="flex_container">
+                            <p class="title title-long"><b>Ghi chú của bác sĩ:</b></p> <p class="value">{{procedure.procedure_note}}</p>
+                        </div>
+                        <p><b>Chẩn đoán của bác sĩ:</b></p>
+                        <textarea name="" id="" cols="30" rows="10" disabled>{{diagnostic_report.diagnostic_conclusion}}</textarea>
                     </div>
-                </form>            
-            </div>
-            {%elif procedure.procedure_status == 'completed'%}
-                <div id="data">
-                    <p>Ngày thực hiện: {{procedure.procedure_performed_datetime|date:"d-m-Y H:i:s"}}</p>
-                    <p>Kết quả thủ thuật, phẫu thuật: {{procedure.get_procedure_outcome_display}}</p>
-                    <p>Các biến chứng sau thủ thuật, phẫu thuật: {{procedure.procedure_complication}}</p>
-                    <p>Các hướng dẫn bệnh nhân sau thủ thuật, phẫu thuật: {{procedure.procedure_follow_up}}</p>
-                    <p>Thiết bị thực hiện thủ thuật, phẫu thuật: {{procedure.procedure_used}}</p>
-                    <p>Ghi chú của bác sĩ: {{procedure.procedure_note}}</p>
-                    <p>Chẩn đoán của bác sĩ:</p>
-                    <textarea name="" id="" cols="30" rows="10" disabled>{{diagnostic_report.diagnostic_conclusion}}</textarea>
-                </div>
-                <div id="form" style="display: none;">
-                    <form action="" method="POST">
-                        {%csrf_token%}
-                        {%with 'value:'|add:procedure.procedure_identifier as code%}
-                            {{procedure_form.procedure_identifier|attr:code|attr:'type:hidden'}}
-                        {%endwith%}
-                        {%with 'value:'|add:procedure.procedure_outcome as code%}
-                        <div class="flex_container">
-                            <label class="title" style="min-width: 420px" for="id_procedure_outcome">Kết quả thủ thuật, phẫu thuật:</label>
-                            <p>{{procedure_form.procedure_outcome|attr:code|add_class:'value'}}</p>
-                        </div>
-                        {%endwith%}
-                        {%with 'value:'|add:procedure.procedure_complication as code%}
-                        <div class="flex_container">
-                            <label class="title" style="min-width: 420px" for="id_procedure_complication">Các biến chứng sau thủ thuật, phẫu thuật:</label>
-                            <p>{{procedure_form.procedure_complication|attr:code|add_class:'value'}}</p>
-                        </div>
-                        {%endwith%}
+                    <div id="form" style="display: none;">
+                        <form action="" method="POST">
+                            {%csrf_token%}
+                            {%with 'value:'|add:procedure.procedure_identifier as code%}
+                                {{procedure_form.procedure_identifier|attr:code|attr:'type:hidden'}}
+                            {%endwith%}
+                            {%with 'value:'|add:procedure.procedure_outcome as code%}
+                            <div class="flex_container">
+                                <label class="title title-long" style="min-width: 420px" for="id_procedure_outcome">Kết quả thủ thuật, phẫu thuật:</label>
+                                <p>{{procedure_form.procedure_outcome|attr:code|add_class:'value'}}</p>
+                            </div>
+                            {%endwith%}
+                            {%with 'value:'|add:procedure.procedure_complication as code%}
+                            <div class="flex_container">
+                                <label class="title title-long" style="min-width: 420px" for="id_procedure_complication">Các biến chứng sau thủ thuật, phẫu thuật:</label>
+                                <p>{{procedure_form.procedure_complication|attr:code|add_class:'value'}}</p>
+                            </div>
+                            {%endwith%}
 
-                        {%with 'value:'|add:procedure.procedure_follow_up as code%}
-                        <div  class="flex_container">
-                            <label class="title" style="min-width: 420px" for="id_procedure_followUp">Các hướng dẫn bệnh nhân sau thủ thuật, phẫu thuật:</label>
-                            <p>{{procedure_form.procedure_follow_up|attr:code|add_class:'value'}}</p>
-                        </div>
-                        {%endwith%}
-                        {%with 'value:'|add:procedure.procedure_used as code%}
-                        <div class="flex_container">
-                            <label class="title" style="min-width: 420px" for="id_procedure_focalDevice">Thiết bị thực hiện thủ thuật, phẫu thuật:</label>
-                            <p>{{procedure_form.procedure_used|attr:code|add_class:'value'}}</p>
-                        </div>
-                        {%endwith%}
-                        {%with 'value:'|add:procedure.procedure_note as code%}
-                        <div class="flex_container">
-                            <label class="title" style="min-width: 420px" for="id_procedure_note">Ghi chú của bác sĩ:</label>
-                            <p>{{procedure_form.procedure_note|attr:code|add_class:'value'}}</p>
-                        </div>
-                        {%endwith%}
-                        <p>Chẩn đoán của bác sĩ:</p>
-                        <input type="hidden" name="diagnostic_report_identifier" id="" value="{{diagnostic_report.diagnostic_identifier}}">
-                        <textarea name="diagnostic_report_conclusion" id="" cols="30" rows="10">{{diagnostic_report.diagnostic_conclusion}}</textarea>`
-                        <div style="text-align: center; margin-top: 10px">                                
-                            <button type="submit" class="btn">Lưu lại</button>
-                        </div>
-                    </form>
-                </div>
-                <div style="text-align: center; margin-top: 10px">
-                    <button id="clickButton" class="btn edit" onclick="changeDisplay()">Chỉnh sửa</button>
-                </div>
-                <script>
-                    function changeDisplay(){
-                        button = document.getElementById('clickButton');
-                        data = document.getElementById('data');
-                        form = document.getElementById('form');
-                        console.log(button.textContent);
-                        if (button.textContent == "Chỉnh sửa"){
-                            data.style.display = "none";
-                            form.style.display = "block";
-                            button.textContent = "Hủy bỏ";
-                            button.className = "btn cancel";
+                            {%with 'value:'|add:procedure.procedure_follow_up as code%}
+                            <div  class="flex_container">
+                                <label class="title title-long" style="min-width: 420px" for="id_procedure_followUp">Các hướng dẫn bệnh nhân sau thủ thuật, phẫu thuật:</label>
+                                <p>{{procedure_form.procedure_follow_up|attr:code|add_class:'value'}}</p>
+                            </div>
+                            {%endwith%}
+                            {%with 'value:'|add:procedure.procedure_used as code%}
+                            <div class="flex_container">
+                                <label class="title title-long" style="min-width: 420px" for="id_procedure_focalDevice">Thiết bị thực hiện thủ thuật, phẫu thuật:</label>
+                                <p>{{procedure_form.procedure_used|attr:code|add_class:'value'}}</p>
+                            </div>
+                            {%endwith%}
+                            {%with 'value:'|add:procedure.procedure_note as code%}
+                            <div class="flex_container">
+                                <label class="title title-long" for="id_procedure_note">Ghi chú của bác sĩ:</label>
+                                <p>{{procedure_form.procedure_note|attr:code|add_class:'value'}}</p>
+                            </div>
+                            {%endwith%}
+                            <p><b>Chẩn đoán của bác sĩ:</b></p>
+                            <input type="hidden" name="diagnostic_report_identifier" id="" value="{{diagnostic_report.diagnostic_identifier}}">
+                            <textarea name="diagnostic_report_conclusion" id="" cols="30" rows="10">{{diagnostic_report.diagnostic_conclusion}}</textarea>`
+                            <div style="text-align: center; margin-top: 10px">                                
+                                <button type="submit" class="btn">Lưu lại</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div style="text-align: center; margin-top: 10px">
+                        <button id="clickButton" class="btn edit" onclick="changeDisplay()">Chỉnh sửa</button>
+                    </div>
+                    <script>
+                        function changeDisplay(){
+                            button = document.getElementById('clickButton');
+                            data = document.getElementById('data');
+                            form = document.getElementById('form');
+                            console.log(button.textContent);
+                            if (button.textContent == "Chỉnh sửa"){
+                                data.style.display = "none";
+                                form.style.display = "block";
+                                button.textContent = "Hủy bỏ";
+                                button.className = "btn cancel";
+                            }
+                            else{
+                                data.style.display = "block";
+                                form.style.display = "none";
+                                button.textContent = "Chỉnh sửa";
+                                button.className = "btn edit";
+                            }
                         }
-                        else{
-                            data.style.display = "block";
-                            form.style.display = "none";
-                            button.textContent = "Chỉnh sửa";
-                            button.className = "btn edit";
-                        }
-                    }
-                </script>
-            {% endif %}
+                    </script>
+                {% endif %}
+            {% else %}
+            <div id="data">
+                <div class="flex_container">
+                    <p class="title title-long" ><b>Ngày thực hiện:</b></p> <p class="value">{{procedure.procedure_performed_datetime|date:"d-m-Y H:i:s"}}</p>
+                </div>
+                <div class="flex_container">
+                    <p class="title title-long"><b>Kết quả thủ thuật, phẫu thuật:</b></p> <p class="value">{{procedure.get_procedure_outcome_display}}</p>
+                </div>
+                <div class="flex_container">
+                    <p class="title title-long"><b>Các biến chứng sau thủ thuật, phẫu thuật:</b></p> <p class="value">{{procedure.procedure_complication}}</p>
+                </div>
+                <div class="flex_container">
+                    <p class="title title-long"><b>Các hướng dẫn bệnh nhân sau thủ thuật, phẫu thuật:</b></p> <p class="value">{{procedure.procedure_follow_up}}</p>
+                </div>
+                <div class="flex_container">
+                    <p class="title title-long"><b>Thiết bị thực hiện thủ thuật, phẫu thuật:</b></p> <p class="value">{{procedure.procedure_used}}</p>
+                </div>
+                <div class="flex_container">
+                    <p class="title title-long"><b>Ghi chú của bác sĩ:</b></p> <p class="value">{{procedure.procedure_note}}</p>
+                </div>
+                <p><b>Chẩn đoán của bác sĩ:</b></p>
+                <textarea name="" id="" cols="30" rows="10" disabled>{{diagnostic_report.diagnostic_conclusion}}</textarea>
+            </div>
+                {% endif %}
             {% elif service.service_status == 'completed' %}
-                <p>Ngày thực hiện: {{procedure.procedure_performed_datetime|date:"d-m-Y H:i:s"}}</p>
-                <p>Kết quả thủ thuật, phẫu thuật: {{procedure.get_procedure_outcome_display}}</p>
-                <p>Các biến chứng sau thủ thuật, phẫu thuật: {{procedure.procedure_complication}}</p>
-                <p>Các hướng dẫn bệnh nhân sau thủ thuật, phẫu thuật: {{procedure.procedure_follow_up}}</p>
-                <p>Thiết bị thực hiện thủ thuật, phẫu thuật: {{procedure.procedure_used}}</p>
-                <p>Ghi chú của bác sĩ: {{procedure.procedure_note}}</p>
-                <p>Chẩn đoán của bác sĩ:</p>
-                <div id="diagnostic_report_data" style="margin: 20px 60px; border: solid black 1px; min-height: 50px">
+            <div class="flex_container">
+                <p class="title title-long"><b>Ngày thực hiện:</b></p><p class="value"> {{procedure.procedure_performed_datetime|date:"d-m-Y H:i:s"}}</p>
+            </div>
+            <div class="flex_container">
+                <p class="title title-long"><b>Kết quả thủ thuật, phẫu thuật:</b></p><p class="value"> {{procedure.get_procedure_outcome_display}}</p>
+            </div>
+            <div class="flex_container">
+                <p class="title title-long"><b>Các biến chứng sau thủ thuật, phẫu thuật:</b></p><p class="value"> {{procedure.procedure_complication}}</p>
+            </div>
+            <div class="flex_container">
+                <p class="title title-long"><b>Các hướng dẫn bệnh nhân sau thủ thuật, phẫu thuật:</b></p><p class="value"> {{procedure.procedure_follow_up}}</p>
+            </div>
+            <div class="flex_container">
+                <p class="title title-long"><b>Thiết bị thực hiện thủ thuật, phẫu thuật:</b></p><p class="value"> {{procedure.procedure_used}}</p>
+            </div>
+            <div class="flex_container">
+                <p class="title title-long"><b>Ghi chú của bác sĩ:</b></p><p class="value"> {{procedure.procedure_note}}</p>
+            </div>
+                <p style="height: 45px;"><b>Chẩn đoán của bác sĩ:</b></p>
+                <div id="diagnostic_report_data" style="border: solid black 1px; min-height: 50px; padding:12px">
                     {{diagnostic_report.diagnostic_conclusion}}
                 </div>
         {% endif %}

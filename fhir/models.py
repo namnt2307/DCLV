@@ -39,6 +39,7 @@ class PatientModel(models.Model):
     def __str__(self):
         return f"{self.name}"
 
+
 class EncounterModel(models.Model):
     CLASS_CHOICES = (
         ('SS', 'Thăm khám trong ngày'),
@@ -85,8 +86,10 @@ class EncounterModel(models.Model):
     encounter_location = models.ForeignKey(ClinicalDepartment, on_delete=SET_NULL, null=True)
     encounter_participant = models.CharField(max_length=100, null=True)
     encounter_participant_identifier = models.ForeignKey(PractitionerModel, null=True, on_delete=SET_NULL)
+    encounter_sharing_status = models.BooleanField(default=False)
     encounter_version = models.IntegerField(default=0)
     encounter_storage = models.CharField(max_length=100, default='local')
+
 
 class ConditionModel(models.Model):
     CLINICAL_CHOICES = (
@@ -141,10 +144,10 @@ class ServiceRequestModel(models.Model):
     service_authored = models.DateTimeField(max_length=100)
     service_performed_date = models.DateField(max_length=100, null=True)
     service_requester = models.CharField(max_length=100,null=True)
-    serivce_requester_identifier = models.ForeignKey(PatientModel, null=True, on_delete=SET_NULL)
+    service_requester_identifier = models.ForeignKey(PractitionerModel, null=True, on_delete=SET_NULL, related_name='service_requester')
     service_note = models.CharField(max_length=100, null=True, blank=True)
     service_performer = models.CharField(max_length=100, null=True)
-    service_performer_identifier = models.ForeignKey(PractitionerModel, null=True, on_delete=SET_NULL)
+    service_performer_identifier = models.ForeignKey(PractitionerModel, null=True, on_delete=SET_NULL, related_name='service_performer')
     service_version = models.IntegerField(default=0)
 
 
@@ -321,12 +324,12 @@ class ComorbidityDisease(models.Model):
     disease_search = models.CharField(max_length=100)
     
 
-
 class Schedule(models.Model):
     practitioner_name = models.CharField(max_length=100)
     practitioner_identifier = models.ForeignKey(PractitionerModel, on_delete=models.CASCADE)
     schedule_date = models.DateField()
     session = models.CharField(max_length=20)
+  
     
 class AssignedEncounter(models.Model):
     practitioner_name = models.CharField(max_length=100)
@@ -346,6 +349,7 @@ class Medicine(models.Model):
 class Test(models.Model):
     test_name = models.CharField(max_length=1000)
     test_category = models.CharField(max_length=1000)
+  
     
 class Image(models.Model):
     image_name = models.CharField(max_length=1000)

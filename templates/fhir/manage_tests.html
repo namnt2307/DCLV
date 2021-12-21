@@ -13,11 +13,13 @@
                 <p><input type="radio" name="draft_service_identifier" id="draft_{{service.service_identifier}}" value="{{service.service_identifier}}" required><label for="draft_{{service.service_identifier}}" style="display: inline;">{{service.service_code}} - {{service.encounter_identifier.patient.name}} - {{service.encounter_identifier.patient.identifier}}</label></p>
             {% endfor %}
         </div>
-    {% if draft_services %}        
-    <button type="submit" style="margin-top : 10px" class="btn">Tiếp nhận</button>
-    {% else %}
-    <button disabled="disabled" style="margin-top: 10px;" class="btn">Tiếp nhận</button>
-    {% endif %}
+        <div style="text-align: center;">
+            {% if draft_services %}        
+            <button type="submit" style="margin-top : 10px" class="btn">Tiếp nhận</button>
+            {% else %}
+            <button disabled="disabled" style="margin-top: 10px;" class="btn">Tiếp nhận</button>
+            {% endif %}
+        </div>
     </form>
 </div>
 <div class="tests-container">
@@ -31,13 +33,15 @@
                 <p><input type="radio" name="in_progress_service_identifier" id="in_progress_service_input" value="{{service.service_identifier}}" required><label for="in_progress_{{service.service_identifier}}" style="display: inline;"><a href="{% url 'fhir:chitietxetnghiem' service.encounter_identifier.patient.identifier service.encounter_identifier.encounter_identifier service.service_identifier %}">{{service.service_code}} - {{service.encounter_identifier.patient.name}} - {{service.encounter_identifier.patient.identifier}}</a></label></p>
             {% endfor %}
         </div>
-    {% if in_progress_services %}
-    <button type="button" id="in_progress_reverse" style="margin: 10px;" class="btn">Hoàn tác</button>
-    <button type="button" id="in_progress_forward" style="margin: 10px;" class="btn">Hoàn tất</button>
-    {% else %}
-    <button type="button" id="in_progress_reverse" style="margin: 10px;" class="btn" disabled="disabled">Hoàn tác</button>
-    <button type="button" id="in_progress_forward" style="margin: 10px;" class="btn" disabled="disabled">Hoàn tất</button>
-    {% endif %}
+        <div style="text-align: center;">
+            {% if in_progress_services %}
+            <button type="button" id="in_progress_reverse" style="margin: 10px;" class="btn cancel">Hoàn tác</button>
+            <button type="button" id="in_progress_forward" style="margin: 10px;" class="btn">Hoàn tất</button>
+            {% else %}
+            <button type="button" id="in_progress_reverse" style="margin: 10px;" class="btn cancel" disabled="disabled">Hoàn tác</button>
+            <button type="button" id="in_progress_forward" style="margin: 10px;" class="btn" disabled="disabled">Hoàn tất</button>
+            {% endif %}
+        </div>
     </form>
 </div>
 <div class="tests-container">
@@ -51,11 +55,13 @@
                 <p><input type="radio" name="completed_service_identifier" id="completed_service_input" value="{{service.service_identifier}}" required><label for="completed_{{service.service_identifier}}" style="display: inline;"><a href="{% url 'fhir:chitietxetnghiem' service.encounter_identifier.patient.identifier service.encounter_identifier.encounter_identifier service.service_identifier %}">{{service.service_code}} - {{service.encounter_identifier.patient.name}} - {{service.encounter_identifier.patient.identifier}}</a></label></p>
             {% endfor %}
         </div>
-    {% if completed_services %}
-    <button style="margin: 10px;" class="btn">Hoàn tác</button>
-    {% else %}
-    <button style="margin: 10px;" class="btn" disabled="disabled">Hoàn tác</button>
-    {% endif %}
+        <div style="text-align: center;">
+            {% if completed_services %}
+            <button style="margin: 10px;" class="btn cancel">Hoàn tác</button>
+            {% else %}
+            <button style="margin: 10px;" class="btn cancel" disabled="disabled">Hoàn tác</button>
+            {% endif %}
+        </div>
     </form>
 </div>
 <script>

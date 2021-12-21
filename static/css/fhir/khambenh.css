@@ -182,7 +182,7 @@
     padding: 12px 20px;
     border: none;
     background-color: #8ebf42;
-    color: #fff;
+    color: #fff !important;
     cursor: pointer;
     width: 100%;
     margin-bottom: 15px;
@@ -295,6 +295,10 @@ select{
     margin: 0;
     height: 25px;
     vertical-align: middle;
+}
+
+.flex_container .title-long{
+    min-width: 420px;
 }
 
 .flex_container .title-short{

@@ -88,15 +88,28 @@
         <div class="">
             <h1>PHIẾU KẾT QUẢ XÉT NGHIỆM</h1>
             <div>
-                <p>HỌ TÊN: {{patient.name}}</p>
-                <p>GIỚI: {{patient.gender}}</p>
-                <p>NGÀY SINH: {{patient.birthdate|date:'d-m-Y'}}</p>
-                <p>ĐỊA CHỈ: {{patient.home_address}}</p>
-                <p>BS CHỈ ĐỊNH: {{encounter.encounter_participant}}</p>
-                <p>NGÀY GIỜ CÓ KẾT QUẢ: </p>
+                <div class="flex_container">
+                    <p class="title">HỌ TÊN:</p><p class="value"> {{patient.name}}</p>
+                </div>
+                <div class="flex_container">
+                    <p class="title">GIỚI:</p><p class="value"> {{patient.gender}}</p>
+                </div>
+                <div class="flex_container">
+                    <p class="title">NGÀY SINH:</p><p class="value"> {{patient.birthdate|date:'d-m-Y'}}</p>
+                </div>
+                <div class="flex_container">
+                    <p class="title">ĐỊA CHỈ:</p><p class="value"> {{patient.home_address}}</p>
+                </div>
+                <div class="flex_container">
+                    <p class="title">BS CHỈ ĐỊNH:</p><p class="value"> {{encounter.encounter_participant}}</p>
+                </div>
+
             </div>
         </div>
         {% for service in services %}
+        <div class="flex_container">
+            <p class="title">NGÀY GIỜ CÓ KẾT QUẢ:</p><p class="value"> {{service.service_performed_date|date:'d-m-Y'}} </p>
+        </div>
             <div id="display-data__{{service.service_identifier}}">
                 <div class="history-container">
                     {% if observations_history %}
@@ -142,7 +155,12 @@
                         {%endfor%}
                     </tbody>
                 </table>
-                <p>BÁC SĨ THỰC HIỆN: {{service.service_performer}}</p>
+                <div class="signature">
+                    <div class="signature__content">
+                    <p>BÁC SĨ THỰC HIỆN:</p> 
+                    <p>{{service.service_performer}}</p>
+                </div>
+                </div>
             </div>
         {% endfor %}
     </div>

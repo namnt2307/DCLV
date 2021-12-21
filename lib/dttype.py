@@ -807,6 +807,7 @@ def create_medication_resource(medication, patient_id, patient_name, encounter_i
 
 
 def create_diagnostic_report_resource(diagnostic_report, patient_id, patient_name, encounter_id, service_id):
+    print(diagnostic_report)
     root = ET.Element('DiagnosticReport')
     tree = ET.ElementTree(root)
     root.set('xmlns', 'http://hl7.org/fhir')
@@ -839,7 +840,7 @@ def create_diagnostic_report_resource(diagnostic_report, patient_id, patient_nam
     if diagnostic_report.get('performer'):
         performer = ET.SubElement(root, 'performer')
         reference_type(performer, 'Practitioner/' +
-                       diagnostic_report['performer']['id'], 'Practitioner', diagnostic_report['performer']['name'])
+                       diagnostic_report['performer']['id'], 'Practitioner', display = diagnostic_report['performer']['name'])
     if diagnostic_report.get('conclusion'):
         conclusion = ET.SubElement(root, 'conclusion')
         conclusion.set('value', diagnostic_report['conclusion'])
@@ -930,11 +931,11 @@ def query_patient(patient_identifier, query_type):
             patient['id'] = id_resource.attrib['value']
         if query_type == 'data' or query_type == 'all':
             name = patient_resource.find('d:name', ns)
-            if name:
+            if name != None:
                 patient['name'] = name.find(
                     'd:family', ns).attrib['value'] + ' ' + name.find('d:given', ns).attrib['value']
             telecom = patient_resource.find('d:telecom', ns)
-            if telecom:
+            if telecom != None:
                 patient['telecom'] = telecom.find('d:value', ns).attrib['value']
             gender = patient_resource.find('d:gender', ns)
             if gender != None:
@@ -945,7 +946,8 @@ def query_patient(patient_identifier, query_type):
             birthdate = patient_resource.find('d:birthDate', ns)
             if birthdate != None:
                 patient['birthdate'] = birthdate.attrib['value']
-            for address in patient_resource.findall('d:address', ns):
+            addresses = patient_resource.findall('d:address', ns)
+            for address in addresses:
                 addr_type = address.find('d:use', ns).attrib['value']
                 if addr_type == 'home':
                     patient['home_address'] = address.find('d:line', ns).attrib['value'] + ', ' + address.find(
@@ -955,19 +957,19 @@ def query_patient(patient_identifier, query_type):
                         'd:district', ns).attrib['value'] + ', ' + address.find('d:city', ns).attrib['value']
             patient['identifier'] = patient_identifier
             contact = patient_resource.find('d:contact', ns)
-            if contact:
+            if contact != None:
                 relationship = contact.find('d:relationship', ns)
-                if relationship:
+                if relationship != None:
                     patient['contact_relationship'] = relationship.find('d:text', ns).attrib['value']
                 name = contact.find('d:name', ns)
-                if name:
+                if name != None:
                     patient['contact_name'] = name.find(
                         'd:family', ns).attrib['value'] + ' ' + name.find('d:given', ns).attrib['value']
                 telecom = contact.find('d:telecom', ns)
-                if telecom:
+                if telecom != None:
                     patient['contact_telecom'] = telecom.find('d:value', ns).attrib['value']
                 address = contact.find('d:address', ns)
-                if address:
+                if address != None:
                     patient['contact_address'] = address.find('d:line', ns).attrib['value'] + ', ' + address.find(
                         'd:district', ns).attrib['value'] + ', ' + address.find('d:city', ns).attrib['value']
                 gender = contact.find('d:gender', ns)
@@ -1006,26 +1008,26 @@ def query_encounter(encounter_identifier, query_type):
             if status != None:
                 encounter['encounter_status'] = status.attrib['value']
             _class = encounter_resource.find('d:class', ns)
-            if _class:
+            if _class != None:
                 encounter['encounter_class'] = _class.find(
                     'd:code', ns).attrib['value']
             _type = encounter_resource.find('d:type', ns)
-            if _type:
+            if _type != None:
                 encounter['encounter_type'] = _type.find(
                     'd:text', ns).attrib['value']
             service_type = encounter_resource.find('d:serviceType', ns)
-            if service_type:
+            if service_type != None:
                 encounter['encounter_service'] = service_type.find(
                     'd:text', ns).attrib['value']
             priority = encounter_resource.find('d:priority', ns)
-            if priority:
+            if priority != None:
                 encounter['encounter_priority'] = priority.find('d:text', ns).attrib['value']
             participant = encounter_resource.find('d:participant', ns)
             if participant != None:
                 individual = participant.find('d:individual', ns)
                 encounter['encounter_participant'] = individual.find('d:display', ns).attrib['value']
             period = encounter_resource.find('d:period', ns)
-            if period:
+            if period != None:
                 encounter['encounter_start'] = period.find(
                     'd:start', ns).attrib['value']
                 end_date = None
@@ -1033,10 +1035,10 @@ def query_encounter(encounter_identifier, query_type):
                     end_date = period.find('d:end', ns).attrib['value']
                     encounter['encounter_end'] = getdatetime(end_date)
             length = encounter_resource.find('d:length', ns)
-            if length:
+            if length != None:
                 encounter['encounter_length'] = length.find('d:value', ns).attrib['value']
             reason_code = encounter_resource.find('d:reasonCode', ns)
-            if reason_code:
+            if reason_code != None:
                 encounter['encounter_reason'] = reason_code.find(
                     'd:text', ns).attrib['value']
     
@@ -1067,11 +1069,11 @@ def query_service(service_identifier, query_type):
             if intent != None:
                 service['service_intent'] = intent.attrib['value']
             category = service_resource.find('d:category', ns)
-            if category:
+            if category != None:
                 service['service_category'] = category.find(
                     'd:text', ns).attrib['value']
             code = service_resource.find('d:code', ns)
-            if code:
+            if code != None:
                 service['service_code'] = code.find('d:text', ns).attrib['value']
             occurrence = service_resource.find('d:occurrenceDateTime', ns)
             if occurrence != None:
@@ -1079,8 +1081,18 @@ def query_service(service_identifier, query_type):
             authored_on = service_resource.find('d:authoredOn', ns)
             if authored_on != None:
                 service['service_authored'] = get_date(authored_on.attrib['value'])
+            requester = service_resource.find('d:requester', ns)
+            if requester != None:
+                display = requester.find('d:display', ns)
+                if display != None:
+                    service['service_requester'] = display.attrib['value']
+            performer = service_resource.find('d:performer', ns)
+            if performer != None:
+                display = performer.find('d:display', ns)
+                if display != None:
+                    service['service_performer'] = display.attrib['value']
             note = service_resource.find('d:note', ns)
-            if note:
+            if note != None:
                 service['service_note'] = note.find('d:text', ns).attrib['value']
     return service
 
@@ -1109,17 +1121,17 @@ def query_condition(condition_identifier, query_type):
                 condition['condition_clinical_status'] = clinical_status.find(
                     'd:text', ns).attrib['value']
             verification_status = condition_resource.find('d:verificationStatus', ns)
-            if verification_status:
+            if verification_status != None:
                 condition['condition_verification_status'] = verification_status.find('d:text', ns).attrib['value']
             category = condition_resource.find('d:category', ns)
-            if category:
+            if category != None:
                 condition['condition_category'] = category.find('d:text', ns).attrib['value']
             severity = condition_resource.find('d:severity', ns)
-            if severity:
-                condition['condition_severity'] = severity.find(
+            if severity != None:
+                condition['get_condition_severity_display'] = severity.find(
                     'd:text', ns).attrib['value']
             code = condition_resource.find('d:code', ns)
-            if code:
+            if code != None:
                 condition['condition_code'] = code.find(
                     'd:text', ns).attrib['value']
             onset = condition_resource.find('d:onsetDateTime', ns)
@@ -1129,7 +1141,7 @@ def query_condition(condition_identifier, query_type):
             if abatement != None:
                 condition['condition_abatement'] = abatement.attrib['value']
             note = condition_resource.find('d:note', ns)
-            if note:
+            if note != None:
                 condition['condition_note'] = note.find(
                     'd:text', ns).attrib['value']
             
@@ -1158,11 +1170,11 @@ def query_observation(observation_identifier, query_type):
             if status != None:
                 observation['observation_status'] = status.attrib['value']
             category = observation_resource.find('d:category', ns)
-            if category:
+            if category != None:
                 observation['observation_category'] = category.find(
                     'd:text', ns).attrib['value']
             code = observation_resource.find('d:code', ns)
-            if code:
+            if code != None:
                 observation['observation_code'] = code.find(
                     'd:text', ns).attrib['value']
             effective = observation_resource.find('d:effectiveDateTime', ns)
@@ -1170,14 +1182,14 @@ def query_observation(observation_identifier, query_type):
                 observation['observation_effective'] = getdatetime(
                     effective.attrib['value'])
             value_quantity = observation_resource.find('d:valueQuantity', ns)
-            if value_quantity:
+            if value_quantity != None:
                 observation['observation_value_quantity'] = value_quantity.find(
                     'd:value', ns).attrib['value']
                 unit = value_quantity.find('d:unit', ns)
                 if unit != None:
                     observation['observation_value_unit'] = unit.attrib['value']
             reference_range = observation_resource.find('d:referenceRange', ns)
-            if reference_range:
+            if reference_range != None:
                 observation['observation_reference_range'] = reference_range.find('d:text', ns).attrib['value']
     return observation
 
@@ -1204,35 +1216,40 @@ def query_procedure(procedure_identifier, query_type):
             if status != None:
                 procedure['procedure_status'] = status.attrib['value']
             category = procedure_resource.find('d:category', ns)
-            if category:
+            if category != None:
                 procedure['procedure_category'] = category.find(
                     'd:text', ns).attrib['value']
             code = procedure_resource.find('d:code', ns)
-            if code:
+            if code != None:
                 procedure['procedure_code'] = code.find(
                     'd:text', ns).attrib['value']
             performed_datetime = procedure_resource.find('d:performedDateTime', ns)
             if performed_datetime != None:
                 procedure['procedure_performed_datetime'] = getdatetime(
                     performed_datetime.attrib['value'])
+            performer = procedure_resource.find('d:performer', ns)
+            if performer != None:
+                display = performer.find('d:display', ns)
+                if display != None:
+                    procedure['procedure_performer'] = display.attrib['value']
             reason_code = procedure_resource.find('d:reasonCode', ns)
-            if reason_code:
+            if reason_code != None:
                 procedure['procedure_reason_code'] = reason_code.find(
                     'd:text', ns).attrib['value']
             outcome = procedure_resource.find('d:outcome', ns)
-            if outcome:
+            if outcome != None:
                 procedure['procedure_outcome'] = outcome.find(
                     'd:text', ns).attrib['value']
             complication = procedure_resource.find('d:complication', ns)
-            if complication:
+            if complication != None:
                 procedure['procedure_complication'] = complication.find(
                     'd:text', ns).attrib['value']
             follow_up = procedure_resource.find('d:followUp', ns)
-            if follow_up:
+            if follow_up != None:
                 procedure['procedure_follow_up'] = follow_up.find(
                     'd:text', ns).attrib['value']
             note = procedure_resource.find('d:note', ns)
-            if note:
+            if note != None:
                 procedure['procedure_note'] = note.find(
                     'd:text', ns).attrib['value']
     return procedure
@@ -1258,7 +1275,7 @@ def query_medication(medication_identifier, query_type):
             medication_statement['medication_identifier'] = medication_identifier
             medication = medication_resource.find(
                 'd:medicationCodeableConcept', ns)
-            if medication:
+            if medication != None:
                 medication_statement['medication_medication'] = medication.find(
                     'd:text', ns).attrib['value']
             effective = medication_resource.find('d:effectiveDateTime', ns)
@@ -1268,23 +1285,23 @@ def query_medication(medication_identifier, query_type):
             if date_asserted != None:
                 medication_statement['medication_date_asserted'] = get_date(date_asserted.attrib['value'])
             reason_code = medication_resource.find('d:reasonCode', ns)
-            if reason_code:
+            if reason_code != None:
                 medication_statement['medication_reason_code'] = reason_code.find(
                     'd:text', ns).attrib['value']
             dosage = medication_resource.find('d:dosage', ns)
-            if dosage:
+            if dosage != None:
                 additional_instruction = dosage.find('d:additionalInstruction', ns)
-                if additional_instruction:
+                if additional_instruction != None:
                     medication_statement['dosage_additional_instruction'] = additional_instruction.find(
                         'd:text', ns).attrib['value']
                 patient_instruction = dosage.find('d:patientInstruction', ns)
-                if patient_instruction:
+                if patient_instruction != None:
                     medication_statement['dosage_patient_instruction'] = patient_instruction.find(
                         'd:text', ns).attrib['value']
                 timing = dosage.find('d:timing', ns)
-                if timing:
+                if timing != None:
                     repeat = timing.find('d:repeat', ns)
-                    if repeat:
+                    if repeat != None:
                         duration = repeat.find('d:duration', ns)
                         if duration != None:
                             duration_value = duration.attrib['value']
@@ -1316,11 +1333,11 @@ def query_medication(medication_identifier, query_type):
                         if offset != None:
                             medication_statement['dosage_offset'] = offset.attrib['value']
                 route = dosage.find('d:route', ns)
-                if route:
+                if route != None:
                     medication_statement['dosage_route'] = route.find(
                         'd:text', ns).attrib['value']
                 dose_and_rate = dosage.find('d:doseAndRate', ns)
-                if dose_and_rate:
+                if dose_and_rate != None:
                     dose_quantity = dose_and_rate.find('d:doseQuantity', ns)
                     quantity = dose_quantity.find('d:value', ns).attrib['value']
                     unit = dose_quantity.find('d:unit', ns).attrib['value']
@@ -1350,11 +1367,11 @@ def query_practitioner(practitioner_identifier, query_type):
         if query_type == 'data' or query_type == 'all':
             practitioner['identifier'] = practitioner_identifier
             practitioner_name = practitioner_resource.find('d:name', ns)
-            if practitioner_name:
+            if practitioner_name != None:
                 practitioner['name'] = practitioner_name.find(
                     'd:family', ns).attrib['value'] + ' ' + practitioner_name.find('d:given', ns).attrib['value']
             practitioner_telecom = practitioner_resource.find('d:telecom', ns)
-            if practitioner_telecom:
+            if practitioner_telecom != None:
                 practitioner['telecom'] = practitioner_telecom.find(
                     'd:value', ns).attrib['value']
             practitioner_gender = practitioner_resource.find('d:gender', ns)
@@ -1368,7 +1385,7 @@ def query_practitioner(practitioner_identifier, query_type):
                 practitioner['birthdate'] = practitioner_birthdate.attrib['value']
             practitioner_qualification = practitioner_resource.find(
                 'd:qualification', ns)
-            if practitioner_qualification:
+            if practitioner_qualification != None:
                 practitioner_qualification_code = practitioner_qualification.find(
                     'd:code', ns)
                 practitioner['qualification'] = practitioner_qualification_code.find(
@@ -1398,12 +1415,12 @@ def query_diagnostic_report(diagnostic_report_identifier, query_type):
             if status != None:
                 diagnostic_report['diagnostic_status'] = status.attrib['value']
             category = diagnostic_report_resource.find('d:category', ns)
-            if category:
+            if category != None:
                 diagnostic_report['diagnostic_category'] = category.find(
                     'd:text', ns).attrib['value']
 
             code = diagnostic_report_resource.find('d:code', ns)
-            if code:
+            if code != None:
                 diagnostic_report['diagnostic_code'] = code.find('d:text', ns).attrib['value']
             effective = diagnostic_report_resource.find('d:effectiveDateTime', ns)
             if effective != None:
@@ -1432,19 +1449,19 @@ def query_allergy(allergy_identifier, query_type):
         if query_type == 'all' or query_type == 'data':
             allergy['allergy_identifier'] = allergy_identifier
             clinical_status = allergy_resource.find('d:clinicalStatus', ns)
-            if clinical_status:
+            if clinical_status != None:
                 allergy['allergy_clinical_status'] = clinical_status.find('d:text', ns).attrib['value']
             verification_status = allergy_resource.find('d:verificationStatus', ns)
-            if verification_status:
+            if verification_status != None:
                 allergy['allergy_verification_status'] = verification_status.find('d:text', ns).attrib['value']
             category = allergy_resource.find('d:category', ns)
-            if category:
+            if category != None:
                 allergy['allergy_category'] = category.find('d:text', ns).attrib['value']
             criticality = allergy_resource.find('d:criticality', ns)
-            if criticality:
-                allergy['allergy_criticality'] = criticality.find('d:text', ns).attrib['value']
+            if criticality != None:
+                allergy['get_allergy_criticality_display'] = criticality.find('d:text', ns).attrib['value']
             code = allergy_resource.find('d:code', ns)
-            if code:
+            if code != None:
                 allergy['allergy_code'] = code.find('d:text', ns).attrib['value']
             onset = allergy_resource.find('d:onsetDateTime', ns)
             if onset != None:
@@ -1453,16 +1470,16 @@ def query_allergy(allergy_identifier, query_type):
             if last_occurrence != None:
                 allergy['allergy_last_occurrence'] = last_occurrence.attrib['value']
             reaction = allergy_resource.find('d:reaction', ns)
-            if reaction:
+            if reaction != None:
                 substance = reaction.find('d:substance', ns)
-                if substance:
+                if substance != None:
                     allergy['allergy_reaction_substance'] = substance.find('d:text', ns).attrib['value']
                 manifestation = reaction.find('d:manifestation', ns)
-                if manifestation:
+                if manifestation != None:
                     allergy['allergy_reaction_manifestation'] = manifestation.find('d:text', ns).attrib['value']
                 severity = allergy_resource.find('d:severity', ns)
-                if severity:
-                    allergy['allergy_reaction_severity'] = severity.find('d:severity', ns).attrib['value']
+                if severity != None:
+                    allergy['get_allergy_reaction_severity_display'] = severity.find('d:severity', ns).attrib['value']
     return allergy
 
 
@@ -1487,22 +1504,22 @@ def query_encounter_history(encounter_id, version, query_type):
             if status != None:
                 encounter['encounter_status'] = status.attrib['value']
             _class = encounter_resource.find('d:class', ns)
-            if _class:
+            if _class != None:
                 encounter['encounter_class'] = _class.find(
                     'd:code', ns).attrib['value']
             _type = encounter_resource.find('d:type', ns)
-            if _type:
+            if _type != None:
                 encounter['encounter_type'] = _type.find(
                     'd:text', ns).attrib['value']
             service_type = encounter_resource.find('d:serviceType', ns)
-            if service_type:
+            if service_type != None:
                 encounter['encounter_service'] = service_type.find(
                     'd:text', ns).attrib['value']
             # priority = encounter_resource.find('d:priority', ns)
             # if priority:
             #     encounter['encounter_priority'] = priority.find('d:text', ns).attrib['value']
             period = encounter_resource.find('d:period', ns)
-            if period:
+            if period != None:
                 start_date = period.find(
                     'd:start', ns).attrib['value']
                 encounter['encounter_start'] = getdatetime(start_date)
@@ -1511,10 +1528,10 @@ def query_encounter_history(encounter_id, version, query_type):
                     end_date = period.find('d:end', ns).attrib['value']
                     encounter['encounter_end'] = getdatetime(end_date)
             length = encounter_resource.find('d:length', ns)
-            if length:
+            if length != None:
                 encounter['encounter_length'] = length.find('d:value', ns).attrib['value']
             reason_code = encounter_resource.find('d:reasonCode', ns)
-            if reason_code:
+            if reason_code != None:
                 encounter['encounter_reason'] = reason_code.find(
                     'd:text', ns).attrib['value']
     return encounter
@@ -1544,11 +1561,11 @@ def query_service_history(service_id, version, query_type):
             if intent != None:
                 service['service_intent'] = intent.attrib['value']
             category = service_resource.find('d:category', ns)
-            if category:
+            if category != None:
                 service['service_category'] = category.find(
                     'd:text', ns).attrib['value']
             code = service_resource.find('d:code', ns)
-            if code:
+            if code != None:
                 service['service_code'] = code.find('d:text', ns).attrib['value']
             occurrence = service_resource.find('d:occurrenceDateTime', ns)
             if occurrence != None:
@@ -1557,7 +1574,7 @@ def query_service_history(service_id, version, query_type):
             if authored_on != None:
                 service['service_authored'] = get_date(authored_on.attrib['value'])
             note = service_resource.find('d:note', ns)
-            if note:
+            if note != None:
                 service['service_note'] = note.find('d:text', ns).attrib['value']
     return service
 
@@ -1584,17 +1601,17 @@ def query_condition_history(condition_id, version, query_type):
                 condition['condition_clinical_status'] = clinical_status.find(
                     'd:text', ns).attrib['value']
             verification_status = condition_resource.find('d:verificationStatus', ns)
-            if verification_status:
+            if verification_status != None:
                 condition['condition_verification_status'] = verification_status.find('d:text', ns).attrib['value']
             category = condition_resource.find('d:category', ns)
-            if category:
+            if category != None:
                 condition['condition_category'] = category.find('d:text', ns).attrib['value']
             severity = condition_resource.find('d:severity', ns)
-            if severity:
+            if severity != None:
                 condition['condition_severity'] = severity.find(
                     'd:text', ns).attrib['value']
             code = condition_resource.find('d:code', ns)
-            if code:
+            if code != None:
                 condition['condition_code'] = code.find(
                     'd:text', ns).attrib['value']
             onset = condition_resource.find('d:onsetDateTime', ns)
@@ -1604,7 +1621,7 @@ def query_condition_history(condition_id, version, query_type):
             if abatement != None:
                 condition['condition_abatement'] = abatement.attrib['value']
             note = condition_resource.find('d:note', ns)
-            if note:
+            if note != None:
                 condition['condition_note'] = note.find(
                     'd:text', ns).attrib['value']
             
@@ -1632,11 +1649,11 @@ def query_observation_history(observation_id, version, query_type):
             if status != None:
                 observation['observation_status'] = status.attrib['value']
             category = observation_resource.find('d:category', ns)
-            if category:
+            if category != None:
                 observation['observation_category'] = category.find(
                     'd:text', ns).attrib['value']
             code = observation_resource.find('d:code', ns)
-            if code:
+            if code != None:
                 observation['observation_code'] = code.find(
                     'd:text', ns).attrib['value']
             effective = observation_resource.find('d:effectiveDateTime', ns)
@@ -1644,14 +1661,14 @@ def query_observation_history(observation_id, version, query_type):
                 observation['observation_effective'] = getdatetime(
                     effective.attrib['value'])
             value_quantity = observation_resource.find('d:valueQuantity', ns)
-            if value_quantity:
+            if value_quantity != None:
                 observation['observation_value_quantity'] = value_quantity.find(
                     'd:value', ns).attrib['value']
                 unit = value_quantity.find('d:unit', ns)
                 if unit != None:
                     observation['observation_value_unit'] = unit.attrib['value']
             reference_range = observation_resource.find('d:referenceRange', ns)
-            if reference_range:
+            if reference_range != None:
                 observation['observation_reference_range'] = reference_range.find('d:text', ns).attrib['value']
    
     return observation
@@ -1678,11 +1695,11 @@ def query_procedure_history(procedure_id, version, query_type):
             if status != None:
                 procedure['procedure_status'] = status.attrib['value']
             category = procedure_resource.find('d:category', ns)
-            if category:
+            if category != None:
                 procedure['procedure_category'] = category.find(
                     'd:text', ns).attrib['value']
             code = procedure_resource.find('d:code', ns)
-            if code:
+            if code != None:
                 procedure['procedure_code'] = code.find(
                     'd:text', ns).attrib['value']
             performed_datetime = procedure_resource.find('d:performedDateTime', ns)
@@ -1690,23 +1707,23 @@ def query_procedure_history(procedure_id, version, query_type):
                 procedure['procedure_performed_datetime'] = getdatetime(
                     performed_datetime.attrib['value'])
             reason_code = procedure_resource.find('d:reasonCode', ns)
-            if reason_code:
+            if reason_code != None:
                 procedure['procedure_reason_code'] = reason_code.find(
                     'd:text', ns).attrib['value']
             outcome = procedure_resource.find('d:outcome', ns)
-            if outcome:
+            if outcome != None:
                 procedure['procedure_outcome'] = outcome.find(
                     'd:text', ns).attrib['value']
             complication = procedure_resource.find('d:complication', ns)
-            if complication:
+            if complication != None:
                 procedure['procedure_complication'] = complication.find(
                     'd:text', ns).attrib['value']
             follow_up = procedure_resource.find('d:followUp', ns)
-            if follow_up:
+            if follow_up != None:
                 procedure['procedure_follow_up'] = follow_up.find(
                     'd:text', ns).attrib['value']
             note = procedure_resource.find('d:note', ns)
-            if note:
+            if note != None:
                 procedure['procedure_note'] = note.find(
                     'd:text', ns).attrib['value']
     return procedure
@@ -1741,7 +1758,7 @@ def query_medication_history(medication_id, version, query_type):
             if date_asserted != None:
                 medication_statement['medication_date_asserted'] = get_date(date_asserted.attrib['value'])
             reason_code = medication_resource.find('d:reasonCode', ns)
-            if reason_code:
+            if reason_code != None:
                 medication_statement['medication_reason_code'] = reason_code.find(
                     'd:text', ns).attrib['value']
             dosage = medication_resource.find('d:dosage', ns)
@@ -1946,22 +1963,22 @@ def get_encounter(encounter_resource, query_type):
         if status != None:
             encounter['encounter_status'] = status.attrib['value']
         _class = encounter_resource.find('d:class', ns)
-        if _class:
+        if _class != None:
             encounter['encounter_class'] = _class.find(
                 'd:code', ns).attrib['value']
         _type = encounter_resource.find('d:type', ns)
-        if _type:
+        if _type != None:
             encounter['encounter_type'] = _type.find(
                 'd:text', ns).attrib['value']
         service_type = encounter_resource.find('d:serviceType', ns)
-        if service_type:
+        if service_type != None:
             encounter['encounter_service'] = service_type.find(
                 'd:text', ns).attrib['value']
         # priority = encounter_resource.find('d:priority', ns)
         # if priority:
         #     encounter['encounter_priority'] = priority.find('d:text', ns).attrib['value']
         period = encounter_resource.find('d:period', ns)
-        if period:
+        if period != None:
             encounter['encounter_start'] = period.find(
                 'd:start', ns).attrib['value']
             end_date = None
@@ -1969,10 +1986,10 @@ def get_encounter(encounter_resource, query_type):
                 end_date = period.find('d:end', ns).attrib['value']
                 encounter['encounter_end'] = getdatetime(end_date)
         length = encounter_resource.find('d:length', ns)
-        if length:
+        if length != None:
             encounter['encounter_length'] = length.find('d:value', ns).attrib['value']
         reason_code = encounter_resource.find('d:reasonCode', ns)
-        if reason_code:
+        if reason_code != None:
             encounter['encounter_reason'] = reason_code.find(
                 'd:text', ns).attrib['value']
     return encounter
@@ -1995,11 +2012,11 @@ def get_service(service_resource, query_type):
         if intent != None:
             service['service_intent'] = intent.attrib['value']
         category = service_resource.find('d:category', ns)
-        if category:
+        if category != None:
             service['service_category'] = category.find(
                 'd:text', ns).attrib['value']
         code = service_resource.find('d:code', ns)
-        if code:
+        if code != None:
             service['service_code'] = code.find('d:text', ns).attrib['value']
         occurrence = service_resource.find('d:occurrenceDateTime', ns)
         if occurrence != None:

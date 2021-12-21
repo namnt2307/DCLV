@@ -81,15 +81,27 @@
         <div class="">
             <h1>PHIẾU KẾT QUẢ THỦ THUẬT</h1>
             <div>
-                <p>HỌ TÊN: {{patient.name}}</p>
-                <p>GIỚI: {{patient.gender}}</p>
-                <p>NGÀY SINH: {{patient.birthdate|date:'d-m-Y'}}</p>
-                <p>ĐỊA CHỈ: {{patient.home_address}}</p>
-                <p>BS CHỈ ĐỊNH: {{encounter.encounter_participant}}</p>
-                <p>NGÀY GIỜ CÓ KẾT QUẢ: </p>
+                <div class="flex_container">
+                    <p class="title">HỌ TÊN:</p><p class="value"> {{patient.name}}</p>
+                </div>
+                <div class="flex_container">
+                    <p class="title">GIỚI:</p><p class="value"> {{patient.gender}}</p>
+                </div>
+                <div class="flex_container">
+                    <p class="title">NGÀY SINH:</p><p class="value"> {{patient.birthdate|date:'d-m-Y'}}</p>
+                </div>
+                <div class="flex_container">
+                    <p class="title">ĐỊA CHỈ:</p><p class="value"> {{patient.home_address}}</p>
+                </div>
+                <div class="flex_container">
+                    <p class="title">BS CHỈ ĐỊNH:</p><p class="value"> {{encounter.encounter_participant}}</p>
+                </div>                                
             </div>
         </div>
         {% for service in services %}
+            <div class="flex_container">
+                <p class="title">NGÀY GIỜ CÓ KẾT QUẢ:</p><p class="value"> {{service.service_performed_date|date:'d:m:Y'}}</p>
+            </div>
             <div  id="display-data__{{service.service_identifier}}">
                 <div class="right-body__section">
                     <h2>THÔNG TIN THỦ THUẬT</h2>
@@ -113,15 +125,30 @@
                             {% endfor %}
                         </div>
                         {% endif %}
-                        
-                        <p>THỦ THUẬT THỰC HIỆN: {{ procedure.procedure_code }}</p>
-                        <p>LÝ DO THỰC HIỆN: {{ procedure.procedure_reason_code }}</p>
-                        <p>NGÀY THỰC HIỆN: {{ procedure.procedure_performed_datetime }}</p>
-                        <p>KẾT QUẢ: {{procedure.procedure_outcome}}</p>
-                        <p>THIẾT BỊ SỬ DỤNG: {{procedure.procedure_used}}</p>
-                        <p>BIẾN CHỨNG SAU THỦ THUẬT: {{procedure.procedure_complication}}</p>
-                        <p>HƯỚNG DẪN SAU THỦ THUẬT: {{procedure.procedure_follow_up}}</p>
-                        <p>BÁC SĨ THỰC HIỆN: {{procedure.procedure_performer}}</p>
+                        <div class="flex_container">
+                            <p class="title">THỦ THUẬT THỰC HIỆN:</p><p class="value"> {{ procedure.procedure_code }}</p>
+                        </div>
+                        <div class="flex_container">
+                            <p class="title">LÝ DO THỰC HIỆN:</p><p class="value"> {{ procedure.procedure_reason_code }}</p>
+                        </div>
+                        <div class="flex_container">
+                            <p class="title">NGÀY THỰC HIỆN:</p><p class="value"> {{ procedure.procedure_performed_datetime|date:"H:i:s d:m:Y" }}</p>
+                        </div>
+                        <div class="flex_container">
+                            <p class="title">KẾT QUẢ:</p><p class="value"> {{procedure.get_procedure_outcome_display}}</p>
+                        </div>
+                        <div class="flex_container">
+                            <p class="title">THIẾT BỊ SỬ DỤNG:</p><p class="value"> {{procedure.procedure_used}}</p>
+                        </div>
+                        <div class="flex_container">
+                            <p class="title">BIẾN CHỨNG SAU THỦ THUẬT:</p><p class="value"> {{procedure.procedure_complication}}</p>
+                        </div>
+                        <div class="flex_container">
+                            <p class="title">HƯỚNG DẪN SAU THỦ THUẬT:</p><p class="value"> {{procedure.procedure_follow_up}}</p>
+                        </div>
+                        <div class="flex_container">
+                            <p class="title">BÁC SĨ THỰC HIỆN:</p><p class="value"> {{procedure.procedure_performer}}</p>
+                        </div>
                         {% if procedures_history|get_item:procedure.procedure_identifier %}
                             <button onclick="displayHistory('{{procedure.procedure_identifier}}-history')">xem lich su</button>
                         {% endif %}
@@ -144,8 +171,10 @@
                                 {% endfor %}
                             </div>
                         {% endif %}
-                        <p>{{diagnostic_report.diagnostic_conclusion}}</p>
-                        <p>BÁC SĨ CHẨN ĐOÁN: {{diagnostic_report.diagnostic_performer}}</p>
+                        <p class="text-line">{{diagnostic_report.diagnostic_conclusion}}</p>
+                        <div class="flex_container">
+                            <p class="title">BÁC SĨ CHẨN ĐOÁN:</p><p class="value"> {{diagnostic_report.diagnostic_performer}}</p>
+                        </div>
                         {% if diagnostic_reports_history|get_item:diagnostic_report.diagnostic_identifier %}
                             <button onclick="displayHistory('{{diagnostic_report.diagnostic_identifier}}-history')">xem lich su</button>
                         {% endif %}

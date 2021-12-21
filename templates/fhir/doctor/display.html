@@ -181,6 +181,7 @@
                 <th>Loại thăm khám</th>
                 <th>Tình trạng thăm khám</th>
                 <th>Ngày kết thúc</th>
+                <th>Tình trạng chia sẻ</th>
                 <th>Xem hồ sơ</th>
             </thead>
             {%if data.Encounter%}
@@ -196,30 +197,43 @@
                     {% endif %}
                 </td>
                 {% elif encounter.encounter_storage == 'hapi' %}
-                <td>{{encounter.encounter_identifier}}</td>
+                    <td>{{encounter.encounter_identifier}}</td>
                 {% endif %}
                 <td>{{encounter.get_encounter_class_display}}</td>
                 {% if encounter.encounter_status == 'queued' %}
-                <td>Chưa chỉ định bác sĩ</td>
+                    <td>Chưa chỉ định bác sĩ</td>
                 {% elif encounter.encounter_status == 'assigned' %}
-                <td> Đang Khám</td>
+                    <td> Đang Khám</td>
                 {%elif encounter.encounter_status == 'finished'%}
-                <td>Đã Khám xong</td>
+                    <td>Đã Khám xong</td>
                 {% else %}
-                <td></td>
+                    <td></td>
                 {%endif%}
                 {%if encounter.encounter_end %}
-                <td>{{encounter.encounter_end|date:"d-m-Y H:i:s"}}</td>
+                    <td>{{encounter.encounter_end|date:"d-m-Y H:i:s"}}</td>
                 {%else%}
-                <td></td>
+                    <td></td>
                 {%endif%}
-                <td><a href="{% url 'fhir:view_benhan'  data.Patient.identifier encounter.encounter_identifier %}">Xem</a></td>
+                {% if encounter.encounter_sharing_status %}
+                    <td>
+                        <form action="{% url 'fhir:delete' %}" method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="resource_type" value="sharing_encounter">
+                            <input type="hidden" name="resource_identifier" value="{{encounter.encounter_identifier}}">
+                            <input type="hidden" name="url_next" value="{{request.get_full_path}}">
+                            <button class="btn cancel">Ngừng chia sẻ</button>
+                        </form>
+                    </td>
+                {% else %}
+                    <td><button class="btn" type="button"><a href="{% url 'fhir:save' data.Patient.identifier encounter.encounter_identifier %}">Chia sẻ</a></button></td>
+                {% endif %}
+                <td><a href="{% url 'fhir:view_benhan' data.Patient.identifier encounter.encounter_identifier %}">Xem</a></td>
             </tr>
             {%endfor%}
             {%endif%}
             {% if request.user.role == 'medical assistant' or request.user.role == 'doctor' %}
             <tr>
-                <td colspan="6" style="text-align: center;"><button class="btn" onclick="openForm()">Đăng ký khám mới</button></td>
+                <td colspan="7" style="text-align: center;"><button class="btn" onclick="openForm()">Đăng ký mới</button></td>
             </tr>
             {% endif %}
         </table>

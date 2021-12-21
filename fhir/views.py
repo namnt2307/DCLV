@@ -7,22 +7,23 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils.decorators import method_decorator
 from django.contrib.auth import get_user_model, login
 from django.core.exceptions import ObjectDoesNotExist
+from django.template.defaulttags import register
+from django.shortcuts import get_object_or_404
+from django.contrib import messages
+from login.forms import UserCreationForm
+from handlers import handlers
+from .forms import EncounterForm, ConditionForm, ProcedureForm, ProcedureDetailForm, MedicationForm, ServiceRequestForm, DiagnosticReportForm, AllergyForm, PatientForm
+from .models import AssignedEncounter, EncounterModel, MedicationModel, ServiceRequestModel, PatientModel, ConditionModel, ObservationModel, ProcedureModel, DiagnosticReportModel, AllergyModel, DischargeDisease, ComorbidityDisease, Schedule, Medicine, Test, Image
 import xml.etree.ElementTree as ET
 import requests
 import uuid
 import os
 from lib import dttype as dt
-from login.forms import UserCreationForm
-from handlers import handlers
 # from fhir.forms import EHRCreationForm
-from .models import AssignedEncounter, EncounterModel, MedicationModel, ServiceRequestModel, PatientModel, ConditionModel, ObservationModel, ProcedureModel, DiagnosticReportModel, AllergyModel, DischargeDisease, ComorbidityDisease, Schedule, Medicine, Test, Image
 from administration.models import PractitionerModel, ClinicalDepartment
-from .forms import EncounterForm, ConditionForm, ProcedureForm, ProcedureDetailForm, MedicationForm, ServiceRequestForm, DiagnosticReportForm, AllergyForm, PatientForm
-from django.shortcuts import get_object_or_404
 from datetime import datetime, timedelta, date
-from django.template.defaulttags import register
 import time
-from django.contrib import messages
+import urllib.request
 # Create your views here.
 
 
@@ -32,6 +33,10 @@ fhir_server = os.getenv('FHIR_SERVER',"http://10.0.0.25:8080/fhir")
 @register.filter
 def get_item(dictionary, key):
     return dictionary.get(key)
+
+@register.filter
+def make_range(num):
+    return range(num)
 
 
 DOSAGE_WHEN_CHOICES = {
@@ -292,34 +297,38 @@ class display_detail(LoginRequiredMixin, View):
         instance = PatientModel.objects.get(
             identifier=patient_identifier)
         data['Patient'] = instance
-        get_encounter = requests.get(fhir_server + "/Encounter?subject.identifier=urn:trinhcongminh|" +
-                                    patient_identifier, headers={'Content-type': 'application/xml'})
-        if get_encounter.status_code == 200 and 'entry' in get_encounter.content.decode('utf-8'):
-            get_root = ET.fromstring(
-                get_encounter.content.decode('utf-8'))
-            data['Encounter'] = []
-            for entry in get_root.findall('d:entry', ns):
-                encounter = {}
-                resource = entry.find('d:resource', ns)
-                encounter_resource = resource.find(
-                    'd:Encounter', ns)
-                identifier = encounter_resource.find(
-                    'd:identifier', ns)
-                encounter_identifier = identifier.find(
-                    'd:value', ns).attrib['value']
-                encounter = dt.query_encounter(identifier.find(
-                    'd:value', ns).attrib['value'], query_type='data')
-                print(encounter)
-                try:
-                    encounter_instance = EncounterModel.objects.get(
-                        encounter_identifier=encounter_identifier)
-                    if encounter_instance.encounter_storage == 'hapi':
-                        encounter_instance.delete()
+        
+        try:
+            get_encounter = requests.get(fhir_server + "/Encounter?subject.identifier=urn:trinhcongminh|" +
+                                        patient_identifier, headers={'Content-type': 'application/xml'})
+            if get_encounter.status_code == 200 and 'entry' in get_encounter.content.decode('utf-8'):
+                get_root = ET.fromstring(
+                    get_encounter.content.decode('utf-8'))
+                data['Encounter'] = []
+                for entry in get_root.findall('d:entry', ns):
+                    encounter = {}
+                    resource = entry.find('d:resource', ns)
+                    encounter_resource = resource.find(
+                        'd:Encounter', ns)
+                    identifier = encounter_resource.find(
+                        'd:identifier', ns)
+                    encounter_identifier = identifier.find(
+                        'd:value', ns).attrib['value']
+                    encounter = dt.query_encounter(identifier.find(
+                        'd:value', ns).attrib['value'], query_type='data')
+                    print(encounter)
+                    try:
+                        encounter_instance = EncounterModel.objects.get(
+                            encounter_identifier=encounter_identifier)
+                        if encounter_instance.encounter_storage == 'hapi':
+                            encounter_instance.delete()
+                            EncounterModel.objects.create(
+                                **encounter, patient=instance, encounter_storage='hapi')
+                    except:
                         EncounterModel.objects.create(
                             **encounter, patient=instance, encounter_storage='hapi')
-                except:
-                    EncounterModel.objects.create(
-                        **encounter, patient=instance, encounter_storage='hapi')
+        except Exception as e:
+            messages.error(request, "Kho FHIR không hoạt động") 
         data['Encounter'] = EncounterModel.objects.all().filter(
             patient=patient_identifier)
         img_dir = f'/static/img/patient/{patient_identifier}.jpg'
@@ -332,11 +341,15 @@ class display_detail(LoginRequiredMixin, View):
             'departments': departments
         }
         return render(request, 'fhir/doctor/display.html', context)
+        
     
     def post(self, request, patient_identifier):
-        print(patient_identifier)
         try: 
             patient = PatientModel.objects.get(identifier=patient_identifier)
+        except PatientModel.DoesNotExist:
+            messages.errors(request, "Mã y tế cung cấp không tồn tại")
+            return HttpResponseRedirect('/fhir/create')
+        try:
             patient_id = dt.query_patient(patient_identifier, query_type='id')
             patient_update = PatientForm(request.POST or None, instance=patient)
             if patient_update.is_valid():
@@ -348,20 +361,18 @@ class display_detail(LoginRequiredMixin, View):
                 if put_patient.status_code == 200:
                     patient_update.save()
                     messages.success(request, "Cập nhật thông tin thành công")
-                    return HttpResponseRedirect('/fhir/display_detail/' + patient_identifier)
+                    return HttpResponseRedirect(self.request.path_info)
                 else:
                     messages.error(request, "Cập nhật thông tin không thành công, hệ thống không cập nhật được trên FHIR")
-                    return HttpResponseRedirect('/fhir/display_detail/' + patient_identifier)
+                    return HttpResponseRedirect(self.request.path_info)
             else:
                 print(patient_update.errors)
                 messages.error(request, "Cập nhật thông tin không thành công, thông tin cung cấp không phù hợp, vui lòng kiểm tra lại")
-                return HttpResponseRedirect('/fhir/display_detail/' + patient_identifier)
+                return HttpResponseRedirect(self.request.path_info)
         except Exception as e:
-            print(e)
-            messages.error(request, "Mã y tế cung cấp không tồn tại, tạo hồ sơ hoặc thực hiện tìm kiếm với mã y tế đã cung cấp")
-            return HttpResponseRedirect('/fhir/create')
+            messages.error(request, "Kho FHIR không hoạt động, vui lòng thử lại sau")
+            return HttpResponseRedirect(self.request.path_info)
                 
-
 
 class register(LoginRequiredMixin, View):
     login_url = '/login/'
@@ -382,7 +393,14 @@ class register(LoginRequiredMixin, View):
 
     def post(self, request):
         data = {'Patient': {}}
-        print(request.POST)
+        try:
+            connection_test = requests.get(fhir_server + "/Patient")
+            if connection_test.status_code != 200:
+                messages.error(request, "Có lỗi khi kết nối với kho FHIR, vui lòng liên hệ kĩ thuật viên")
+                return HttpResponseRedirect('/fhir/create/')
+        except:
+            messages.error(request, "Kho FHIR không hoạt động, vui lòng liên hệ kĩ thuật viên")
+            return HttpResponseRedirect('/fhir/create/')
         try:
             PatientModel.objects.get(identifier=request.POST['identifier'])
             messages.error(request, "Mã y tế cung cấp đã tồn tại, vui lòng kiểm tra lại")
@@ -723,28 +741,15 @@ class encounter(LoginRequiredMixin, View):
             messages.error(request, "Mã y tế không tồn tại")
             return HttpResponseRedirect('/')
 
-    def get(self, request, patient_identifier):
-        data = {'Patient': {}, 'Encounter': {}, 'Observation': []}
-        instance = PatientModel.objects.get(
-            identifier=patient_identifier)
-        # instance = get_object_or_404(
-        #     User, patient=patient['identifier'])
-        data['Patient'] = instance
-        new_encounter_identifier = patient_identifier + \
-            '_' + datetime.strftime(datetime.now(), "%d%m%Y%H%M%S%f")
-        new_encounter = EncounterModel.objects.create(
-            patient=instance, encounter_identifier=new_encounter_identifier)
-        data['Encounter'] = new_encounter
-        return render(request, 'fhir/hanhchinh.html', {'data': data})
-
     def post(self, request, patient_identifier):
         data = {'Patient': {}, 'Encounter': {}}
         instance = PatientModel.objects.get(
             identifier=patient_identifier)
-        encounters = EncounterModel.objects.exclude(encounter_status="finished")
+        encounters = EncounterModel.objects.filter(patient=patient_identifier).exclude(encounter_status="finished")
+        print(encounters)
         if len(encounters) > 0:
             messages.error(request, "Bệnh nhân đang trong lần thăm khám khác")
-            return HttpResponseRedirect(self.request.path_info)
+            return HttpResponseRedirect('/fhir/display_detail/' + patient_identifier)
         new_encounter_identifier = patient_identifier + \
             '_' + datetime.strftime(datetime.now(), "%d%m%Y%H%M%S%f")
         form = EncounterForm(request.POST)
@@ -1363,6 +1368,7 @@ class chitietxetnghiem(LoginRequiredMixin, View):
         service_instance.save()
         return HttpResponseRedirect(self.request.path_info)
 
+
 class thuthuat(LoginRequiredMixin, View):
     login_url = '/login/'
 
@@ -1883,7 +1889,7 @@ class chandoan(LoginRequiredMixin, View):
 
 class save(LoginRequiredMixin, View):
     def dispatch(self, request, *args, **kwargs):
-        if request.user.role != "doctor":
+        if request.user.role != "doctor" and request.user.role != "medical assistant":
             messages.error(request, "Bạn không có quyền truy cập trang này")
             return HttpResponseRedirect('/')
         if not kwargs.get('encounter_identifier') or not kwargs.get('patient_identifier'):
@@ -1897,12 +1903,11 @@ class save(LoginRequiredMixin, View):
             messages.error(request, "Mã thăm khám không tồn tại")
             return HttpResponseRedirect('/')
         try:
-            encounter = EncounterModel.objects.get(encounter_identifier=kwargs['encounter_identifier'])
-            
-            if self.request.user.username != encounter.encounter_participant_identifier.identifier:
-                # Redirect the user to somewhere else - add your URL here
-                messages.error(request, "Bạn không có quyền truy cập trang này")
-                return HttpResponseRedirect('/')
+            encounter = EncounterModel.objects.get(encounter_identifier=kwargs['encounter_identifier'])            
+            # if self.request.user.username != encounter.encounter_participant_identifier.identifier:
+            #     # Redirect the user to somewhere else - add your URL here
+            #     messages.error(request, "Bạn không có quyền truy cập trang này")
+            #     return HttpResponseRedirect('/')
         except EncounterModel.DoesNotExist:
             messages.error(request, 'Mã thăm khám không tồn tại')
             return HttpResponseRedirect('/')
@@ -1913,24 +1918,33 @@ class save(LoginRequiredMixin, View):
 
     def get(self, request, patient_identifier, encounter_identifier):
         data = {'Patient': {}, 'Encounter': {}, 'Condition': []}
-        patient = dt.query_patient(patient_identifier, query_type='all')
-        get_encounter = dt.query_encounter(
-            encounter_identifier, query_type='id')
         participant = PractitionerModel.objects.get(
             identifier=request.user.username)
         encounter_instance = EncounterModel.objects.get(
             encounter_identifier=encounter_identifier)
-        encounter_instance.encounter_status = 'finished'
-        encounter_instance.encounter_end = datetime.now()
-        delta = encounter_instance.encounter_end.date(
-        ) - encounter_instance.encounter_start.date()
-        if delta.days == 0:
-            encounter_instance.encounter_length = '1'
-        else:
-            encounter_instance.encounter_length = str(delta.days)
-        encounter_instance.save()
+        if encounter_instance.encounter_status != 'finished':
+            encounter_instance.encounter_status = 'finished'
+            encounter_instance.encounter_end = datetime.now()
+            delta = encounter_instance.encounter_end.date(
+            ) - encounter_instance.encounter_start.date()
+            if delta.days == 0:
+                encounter_instance.encounter_length = '1'
+            else:
+                encounter_instance.encounter_length = str(delta.days)
+            encounter_instance.save()
+        try:
+            connection_test = requests.get(fhir_server + "/Patient")
+            if connection_test.status_code != 200:
+                messages.error(request, "Không thể kết nối đến kho FHIR, vui lòng liên hệ kĩ thuật viên")
+                return HttpResponseRedirect('/fhir/display_detail/' + patient_identifier)
+        except:
+            messages.error(request, "Kho FHIR không hoạt động, không thể chia sẻ dữ liệu")
+            return HttpResponseRedirect('/fhir/display_detail/' + patient_identifier)
+        patient = dt.query_patient(patient_identifier, query_type='all')
+        get_encounter = dt.query_encounter(
+            encounter_identifier, query_type='id')
         participant_id = dt.query_practitioner(
-            participant.identifier, query_type='id')
+            encounter_instance.encounter_participant_identifier.identifier, query_type='id')
         data['Encounter']['identifier'] = encounter_identifier
         data['Encounter']['status'] = encounter_instance.encounter_status
         data['Encounter']['period'] = {}
@@ -1970,9 +1984,10 @@ class save(LoginRequiredMixin, View):
                     encounter_resource, query_type='all')
             else:
                 print("có lỗi khi lưu allergy")
-        encounter_instance.encounter_version = encounter['version']
-        encounter_instance.save()
-        if encounter:
+        if encounter:                
+            encounter_instance.encounter_version = encounter['version']
+            encounter_sharing_status = True
+            encounter_instance.save()
             condition_instances = ConditionModel.objects.all().filter(
                 encounter_identifier=encounter_identifier)
             for condition_instance in condition_instances:
@@ -2030,11 +2045,11 @@ class save(LoginRequiredMixin, View):
                     condition['id'] = get_condition['id']
                 condition_data = dt.create_condition_resource(
                     condition, patient['id'], patient['name'], encounter['id'])
-                print(condition_data)
+                
                 if get_condition:
                     put_condition = requests.put(fhir_server + "/Condition/"+get_condition['id'], headers={
                         'Content-type': 'application/xml'}, data=condition_data.decode('utf-8'))
-                    print(put_condition.status_code)
+                    
                     if put_condition.status_code == 200:
                         condition_resource = ET.fromstring(
                             put_condition.content.decode('utf-8'))
@@ -2069,7 +2084,7 @@ class save(LoginRequiredMixin, View):
                 allergy['category'] = allergy_instance.allergy_category
                 allergy['criticality'] = allergy_instance.allergy_criticality
                 allergy['code'] = allergy_instance.allergy_code
-                if allergy_instance.allergy_onsẻ:
+                if allergy_instance.allergy_onset:
                     allergy['onset'] = allergy_instance.allergy_onset.strftime(
                         '%Y-%m-%d')
                 if allergy_instance.allergy_last_occurrence:
@@ -2277,7 +2292,7 @@ class save(LoginRequiredMixin, View):
                         diagnostic_report['conclusion'] = diagnostic_report_instance.diagnostic_conclusion
                         diagnostic_report['performer'] = {}
                         diagnostic_report['performer']['id'] = service_performer_id['id']
-                        diagnostic_report['performer']['name'] = service_instance.service_performer.name
+                        diagnostic_report['performer']['name'] = service_instance.service_performer_identifier.name
                         get_diagnostic_report = dt.query_diagnostic_report(
                             diagnostic_report['identifier'], query_type='id')
                         if get_diagnostic_report:
@@ -2308,8 +2323,8 @@ class save(LoginRequiredMixin, View):
                         diagnostic_report_instance.diagnostic_version = diagnostic_report_meta[
                             'version']
                         diagnostic_report_instance.save()
-                    except Exception as e:
-                        print(e)
+                    except DiagnosticReportModel.DoesNotExist:
+                        pass
                 else:
                     pass
             observation_instances = ObservationModel.objects.all().filter(
@@ -2411,6 +2426,8 @@ class save(LoginRequiredMixin, View):
                         print("có lỗi khi lưu medication")    
                 medication_instance.medication_version = medication_meta['version']
                 medication_instance.save()
+                encounter_instance.encounter_sharing_status = True
+                encounter_instance.save()
                 messages.success(request, "Lưu thành công")
             return HttpResponseRedirect('/fhir/display_detail/' + patient_identifier)
         else:
@@ -2420,41 +2437,125 @@ class save(LoginRequiredMixin, View):
 
 def delete(request):
     if request.method == "POST":
-        print(request.POST)
+        if not request.POST.get('resource_type') or not request.POST.get('url_next'):
+            messages.error(request, "Yêu cầu không hợp lệ")
+            return HttpResponseRedirect('/')
         resource_type = request.POST['resource_type']
         resource_identifier = request.POST.get('resource_identifier')
         url_next = request.POST['url_next']
-        if resource_type == 'condition':
-            resource = ConditionModel.objects.get(
-                condition_identifier=resource_identifier)
-            if request.user.username == resource.encounter_identifier.encounter_participant_identifier.identifier:
-                resource.delete()
+        if resource_type == 'condition':            
+            try:
+                resource = ConditionModel.objects.get(
+                    condition_identifier=resource_identifier)
+                if request.user.username == resource.encounter_identifier.encounter_participant_identifier.identifier:
+                    resource.delete()
+            except:
+                messages.error(request, "Tài nguyên không tồn tại")
         elif resource_type == 'observation':
-            resource = ObservationModel.objects.get(
-                observation_identifier=resource_identifier)
-            if request.user.role == 'medical laboratory technician':
-                resource.delete()
+            try:
+                resource = ObservationModel.objects.get(
+                    observation_identifier=resource_identifier)
+                if request.user.role == 'medical laboratory technician':
+                    resource.delete()
+            except:
+                messages.error(request, "Tài nguyên không tồn tại")
         elif resource_type == 'medication_statement':
-            resource = MedicationModel.objects.get(
-                medication_identifier=resource_identifier)
-            if request.user.username == resource.encounter_identifier.encounter_participant_identifier.identifier:
-                resource.delete()
+            try:
+                resource = MedicationModel.objects.get(
+                    medication_identifier=resource_identifier)
+                if request.user.username == resource.encounter_identifier.encounter_participant_identifier.identifier:
+                    resource.delete()
+            except:
+                messages.error(request, "Tài nguyên không tồn tại")
         elif resource_type == 'service_request':
-            resource = ServiceRequestModel.objects.get(
-                service_identifier=resource_identifier)
-            if request.user.username == resource.encounter_identifier.encounter_participant_identifier.identifier:
-                resource.delete()
+            try:
+                resource = ServiceRequestModel.objects.get(
+                    service_identifier=resource_identifier)
+                if request.user.username == resource.encounter_identifier.encounter_participant_identifier.identifier:
+                    resource.delete()
+            except:
+                messages.error(request, "Tài nguyên không tồn tại")
         elif resource_type == 'allergy':
-            resource = AllergyModel.objects.get(
-                allergy_identifier=resource_identifier)
-            if request.user.username == resource.encounter_identifier.encounter_participant_identifier.identifier:
-                resource.delete()
+            try:
+                resource = AllergyModel.objects.get(
+                    allergy_identifier=resource_identifier)
+                if request.user.username == resource.encounter_identifier.encounter_participant_identifier.identifier:
+                    resource.delete()
+            except:
+                messages.error(request, "Tài nguyên không tồn tại")                    
         elif resource_type == 'schedule_value':
             practitioner = PractitionerModel.objects.get(
                 identifier=request.user.username)
-            value = Schedule.objects.get(practitioner_name=practitioner.name, practitioner_identifier=practitioner.identifier,
-                                         schedule_date=request.POST['delete_date'], session=request.POST['delete_session'])
-            value.delete()
+            try:
+                value = Schedule.objects.get(practitioner_name=practitioner.name, practitioner_identifier=practitioner.identifier,
+                                            schedule_date=request.POST['delete_date'], session=request.POST['delete_session'])
+                value.delete()
+            except:
+                messages.error(request, "Dữ liệu không tồn tại")
+        elif resource_type == 'sharing_encounter':
+            try:                
+                encounter = EncounterModel.objects.get(encounter_identifier=resource_identifier)
+            except:
+                messages.error(request, "Tài nguyên không tồn tại")
+                return HttpResponseRedirect(url_next)
+            try:
+                connection_test = requests.get(fhir_server + "/Patient")
+                if connection_test.status_code != 200:
+                    messages.error(request, "Không thể kết nối với kho FHIR, vui lòng liên hệ kĩ thuật viên")
+                    return HttpResponseRedirect(url_next)
+            except:
+                messages.error(request, "Kho FHIR không hoạt động, không thể ngừng chia sẻ tài nguyên")
+                return HttpResponseRedirect(url_next)            
+            observations = ObservationModel.objects.filter(encounter_identifier=resource_identifier)
+            service_requests = ServiceRequestModel.objects.filter(encounter_identifier=resource_identifier)
+            diagnostic_reports = DiagnosticReportModel.objects.filter(encounter_identifier=resource_identifier)
+            conditions = ConditionModel.objects.filter(encounter_identifier=resource_identifier)
+            allergies = AllergyModel.objects.filter(encounter_identifier=resource_identifier)
+            procedures = ProcedureModel.objects.filter(encounter_identifier=resource_identifier)
+            medication_statements = MedicationModel.objects.filter(encounter_identifier=resource_identifier)
+            for observation in observations:
+                delete_resource = requests.delete(fhir_server + "/Observation?identifier=urn:trinhcongminh|" +
+                                        observation.observation_identifier, headers={'Content-type': 'application/xml'})
+                if delete_resource.status_code != 200:
+                    print(delete_resource.content.decode('utf-8'))
+            for diagnostic_report in diagnostic_reports:
+                delete_resource = requests.delete(fhir_server + "/DiagnosticReport?identifier=urn:trinhcongminh|" +
+                                        diagnostic_report.diagnostic_identifier, headers={'Content-type': 'application/xml'})
+                if delete_resource.status_code != 200:
+                    print(delete_resource.content.decode('utf-8'))
+            for condition in conditions:
+                delete_resource = requests.delete(fhir_server + "/Condition?identifier=urn:trinhcongminh|" +
+                                        condition.condition_identifier, headers={'Content-type': 'application/xml'})
+                if delete_resource.status_code != 200:
+                    print(delete_resource.content.decode('utf-8'))
+            for procedure in procedures:
+                delete_resource = requests.delete(fhir_server + "/Procedure?identifier=urn:trinhcongminh|" +
+                                        procedure.procedure_identifier, headers={'Content-type': 'application/xml'})
+                if delete_resource.status_code != 200:
+                    print(delete_resource.content.decode('utf-8'))
+            for allergy in allergies:
+                delete_resource = requests.delete(fhir_server + "/AllergyIntolerance?identifier=urn:trinhcongminh|" +
+                                        allergy.allergy_identifier, headers={'Content-type': 'application/xml'})
+                if delete_resource.status_code != 200:
+                    print(delete_resource.content.decode('utf-8'))
+            for medication_statement in medication_statements:
+                delete_resource = requests.delete(fhir_server + "/MedicationStatement?identifier=urn:trinhcongminh|" +
+                                        medication_statement.medication_identifier, headers={'Content-type': 'application/xml'})
+                if delete_resource.status_code != 200:
+                    print(delete_resource.content.decode('utf-8'))
+            for service_request in service_requests:
+                delete_resource = requests.delete(fhir_server + "/ServiceRequest?identifier=urn:trinhcongminh|" +
+                                        service_request.service_identifier, headers={'Content-type': 'application/xml'})
+                if delete_resource.status_code != 200:
+                    print(delete_resource.content.decode('utf-8'))
+            delete_resource = requests.delete(fhir_server + "/Encounter?identifier=urn:trinhcongminh|" +
+                                    encounter.encounter_identifier, headers={'Content-type': 'application/xml'})                        
+            if delete_resource.status_code == 200:
+                encounter.encounter_sharing_status = False
+                encounter.save()                        
+            else:
+                messages.error(request, "Gặp lỗi trong quá trình ngừng chia sẻ")
+
         return HttpResponseRedirect(url_next)
 
 
@@ -2529,6 +2630,10 @@ class view_benhan(LoginRequiredMixin, View):
                     for code in codes: 
                         disease = DischargeDisease.objects.get(disease_code=code)
                         condition_displays[condition.condition_identifier] = (condition_displays[condition.condition_identifier] + ' ' + disease.disease_name).strip()
+                else:
+                    condition_displays[condition.condition_identifier] = ""
+                    disease = DischargeDisease.objects.get(disease_code=condition.condition_code)
+                    condition_displays[condition.condition_identifier] += ' ' + disease.disease_name
             comorbidity_conditions = ConditionModel.objects.filter(
                 encounter_identifier=encounter, condition_note='comorbidity condition by doctor')
             conditions = ConditionModel.objects.filter(
@@ -2575,6 +2680,14 @@ class view_benhan(LoginRequiredMixin, View):
             #         for i in range(allergy.allergy_version, 0 ,-1):
             #             allergies_history[allergy.allergy_identifier].append(dt.query_allergy_history(allergy_id, str(i), query_type='all'))
         elif encounter.encounter_storage == 'hapi':
+            try:
+                connection_test = requests.get(fhir_server + "/Patient")
+                if connection_test.status_code != 200:
+                    messages.error(request, "Không thể kết nối tới kho FHIR, vui lòng liên hệ kĩ thuật viên")
+                    return HttpResponseRedirect('/fhir/display_detail/' + patient_identifier)
+            except:
+                messages.error(request, "Kho FHIR không hoạt động")
+                return HttpResponseRedirect('/fhir/display_detail/' + patient_identifier)
             get_condition = requests.get(fhir_server + "/Condition?encounter.identifier=urn:trinhcongminh|" +
                                          encounter_identifier, headers={'Content-type': 'application/xml'})
             if get_condition.status_code == 200 and 'entry' in get_condition.content.decode('utf-8'):
@@ -2719,6 +2832,14 @@ class view_xetnghiem(LoginRequiredMixin, View):
                         # for i in range(observation.observation_version-1, 0, -1):
                         #     observations_history[observation.observation_identifier].append(dt.query_observation_history(observation_id, str(i), query_type='all'))
         elif encounter.encounter_storage == 'hapi':
+            try:
+                connection_test = requests.get(fhir_server + "/Patient")
+                if connection_test.status_code != 200:
+                    messages.error(request, "Không thể kết nối tới kho FHIR, vui lòng liên hệ kĩ thuật viên")
+                    return HttpResponseRedirect('/fhir/display_detail/' + patient_identifier)
+            except:
+                messages.error(request, "Kho FHIR không hoạt động")
+                return HttpResponseRedirect('/fhir/display_detail/' + patient_identifier)            
             get_services = requests.get(fhir_server + '/ServiceRequest?encounter.identifier=urn:trinhcongminh|' +
                                         encounter_identifier + '&category:text=Laboratory procedure',  headers={'Content-type': 'application/xml'})
             if get_services.status_code == 200 and 'entry' in get_services.content.decode('utf-8'):
@@ -2825,6 +2946,14 @@ class view_thuthuat(LoginRequiredMixin, View):
                         # for i in range(diagnostic_report.diagnostic_version-1, 0, -1):
                         #     diagnostic_reports_history[diagnostic_report.diagnostic_identifier].append(dt.query_diagnostic_report_history(diagnostic_report_id, str(i), query_type='all'))
         elif encounter.encounter_storage == 'hapi':
+            try:
+                connection_test = requests.get(fhir_server + "/Patient")
+                if connection_test.status_code != 200:
+                    messages.error(request, "Không thể kết nối tới kho FHIR, vui lòng liên hệ kĩ thuật viên")
+                    return HttpResponseRedirect('/fhir/display_detail/' + patient_identifier)
+            except:
+                messages.error(request, "Kho FHIR không hoạt động")
+                return HttpResponseRedirect('/fhir/display_detail/' + patient_identifier)            
             get_services = requests.get(fhir_server + '/ServiceRequest?encounter.identifier=urn:trinhcongminh|' +
                                         encounter_identifier + '&category:text=Imaging',  headers={'Content-type': 'application/xml'})
             if get_services.status_code == 200 and 'entry' in get_services.content.decode('utf-8'):
@@ -2931,6 +3060,14 @@ class view_donthuoc(LoginRequiredMixin, View):
                     # for i in range(medication.medication_version-1, 0, -1):
                     #     medications_history[medication.medication_identifier].append(dt.query_medication_history(medication_id, str(i), query_type='all'))
         elif encounter.encounter_storage == 'hapi':
+            try:
+                connection_test = requests.get(fhir_server + "/Patient")
+                if connection_test.status_code != 200:
+                    messages.error(request, "Không thể kết nối tới kho FHIR, vui lòng liên hệ kĩ thuật viên")
+                    return HttpResponseRedirect('/fhir/display_detail/' + patient_identifier)
+            except:
+                messages.error(request, "Kho FHIR không hoạt động")
+                return HttpResponseRedirect('/fhir/display_detail/' + patient_identifier)            
             get_medication_statements = requests.get(fhir_server + "/MedicationStatement?context.identifier=urn:trinhcongminh|" +
                                                      encounter_identifier, headers={'Content-type': 'application/xml'})
             if get_medication_statements.status_code == 200 and 'entry' in get_medication_statements.content.decode('utf-8'):
@@ -3117,11 +3254,13 @@ class manage_schedule(LoginRequiredMixin, View):
         friday = monday + timedelta(days=4)
         saturday = monday + timedelta(days=5)
         sunday = monday + timedelta(days=6)
+        schedule_dates = {'Monday': {}, 'Tuesday': {}, 'Wednesday': {
+                                }, 'Thursday': {}, 'Friday': {}, 'Saturday': {}}
+        assigned_encounters = {'Monday': {'morning': {}, 'afternoon': {}}, 'Tuesday': {'morning': {}, 'afternoon': {}}, 'Wednesday': {
+                                'morning': {}, 'afternoon': {}}, 'Thursday': {'morning': {}, 'afternoon': {}}, 'Friday': {'morning': {}, 'afternoon': {}}, 'Saturday': {'morning': {}, 'afternoon': {}}}        
         if request.GET.get('department_schedule'):
             try: 
                 department = ClinicalDepartment.objects.get(department_name=request.GET['department_schedule'])
-                schedule_dates = {'Monday': {}, 'Tuesday': {}, 'Wednesday': {
-                                }, 'Thursday': {}, 'Friday': {}, 'Saturday': {}}
                 schedule_dates['Monday']['morning'] = Schedule.objects.filter(
                     schedule_date=monday, session='morning', practitioner_identifier__department=request.GET['department_schedule'])
                 schedule_dates['Monday']['afternoon'] = Schedule.objects.filter(
@@ -3146,8 +3285,7 @@ class manage_schedule(LoginRequiredMixin, View):
                     schedule_date=saturday, session='morning', practitioner_identifier__department=request.GET['department_schedule'])
                 schedule_dates['Saturday']['afternoon'] = Schedule.objects.filter(
                     schedule_date=saturday, session='afternoon', practitioner_identifier__department=request.GET['department_schedule'])
-                assigned_encounters = {'Monday': {'morning': {}, 'afternoon': {}}, 'Tuesday': {'morning': {}, 'afternoon': {}}, 'Wednesday': {
-                    'morning': {}, 'afternoon': {}}, 'Thursday': {'morning': {}, 'afternoon': {}}, 'Friday': {'morning': {}, 'afternoon': {}}, 'Saturday': {'morning': {}, 'afternoon': {}}}
+               
                 for practitioner in schedule_dates['Monday']['morning']:
                     assigned_encounters['Monday']['morning'][practitioner.practitioner_identifier.identifier] = AssignedEncounter.objects.filter(
                         practitioner_identifier=practitioner.practitioner_identifier.identifier, encounter_date=monday, session='morning')
@@ -3273,7 +3411,6 @@ class manage_tests(LoginRequiredMixin, View):
         return HttpResponseRedirect(self.request.path_info)
 
 
-
 class manage_images(LoginRequiredMixin, View):
     login_url = '/login/'
 
@@ -3330,3 +3467,5 @@ class manage_images(LoginRequiredMixin, View):
                 procedure.procedure_status = 'preparation'
                 service.save()
         return HttpResponseRedirect(self.request.path_info)
+
+

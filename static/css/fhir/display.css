@@ -51,12 +51,11 @@ table{
     width: 100%;
 }
 table, th, td {
-    
+    text-align: center;
     border: 1px solid black;
     /* border-collapse: collapse; */
     padding: 5px;
-    vertical-align: top;
-    min-width: 150px;
+    min-width: 120px;
  }
  .formPopup {
     position: fixed;
@@ -101,26 +100,6 @@ table, th, td {
     opacity: 1;
 }
 
-
-.btn {
-    padding: 12px 20px;
-    border: none;
-    background-color: #8ebf42;
-    color: #fff;
-    cursor: pointer;
-    width: 100%;
-    margin-bottom: 15px;
-    opacity: 0.8;
-    text-align: center;
-    min-width: 80px;
-    max-width: 150px;
-}
-.cancel {
-    background-color: #cc0000;
-}
-.edit {
-    background-color: #808080;
-}
 
 .flex_container{
     display: flex;

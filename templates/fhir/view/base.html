@@ -6,10 +6,11 @@
         <ul class="left-body__list">
             <li class="left-body__list-item"><a href="{% url 'fhir:view_benhan' patient.identifier encounter.encounter_identifier %}">Bệnh án</a></li>
             <li class="left-body__list-item"><a href="{% url 'fhir:view_xetnghiem' patient.identifier encounter.encounter_identifier %}">Phiếu xét nghiệm</a></li>
-            <li class="left-body__list-item"><a href="{% url 'fhir:view_thuthuat' patient.identifier encounter.encounter_identifier %}">Phiếu xử lí hình ảnh</a></li>
+            <li class="left-body__list-item"><a href="{% url 'fhir:view_thuthuat' patient.identifier encounter.encounter_identifier %}">Phiếu chẩn đoán hình ảnh</a></li>
             <li class="left-body__list-item"><a href="{% url 'fhir:view_donthuoc' patient.identifier encounter.encounter_identifier %}">Đơn thuốc</a></li>
         </ul>
     </div>
+    <div class="vertical-line"></div>
     <div class="right-body">
         {% block right-body %}
         {% endblock %}

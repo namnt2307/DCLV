@@ -671,6 +671,7 @@
                             {% for encounter in encounters %}
                             <input type="radio" name="encounter" id="{{encounter.encounter_identifier}}" value="{{encounter.encounter_identifier}}" required> 
                             <label for="{{encounter.encounter_identifier}}">{{encounter.patient.name}} - {{encounter.patient.identifier}}</label>
+                            <br>
                             {% endfor %}
                             <input type="hidden" name="practitioner" id="practitioner_input" value="">
                             <input type="hidden" name="schedule_date" id="schedule_date_input" value="">

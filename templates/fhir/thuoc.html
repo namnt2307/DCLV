@@ -174,7 +174,7 @@
                 <tr>
                     <td colspan="6" style="text-align: left;">
                         <div class="flex_container">
-                            <p class="title">Thời điểm sử dụng:</p> <p>{{medication.get_dosage_when_display|capfirst}} {%if medication.dosage_offset != '0'%}{{medication.dosage_offset}} phút{%endif%}</p>
+                            <p class="title">Thời điểm sử dụng:</p> <p>{{medication.get_dosage_when_display|capfirst}} {%if medication.dosage_offset != None %}{{medication.dosage_offset}} phút{%endif%}</p>
                         </div>
                         <div class="flex_container">
                             <p class="title">Hướng dẫn thêm:</p> <p>{{medication.dosage_additional_instruction}}</p>
@@ -216,14 +216,14 @@
                         <td class="cell-data-6">
                             {%with 'value:'|add:medication.dosage_frequency as code%}
                         
-                                {{medication_form.dosage_frequency|attr:code|attr:'step:0.5'|add_class:'number-input'}} lần
+                                {{medication_form.dosage_frequency|attr:code|add_class:'number-input'}} lần
                             
                             {%endwith%}
 
                                 /
                               
                             {%with 'value:'|add:medication.dosage_period as code%}               
-                                {{medication_form.dosage_period|attr:code|attr:'step:0.5'|add_class:'number-input'}}
+                                {{medication_form.dosage_period|attr:code|add_class:'number-input'}}
                                 
                                 {{medication_form.dosage_period_unit|add_class:'unit-input'}}
                             {%endwith%}
@@ -231,12 +231,12 @@
 
                         {%with 'value:'|add:medication.dosage_quantity as code%}
                         {% with 'value:'|add:medication.dosage_quantity_unit as code_unit %}
-                            <td class="cell-data-6">{{medication_form.dosage_quantity|attr:code|attr:'step:0.5'|add_class:'number-input'}} {{medication_form.dosage_quantity_unit|attr:code_unit|add_class:'unit-input'}}</td>
+                            <td class="cell-data-6">{{medication_form.dosage_quantity|attr:code|add_class:'number-input'}} {{medication_form.dosage_quantity_unit|attr:code_unit|add_class:'unit-input'}}</td>
                         {%endwith%}
                         {% endwith %}
                         {%with 'value:'|add:medication.dosage_duration as code%}         
                             <td class="cell-data-6">
-                                {{medication_form.dosage_duration|attr:code|attr:'step:0.5'|add_class:'number-input'}} {{medication_form.dosage_duration_unit|add_class:'unit-input'}}
+                                {{medication_form.dosage_duration|attr:code|add_class:'number-input'}} {{medication_form.dosage_duration_unit|add_class:'unit-input'}}
                             </td>
                         {%endwith%}
 

@@ -10,14 +10,20 @@
                 <th class="cell-data-4">Kết quả</th>
                 <th class="cell-data-4">Trị số bình thường</th>
                 <th class="cell-data-4">Đơn vị</th>
+                {% if request.user.role == 'medical laboratory technician' and service.service_status == 'active' %}
                 <th> </th>
             </thead>
             <tr>
                 <td colspan="5"><b>{{service.service_code}}</b></td>
             </tr>
-            {% if service.service_status == 'active'%}
-            
+            {% else %}
                 
+            </thead>
+            <tr>
+                <td colspan="4"><b>{{service.service_code}}</b></td>
+            </tr>            
+            {% endif %}
+            {% if service.service_status == 'active'%}                            
                 {% if request.user.role == 'medical laboratory technician' %}                
                 <tbody id="observation-input-container">
                     {%for observation in observations%}
