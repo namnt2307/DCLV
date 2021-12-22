@@ -225,7 +225,6 @@ table th,td {
     border-collapse: collapse;
     overflow: hidden;
     background-clip: padding-box;
-    vertical-align: top;
 }
 
 .cell-data-2{

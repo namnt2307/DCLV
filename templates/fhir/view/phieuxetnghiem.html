@@ -2,6 +2,7 @@
 {% block right-body %}
 {% load static %}
 <link rel="stylesheet" href="{% static 'css/fhir/phieuxetnghiem.css' %}">
+
 <div>
     {% if services_history %}
         <div class="history-container">
@@ -47,7 +48,7 @@
                         <td>{{service.service_occurrence|date:"d-m-Y"}}</td>
                         <td>{{service.service_authored|date:"d-m-Y"}}</td>
                         <td>{{service.service_requester}}</td>
-                        <td>{{service.service_note}}</td>
+                        <td>{{service.service_note|default_if_none:"Không"}}</td>
                     </tr>
                     {% endfor %}
                     {% if services_history|get_item:service.service_identifier %}
@@ -108,7 +109,13 @@
         </div>
         {% for service in services %}
         <div class="flex_container">
-            <p class="title">NGÀY GIỜ CÓ KẾT QUẢ:</p><p class="value"> {{service.service_performed_date|date:'d-m-Y'}} </p>
+            {% if encounter.encounter_storage == 'local' %}
+            <p class="title">Lí DO THỰC HIỆN</p><p class="value"> {{service.service_reason_code}} </p>
+            <p class="title">NGÀY GIỜ CÓ KẾT QUẢ:</p><p class="value"> {{service.service_performed_date|date:'H:i:s d-m-Y'}} </p>
+            {% else %}
+            <p class="title">Lí DO THỰC HIỆN</p><p class="value"> {{service.service_reason_code}} </p>
+            <p class="title">NGÀY GIỜ CÓ KẾT QUẢ:</p><p class="value"> {{service.service_performed_date}} </p>
+            {% endif %}
         </div>
             <div id="display-data__{{service.service_identifier}}">
                 <div class="history-container">

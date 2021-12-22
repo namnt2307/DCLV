@@ -148,11 +148,11 @@
                         </div>
                         <div class="flex_container">
                             <p class="title">+ Bệnh chính:</p>                                
-                            <p class="value">{% for condition in discharge_conditions %} {{condition.condition_code}} {{condition_displays|get_item:condition.condition_identifier}}: {{condition.get_condition_severity_display|lower}}; {% endfor %}</p>                                                           
+                            <p class="value">{% for condition in discharge_conditions %} {{condition.condition_code}} {%if condition_displays|get_item:condition.condition_identifier != None %}{{condition_displays|get_item:condition.condition_identifier}}{%endif%}: {{condition.get_condition_severity_display|lower}}; {% endfor %}</p>                                                           
                         </div>
                         <div class="flex_container">
                             <p class="title">+ Bệnh kèm theo</p>                                
-                            <p class="value">{% for condition in comorbidity_conditions %} {{condition.condition_code}} {{condition_displays|get_item:condition.condition_identifier}}: {{condition.get_condition_severity_display|lower}}{% endfor %}</p>                                
+                            <p class="value">{% for condition in comorbidity_conditions %} {{condition.condition_code}} {%if condition_displays|get_item:condition.condition_identifier != None %}{{condition_displays|get_item:condition.condition_identifier}}{%endif%}: {{condition.get_condition_severity_display|lower}}{% endfor %}</p>                                
                         </div>        
                     </div>
                 </div>
@@ -208,7 +208,11 @@
                                     </div>
                                     <button type="button" onclick="displayToggle('{{condition.condition_identifier}}')">xem lịch sử</button>
                                 {% endif %}                                
-                            {% endfor %}                                
+                            {% endfor %} 
+                            {% if admission_conditions.patient|length == 0 %}
+                                <p class="text-line"></p>
+                                <p class="text-line"></p>
+                            {% endif %}
                         </div>
                     <h4>2. Tiền sử bệnh</h4>
                         <h3>+ Bản thân</h3>
@@ -230,8 +234,12 @@
                                         </div>
                                     </div>
                                     <button type="button" onclick="displayToggle('{{condition.condition_identifier}}')">xem lịch sử</button>
-                                {% endif %}                                    
+                                {% endif %}  
                                 {% endfor %}                                    
+                                {% if resolved_conditions|length == 0 %}                                  
+                                    <p class="text-line"></p>
+                                    <p class="text-line"></p>
+                                {% endif %}                                
                             </div>
                         <h3>+ Dị ứng</h3>
                             <div class='right-body__body-section__item-content history-container'>
@@ -250,6 +258,10 @@
                                         </div>
                                     </div>
                                 {% endfor %}
+                                {% if allergies|length == 0 %}
+                                    <p class="text-line"></p>
+                                    <p class="text-line"></p>
+                                {% endif %}
                             </div>
                         <h3>+ Gia đình</h3>
                             <div class='right-body__body-section__item-content'>
@@ -284,11 +296,16 @@
                                     <button type="button" onclick="displayToggle('{{condition.condition_identifier}}')">xem lịch sử</button>
                                 {% endif %}                                
                             {% endfor %}    
-                            {% if 5|subtract:admission_conditions.doctor.toanthan.count > 0 %}       
-                                {% for i in 5|subtract:admission_conditions.doctor.toanthan.count|make_range %}         
+                            {% for condition in other_conditions %}
+                                <p class="text-line">- {{condition.condition_code}}: {{condition.get_condition_severity_display|lower}}</p>
+                            {% endfor %}
+                            {% with admission_conditions.doctor.toanthan|length as condition_length %}
+                            {% if 5|subtract:condition_length > 0 %}       
+                                {% for i in 5|subtract:condition_length|make_range %}         
                                     <p class="text-line"></p>
                                 {% endfor %}
                             {% endif %}
+                            {% endwith %}
                         </div>
                         <div class="right-body__body-section__item-content--flex__item--with-border" style="min-height: 220px;">  
                             <div class="flex_container">
@@ -331,7 +348,7 @@
                                         <button type="button" onclick="displayToggle('{{condition.condition_identifier}}')">xem lịch sử</button>
                                     {% endif %}
                                 {% endfor %}
-                                {% if admission_conditions.doctor.tuanhoan.count == 0 %}
+                                {% if admission_conditions.doctor.tuanhoan|length == 0 %}
                                     <p class="text-line"></p>
                                     <p class="text-line"></p>
                                 {% endif %}
@@ -358,7 +375,7 @@
                                         <button type="button" onclick="displayToggle('{{condition.condition_identifier}}')">xem lịch sử</button>
                                     {% endif %}                                                                  
                                 {% endfor %}
-                                {% if admission_conditions.doctor.hohap.count == 0 %}
+                                {% if admission_conditions.doctor.hohap|length == 0 %}
                                     <p class="text-line"></p>
                                     <p class="text-line"></p>
                                 {% endif %}
@@ -386,7 +403,7 @@
                                         <button type="button" onclick="displayToggle('{{condition.condition_identifier}}')">xem lịch sử</button>
                                     {% endif %}                                    
                                 {% endfor %}      
-                                {% if admission_conditions.doctor.tieuhoa.count == 0 %}
+                                {% if admission_conditions.doctor.tieuhoa|length == 0 %}
                                     <p class="text-line"></p>
                                     <p class="text-line"></p>
                                 {% endif %}                                                          
@@ -414,7 +431,7 @@
                                         <button type="button" onclick="displayToggle('{{condition.condition_identifier}}')">xem lịch sử</button>
                                     {% endif %}                                    
                                 {% endfor %}   
-                                {% if admission_conditions.doctor.tts.count == 0 %}
+                                {% if admission_conditions.doctor.tts|length == 0 %}
                                     <p class="text-line"></p>
                                     <p class="text-line"></p>
                                 {% endif %}                                                               
@@ -442,7 +459,7 @@
                                         <button type="button" onclick="displayToggle('{{condition.condition_identifier}}')">xem lịch sử</button>
                                     {% endif %}                                    
                                 {% endfor %}  
-                                {% if admission_conditions.doctor.thankinh.count == 0 %}
+                                {% if admission_conditions.doctor.thankinh|length == 0 %}
                                     <p class="text-line"></p>
                                     <p class="text-line"></p>
                                 {% endif %}                                                                
@@ -470,7 +487,7 @@
                                         <button type="button" onclick="displayToggle('{{condition.condition_identifier}}')">xem lịch sử</button>
                                     {% endif %}                                    
                                 {% endfor %}                                
-                                {% if admission_conditions.doctor.cxk.count == 0 %}
+                                {% if admission_conditions.doctor.cxk|length == 0 %}
                                     <p class="text-line"></p>
                                     <p class="text-line"></p>
                                 {% endif %}                                       
@@ -498,7 +515,7 @@
                                         <button type="button" onclick="displayToggle('{{condition.condition_identifier}}')">xem lịch sử</button>
                                     {% endif %}                                    
                                 {% endfor %}  
-                                {% if admission_conditions.doctor.tmh.count == 0 %}
+                                {% if admission_conditions.doctor.tmh|length == 0 %}
                                     <p class="text-line"></p>
                                     <p class="text-line"></p>
                                 {% endif %}                                                              
@@ -526,7 +543,7 @@
                                         <button type="button" onclick="displayToggle('{{condition.condition_identifier}}')">xem lịch sử</button>
                                     {% endif %}                                    
                                 {% endfor %}    
-                                {% if admission_conditions.doctor.rhm.count == 0 %}
+                                {% if admission_conditions.doctor.rhm|length == 0 %}
                                     <p class="text-line"></p>
                                     <p class="text-line"></p>
                                 {% endif %}                                                             
@@ -554,7 +571,7 @@
                                         <button type="button" onclick="displayToggle('{{condition.condition_identifier}}')">xem lịch sử</button>
                                     {% endif %}                                    
                                 {% endfor %} 
-                                {% if admission_conditions.doctor.mat.count == 0 %}
+                                {% if admission_conditions.doctor.mat|length == 0 %}
                                     <p class="text-line"></p>
                                     <p class="text-line"></p>
                                 {% endif %}                                                                
@@ -582,7 +599,7 @@
                                         <button type="button" onclick="displayToggle('{{condition.condition_identifier}}')">xem lịch sử</button>
                                     {% endif %}                                    
                                 {% endfor %}  
-                                {% if admission_conditions.doctor.noitiet.count == 0 %}
+                                {% if admission_conditions.doctor.noitiet|length == 0 %}
                                     <p class="text-line"></p>
                                     <p class="text-line"></p>
                                 {% endif %}                                                                 
@@ -592,7 +609,11 @@
                     <div class='right-body__body-section__item-content'>
                         {% for diagnostic_report in diagnostic_reports %}
                             <p class="text-line"> {{diagnostic_report.diagnostic_code}};</p>
-                        {% endfor %}                        
+                        {% endfor %} 
+                        {% if diagnostic_reports|length == 0 %}
+                            <p class="text-line"></p>
+                            <p class="text-line"></p>
+                        {% endif %}
                     </div>
                     <h4>4. Tóm tắt bệnh án</h4>
                     <div class='right-body__body-section__item-content'>
@@ -605,7 +626,7 @@
                         <h5>+ Bệnh chính</h5>
                         <div class='right-body__body-section__item-content history-container'>
                             {% for condition in discharge_conditions %}
-                                <p class="text-line">- {{condition.condition_code}} {{condition_displays|get_item:condition.condition_identifier}}: {{condition.get_condition_severity_display|lower}} </p>
+                                <p class="text-line">- {{condition.condition_code}} {%if condition_displays|get_item:condition.condition_identifier != None %}{{condition_displays|get_item:condition.condition_identifier}}{%endif%}: {{condition.get_condition_severity_display|lower}} </p>
                                 {% if conditions_history|get_item:condition.condition_identifier %}
                                     <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
                                         <div class="history-header">
@@ -622,12 +643,16 @@
                                     </div>
                                     <button type="button" onclick="displayToggle('{{condition.condition_identifier}}')">xem lịch sử</button>
                                 {% endif %}                                    
-                            {% endfor %}   
+                            {% endfor %} 
+                            {% if discharge_conditions|length == 0 %}  
+                                <p class="text-line"></p>
+                                <p class="text-line"></p>
+                            {% endif %}
                         </div>
                         <h5>+ Bệnh kèm theo</h5>
                         <div class='right-body__body-section__item-content history-container'>
                             {% for condition in comorbidity_conditions %}
-                                <p class="text-line">- {{condition.condition_code}} {{condition_displays|get_item:condition.condition_identifier}}: {{condition.get_condition_severity_display|lower}} </p>
+                                <p class="text-line">- {{condition.condition_code}} {%if condition_displays|get_item:condition.condition_identifier != None %}{{condition_displays|get_item:condition.condition_identifier}}{%endif%}: {{condition.get_condition_severity_display|lower}} </p>
                                 {% if conditions_history|get_item:condition.condition_identifier %}
                                     <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
                                         <div class="history-header">
@@ -645,6 +670,10 @@
                                     <button type="button" onclick="displayToggle('{{condition.condition_identifier}}')">xem lịch sử</button>
                                 {% endif %}                                    
                             {% endfor %}  
+                            {% if comorbidity_conditions|length == 0 %}
+                                <p class="text-line"></p>
+                                <p class="text-line"></p>
+                            {% endif %}
                         </div>
                         <h5>+ Phân biệt</h5>
                         <div class='right-body__body-section__item-content'>
@@ -704,7 +733,7 @@
                     <h4>+ Bệnh chính</h4>
                     <div class="history-container">
                         {% for condition in discharge_conditions %}
-                            <p class="text-line">- {{ condition.condition_code }} {{condition_displays|get_item:condition.condition_identifier}}: {{condition.get_condition_severity_display|lower}}</p>
+                            <p class="text-line">- {{ condition.condition_code }} {%if condition_displays|get_item:condition.condition_identifier != None %}{{condition_displays|get_item:condition.condition_identifier}}{%endif%}: {{condition.get_condition_severity_display|lower}}</p>
                             {% if conditions_history|get_item:condition.condition_identifier %}
                                 <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
                                     <div class="history-header">
@@ -744,6 +773,10 @@
                                 <button type="button" onclick="displayToggle('{{condition.condition_identifier}}')">xem lịch sử</button>
                             {% endif %}                          
                         {% endfor %}
+                        {% if comorbidity_conditions|length %}
+                            <p class="text-line"></p>
+                            <p class="text-line"></p>
+                        {% endif %}
                     </div>
                 </div>
                 <h3>5. Hướng điều trị và các chế độ tiếp theo</h3>

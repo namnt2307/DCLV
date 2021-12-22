@@ -1,6 +1,7 @@
 {%extends 'fhir/base.html'%}
 {% load widget_tweaks %}
 {%block function%}
+
         <h1>THÔNG TIN THỦ THUẬT</h1>
         <h2>{{service.service_code}}</h2>
         {% if service.service_status == "draft" %}
@@ -51,18 +52,21 @@
                             <p class="title title-long"><b>Kết quả thủ thuật, phẫu thuật:</b></p> <p class="value">{{procedure.get_procedure_outcome_display}}</p>
                         </div>
                         <div class="flex_container">
-                            <p class="title title-long"><b>Các biến chứng sau thủ thuật, phẫu thuật:</b></p> <p class="value">{{procedure.procedure_complication}}</p>
+                            <p class="title title-long"><b>Các biến chứng sau thủ thuật, phẫu thuật:</b></p> <p class="value">{{procedure.procedure_complication|default_if_none:"Không"}}</p>
                         </div>
                         <div class="flex_container">
-                            <p class="title title-long"><b>Các hướng dẫn bệnh nhân sau thủ thuật, phẫu thuật:</b></p> <p class="value">{{procedure.procedure_follow_up}}</p>
+                            <p class="title title-long"><b>Các hướng dẫn bệnh nhân sau thủ thuật, phẫu thuật:</b></p> <p class="value">{{procedure.procedure_follow_up|default_if_none:'Không'}}</p>
                         </div>
                         <div class="flex_container">
-                            <p class="title title-long"><b>Thiết bị thực hiện thủ thuật, phẫu thuật:</b></p> <p class="value">{{procedure.procedure_used}}</p>
+                            <p class="title title-long"><b>Thiết bị thực hiện thủ thuật, phẫu thuật:</b></p> <p class="value">{{procedure.procedure_used|default_if_none:"Không"}}</p>
                         </div>
                         <div class="flex_container">
-                            <p class="title title-long"><b>Ghi chú của bác sĩ:</b></p> <p class="value">{{procedure.procedure_note}}</p>
+                            <p class="title title-long"><b>Ghi chú của bác sĩ:</b></p> <p class="value">{{procedure.procedure_note|default_if_none:"Không"}}</p>
                         </div>
-                        <p><b>Chẩn đoán của bác sĩ:</b></p>
+                        <div class="flex_container">
+                            <p class="title title-long"><b>Bác sĩ thực hiện</b></p> <p class="value">{{procedure.procedure_performer}}</p>
+                        </div>
+                        <p><b>Chẩn đoán của bác sĩ: {{diagnostic_report.diagnostic_performer|default_if_none:''}}</b></p>
                         <textarea name="" id="" cols="30" rows="10" disabled>{{diagnostic_report.diagnostic_conclusion}}</textarea>
                     </div>
                     <div id="form" style="display: none;">
@@ -143,18 +147,21 @@
                     <p class="title title-long"><b>Kết quả thủ thuật, phẫu thuật:</b></p> <p class="value">{{procedure.get_procedure_outcome_display}}</p>
                 </div>
                 <div class="flex_container">
-                    <p class="title title-long"><b>Các biến chứng sau thủ thuật, phẫu thuật:</b></p> <p class="value">{{procedure.procedure_complication}}</p>
+                    <p class="title title-long"><b>Các biến chứng sau thủ thuật, phẫu thuật:</b></p> <p class="value">{{procedure.procedure_complication|default_if_none:"Không"}}</p>
                 </div>
                 <div class="flex_container">
-                    <p class="title title-long"><b>Các hướng dẫn bệnh nhân sau thủ thuật, phẫu thuật:</b></p> <p class="value">{{procedure.procedure_follow_up}}</p>
+                    <p class="title title-long"><b>Các hướng dẫn bệnh nhân sau thủ thuật, phẫu thuật:</b></p> <p class="value">{{procedure.procedure_follow_up|default_if_none:"Không"}}</p>
                 </div>
                 <div class="flex_container">
-                    <p class="title title-long"><b>Thiết bị thực hiện thủ thuật, phẫu thuật:</b></p> <p class="value">{{procedure.procedure_used}}</p>
+                    <p class="title title-long"><b>Thiết bị thực hiện thủ thuật, phẫu thuật:</b></p> <p class="value">{{procedure.procedure_used|default_if_none:"Không"}}</p>
                 </div>
                 <div class="flex_container">
-                    <p class="title title-long"><b>Ghi chú của bác sĩ:</b></p> <p class="value">{{procedure.procedure_note}}</p>
+                    <p class="title title-long"><b>Ghi chú của bác sĩ:</b></p> <p class="value">{{procedure.procedure_note|default_if_none:"Không"}}</p>
                 </div>
-                <p><b>Chẩn đoán của bác sĩ:</b></p>
+                <div class="flex_container">
+                    <p class="title title-long"><b>Bác sĩ thực hiện:</b></p> <p class="value">{{procedure.procedure_performer}}</p>
+                </div>
+                <p style="height: 45px;"><b>Chẩn đoán của bác sĩ: {{diagnostic_report.diagnostic_performer|default_if_none:''}}</b></p>
                 <textarea name="" id="" cols="30" rows="10" disabled>{{diagnostic_report.diagnostic_conclusion}}</textarea>
             </div>
                 {% endif %}
@@ -177,7 +184,10 @@
             <div class="flex_container">
                 <p class="title title-long"><b>Ghi chú của bác sĩ:</b></p><p class="value"> {{procedure.procedure_note}}</p>
             </div>
-                <p style="height: 45px;"><b>Chẩn đoán của bác sĩ:</b></p>
+            <div class="flex_container">
+                <p class="title title-long"><b>Bác sĩ thực hiện:</b></p> <p class="value">{{procedure.procedure_performer}}</p>
+            </div>            
+                <p style="height: 45px;"><b>Chẩn đoán của bác sĩ: {{diagnostic_report.diagnostic_performer|default_if_none:''}}</b></p>
                 <div id="diagnostic_report_data" style="border: solid black 1px; min-height: 50px; padding:12px">
                     {{diagnostic_report.diagnostic_conclusion}}
                 </div>

@@ -45,7 +45,7 @@
                         <td>{{service.service_occurrence|date:"d-m-Y"}}</td>
                         <td>{{service.service_authored|date:"d-m-Y"}}</td>
                         <td>{{service.service_requester}}</td>
-                        <td>{{service.service_note}}</td>
+                        <td>{{service.service_note|default_if_none:"Không"}}</td>
                     </tr>
                     {% endfor %}
                     {% if services_history|get_item:service.service_identifier %}
@@ -66,7 +66,7 @@
                         <td>{{service.service_occurrence}}</td>
                         <td>{{service.service_authored}}</td>
                         <td>{{service.service_requester}}</td>
-                        <td>{{service.service_note}}</td>
+                        <td>{{service.service_note|default_if_none:"Không"}}</td>
                     </tr>
                     {% endfor %}
                 {% else %}
@@ -100,7 +100,11 @@
         </div>
         {% for service in services %}
             <div class="flex_container">
+                {% if encounter.encounter_storage == 'local' %}
                 <p class="title">NGÀY GIỜ CÓ KẾT QUẢ:</p><p class="value"> {{service.service_performed_date|date:'d:m:Y'}}</p>
+                {% else %}
+                <p class="title">NGÀY GIỜ CÓ KẾT QUẢ:</p><p class="value"> {{service.service_performed_date}}</p>
+                {% endif %}
             </div>
             <div  id="display-data__{{service.service_identifier}}">
                 <div class="right-body__section">
@@ -138,13 +142,13 @@
                             <p class="title">KẾT QUẢ:</p><p class="value"> {{procedure.get_procedure_outcome_display}}</p>
                         </div>
                         <div class="flex_container">
-                            <p class="title">THIẾT BỊ SỬ DỤNG:</p><p class="value"> {{procedure.procedure_used}}</p>
+                            <p class="title">THIẾT BỊ SỬ DỤNG:</p><p class="value"> {{procedure.procedure_used|default_if_none:"Không"}}</p>
                         </div>
                         <div class="flex_container">
-                            <p class="title">BIẾN CHỨNG SAU THỦ THUẬT:</p><p class="value"> {{procedure.procedure_complication}}</p>
+                            <p class="title">BIẾN CHỨNG SAU THỦ THUẬT:</p><p class="value"> {{procedure.procedure_complication|default_if_none:"Không"}}</p>
                         </div>
                         <div class="flex_container">
-                            <p class="title">HƯỚNG DẪN SAU THỦ THUẬT:</p><p class="value"> {{procedure.procedure_follow_up}}</p>
+                            <p class="title">HƯỚNG DẪN SAU THỦ THUẬT:</p><p class="value"> {{procedure.procedure_follow_up|default_if_none:"Không"}}</p>
                         </div>
                         <div class="flex_container">
                             <p class="title">BÁC SĨ THỰC HIỆN:</p><p class="value"> {{procedure.procedure_performer}}</p>
@@ -171,9 +175,9 @@
                                 {% endfor %}
                             </div>
                         {% endif %}
-                        <p class="text-line">{{diagnostic_report.diagnostic_conclusion}}</p>
+                        <p class="text-line">{{diagnostic_report.diagnostic_conclusion|default_if_none:"Không"}}</p>
                         <div class="flex_container">
-                            <p class="title">BÁC SĨ CHẨN ĐOÁN:</p><p class="value"> {{diagnostic_report.diagnostic_performer}}</p>
+                            <p class="title">BÁC SĨ CHẨN ĐOÁN:</p><p class="value"> {{diagnostic_report.diagnostic_performer|default_if_none:"Không"}}</p>
                         </div>
                         {% if diagnostic_reports_history|get_item:diagnostic_report.diagnostic_identifier %}
                             <button onclick="displayHistory('{{diagnostic_report.diagnostic_identifier}}-history')">xem lich su</button>

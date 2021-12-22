@@ -6,7 +6,7 @@ from login.models import myUser
 from datetime import datetime
 from django.core.validators import MinValueValidator
 from administration.models import PractitionerModel, ClinicalDepartment
-
+from django.utils import timezone
 
 
 class PatientModel(models.Model):
@@ -25,7 +25,7 @@ class PatientModel(models.Model):
     )
     identifier = models.CharField(primary_key=True, max_length=10)
     name = models.CharField(default='', max_length=100)
-    birthdate = models.DateField(default=datetime.now)
+    birthdate = models.DateField(default=timezone.localtime(timezone.now()))
     gender = models.CharField(max_length=3, choices=GENDER_CHOICES, default='')
     work_address = models.CharField(default='', max_length=255)
     home_address = models.CharField(default='', max_length=255)
@@ -71,7 +71,7 @@ class EncounterModel(models.Model):
     )
     patient = models.ForeignKey(PatientModel, on_delete=models.CASCADE)
     encounter_identifier = models.CharField(max_length=100, primary_key=True)
-    encounter_start = models.DateTimeField(default=datetime.now)
+    encounter_start = models.DateTimeField(default=timezone.localtime(timezone.now()))
     encounter_end = models.DateTimeField(null=True)
     encounter_length = models.CharField(max_length=100, null=True)
     encounter_status = models.CharField(max_length=20, default='queued')
@@ -142,12 +142,13 @@ class ServiceRequestModel(models.Model):
     service_code = models.CharField(max_length=100, null=True)
     service_occurrence = models.DateField(max_length=100)
     service_authored = models.DateTimeField(max_length=100)
-    service_performed_date = models.DateField(max_length=100, null=True)
+    service_performed_date = models.DateTimeField(max_length=100, null=True)
     service_requester = models.CharField(max_length=100,null=True)
     service_requester_identifier = models.ForeignKey(PractitionerModel, null=True, on_delete=SET_NULL, related_name='service_requester')
     service_note = models.CharField(max_length=100, null=True, blank=True)
     service_performer = models.CharField(max_length=100, null=True)
     service_performer_identifier = models.ForeignKey(PractitionerModel, null=True, on_delete=SET_NULL, related_name='service_performer')
+    service_reason_code = models.CharField(max_length=1000, null=True, blank=True)
     service_version = models.IntegerField(default=0)
 
 
@@ -159,8 +160,9 @@ class ObservationModel(models.Model):
     observation_status = models.CharField(default='registered', max_length=10)
     observation_category = models.CharField(default='', max_length=10)
     observation_code = models.CharField(default='', max_length=100)
-    observation_effective = models.DateTimeField(default=datetime.now)
+    observation_effective = models.DateTimeField(default=timezone.localtime(timezone.now()))
     observation_performer = models.CharField(default='', max_length=100)
+    observation_performer_identifier = models.ForeignKey(PractitionerModel, null=True, on_delete=models.SET_NULL)
     observation_value_quantity = models.CharField(
         default='', max_length=10, null=True)
     observation_value_unit = models.CharField(default='', max_length=10)

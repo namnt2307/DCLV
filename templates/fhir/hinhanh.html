@@ -30,7 +30,7 @@
             <td class="cell-data-10">{{service.service_occurrence|date:"d-m-Y"}}</td>
             <td class="cell-data-10">{{service.service_authored|date:"d-m-Y"}}</td>
             <td class="cell-data-10">{{service.service_requester}}</td>
-            <td class="cell-data-10">{{service.service_note}}</td>
+            <td class="cell-data-10">{{service.service_note|default_if_none:"Không"}}</td>
             <td></td>
             {%comment%}<td><a href="{%url 'fhir:ketquahinhanh'  data.Patient.identifier data.Encounter.encounter_identifier service.service_identifier %}"></a></td>{%endcomment%}
             <td class="cell-data-10"><a href="{%url 'fhir:chitiethinhanh'  data.Patient.identifier data.Encounter.encounter_identifier service.service_identifier%}">Kết quả</a></td>
@@ -77,7 +77,10 @@
                             </datalist>
                         {% endfor %}
                     </div>
-                    
+                    <div class="flex_container">
+                        <label class="title">Lý do thực hiện:</label>
+                        {{service_form.service_reason_code|add_class:"value"}}
+                    </div>                    
                     {% now "Y-m-d" as today_date %}
                     {%with 'min:'|add:today_date as min_date%}
                     <div class="flex_container">

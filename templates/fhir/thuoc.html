@@ -67,10 +67,7 @@
                             </datalist>
                         </td>
                         <td class="cell-data-2">{{condition_form.condition_severity}}</td>
-                        <td><button type="submit" class="btn">Thêm</button></td>
-                        {% if discharge_conditions.all %}
-                            <td></td>
-                        {%endif%}
+                        <td {% if discharge_conditions.all %}colspan='2'{%endif%}><button type="submit" class="btn">Thêm</button></td>
                     </form>
                 </tr>
             </table>
@@ -87,7 +84,7 @@
             {% for condition in comorbidity_conditions %}
             <tbody id="{{condition.condition_identifier}}-data">
                 <tr>
-                    <td class="cell-data-2">{{condition.condition_code}}</td>
+                    <td class="cell-data-2">{% for disease in condition_displays|get_item:condition.condition_identifier %}{% if disease != condition_displays|get_item:condition.condition_identifier|last %}{{disease.disease_name}}, {% else %}{{disease.disease_name}}{% endif %}{% endfor %}</td>
                     <td class="cell-data-2">{{condition.get_condition_severity_display}}</td>
                     <td><button type="button" class="btn edit" onclick="toggleDisplay('{{condition.condition_identifier}}')">Chỉnh sửa</button></td>
                     <td>
@@ -108,14 +105,14 @@
                         <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
                         <input type="hidden" name="classifier" id="" value="comorbidity">
                         <input type="hidden" name="condition_identifier" value="{{condition.condition_identifier}}">
-                        {%with 'value:'|add:condition.condition_code as code%}
-                            <input list="comorbidity_diseases" name="condition_code" id="comorbidity_disease" data-text-property='value' data-value-property='value' class='flexdatalist' data-min-length='1' multiple='multiple'> 
+                        <td>
+                            <input list="comorbidity_diseases" name="condition_code" id="comorbidity_disease" value="{% for disease in condition_displays|get_item:condition.condition_identifier %}{% if disease != condition_displays|get_item:condition.condition_identifier|last %}{{disease.disease_code}},{% else %}{{disease.disease_code}}{% endif %}{% endfor %}" data-text-property='value' data-value-property='value' class='flexdatalist' data-min-length='1' multiple='multiple'> 
                             <datalist id="comorbidity_diseases">
                                 {% for disease in discharge_diseases %}
                                     <option value="{{disease.disease_code}}">{{disease.disease_search}}</option>
                                 {% endfor %}
                             </datalist>
-                        {%endwith%}
+                        </td>
                         {%with 'value:'|add:condition.condition_severity as code%}
                             <td class="cell-data-2">{{condition_form.condition_severity|attr:code}}</td>
                         {%endwith%}
@@ -138,7 +135,9 @@
                         </datalist>
                     </td>
                     <td class="cell-data-2">{{condition_form.condition_severity}}</td>
-                    <td><button type="submit" class="btn">Thêm</button></td>
+                    <td {% if comorbidity_conditions.all %}colspan='2'{%endif%}><button type="submit" class="btn">Thêm</button></td>
+      
+                                     
                 </form>
             </tr>
         </table>
@@ -158,8 +157,7 @@
         {%comment%}<th class="cell-data-8">Ngày chỉ định</th>{%endcomment%}
     </thead>
     
-    {% if medications %}
-    
+    {% if medications %}    
         {% for medication in medications %}
             <tbody id="{{medication.medication_identifier}}-data">
                 <tr>
@@ -289,13 +287,13 @@
             <td class="cell-data-6">{{medication_form.medication_reason_code}}</td>
             {%comment%}<td class="cell-data-8">{{medication_form.medication_effective}}</td>{%endcomment%}
             <td class="cell-data-6">
-            {{medication_form.dosage_frequency|attr:'step:0.5'|add_class:'number-input'}} lần           
+            {{medication_form.dosage_frequency|add_class:'number-input'}} lần           
             <br>  
-            {{medication_form.dosage_period|attr:'step:0.5'|add_class:'number-input'}}
+            {{medication_form.dosage_period|add_class:'number-input'}}
             {{medication_form.dosage_period_unit|add_class:'unit-input'}}
             </td>
-            <td class="cell-data-6">{{medication_form.dosage_quantity|attr:'step:0.5'|add_class:'number-input'}} {{medication_form.dosage_quantity_unit|add_class:'unit-input'}}</td>
-            <td class="cell-data-6">{{medication_form.dosage_duration|attr:'step:0.5'|add_class:'number-input'}} {{medication_form.dosage_duration_unit|add_class:'unit-input'}}</td>
+            <td class="cell-data-6">{{medication_form.dosage_quantity|add_class:'number-input'}} {{medication_form.dosage_quantity_unit|add_class:'unit-input'}}</td>
+            <td class="cell-data-6">{{medication_form.dosage_duration|add_class:'number-input'}} {{medication_form.dosage_duration_unit|add_class:'unit-input'}}</td>
             <td class="cell-data-6">{{medication_form.dosage_route}}</td>
             <td rowspan="2"><button type="submit" class="btn">Thêm</button></td>
         </tr>

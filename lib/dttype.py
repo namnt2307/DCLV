@@ -33,9 +33,11 @@ def period_type(resource, start=None, end=None):
         ET.SubElement(resource, 'end value=\"{}\"'.format(end))
 
 
-def reference_type(resource, reference, _type, identifier=None, display=None):
-    ET.SubElement(resource, 'reference value=\"{}\"'.format(reference))
-    ET.SubElement(resource, 'type value=\"{}\"'.format(_type))
+def reference_type(resource, reference=None, _type=None, identifier=None, display=None):
+    if reference:
+        ET.SubElement(resource, 'reference value=\"{}\"'.format(reference))
+    if _type:
+        ET.SubElement(resource, 'type value=\"{}\"'.format(_type))
     if identifier:
         _identifier = ET.SubElement(resource, 'identifier')
         identifier_type(_identifier, identifier.get('system'), identifier.get('value'), identifier.get(
@@ -519,8 +521,10 @@ def create_encounter_resource(encounter, patient_id, patient_name, practitioner_
     if encounter.get('reason_code'):
         reason = ET.SubElement(root, 'reasonCode')
         codeable_concept(reason, text=encounter['reason_code'])
-    # if data['Encounter'].get('location'):
-    #     location = ET.SubElement(root, 'location')
+    if encounter.get('location'):
+        location = ET.SubElement(root, 'location')
+        location_reference = ET.SubElement(location, 'location')
+        reference_type(location_reference, display=encounter['location'])
     if encounter.get('serviceProvider'):
         serviceProvider = ET.SubElement(root, 'serviceProvider')
     return ET.tostring(root, encoding="us-ascii", method="xml", xml_declaration=None, default_namespace=None, short_empty_elements=True)
@@ -626,6 +630,9 @@ def create_service_resource(service, patient_id, patient_name, encounter_id):
     if service.get('performer'):
         performer = ET.SubElement(root, 'performer')
         reference_type(performer, 'Practitioner/' + service['performer']['id'], 'Practitioner', display=service['performer']['name'])
+    if service.get('reason_code'):
+        reason_code = ET.SubElement(root, 'reasonCode')
+        codeable_concept(reason_code, text=service['reason_code'])
     if service.get('note'):
         note = ET.SubElement(root, 'note')
         annotation_type(note, text=service['note'])
@@ -721,11 +728,12 @@ def create_procedure_resource(procedure, patient_id, patient_name, encounter_id,
                        procedure['asserter']['id'], 'Practitioner', display=procedure['asserter']['name'])
     if procedure.get('performer'):
         performer = ET.SubElement(root, 'performer')
-        reference_type(performer, 'Practitioner/' +
+        actor = ET.SubElement(performer, 'actor')
+        reference_type(actor, 'Practitioner/' +
                        procedure['performer']['id'], 'Practitioner', display=procedure['performer']['name'])
     if procedure.get('reason_code'):
         reasonCode = ET.SubElement(root, 'reasonCode')
-        codeable_concept(reasonCode, text=procedure['reasonCode'])
+        codeable_concept(reasonCode, text=procedure['reason_code'])
     if procedure.get('outcome'):
         outcome = ET.SubElement(root, 'outcome')
         codes = [
@@ -932,11 +940,19 @@ def query_patient(patient_identifier, query_type):
         if query_type == 'data' or query_type == 'all':
             name = patient_resource.find('d:name', ns)
             if name != None:
-                patient['name'] = name.find(
-                    'd:family', ns).attrib['value'] + ' ' + name.find('d:given', ns).attrib['value']
+                patient['name'] = ''
+                family_name = name.find('d:family', ns)
+                if family_name != None:
+                    patient['name'] = family_name.attrib['value']
+                given_name = name.find('d:given', ns)
+                if given_name != None:
+                    patient['name'] = patient['name'] + ' ' + given_name.attrib['value']
+                patient['name'] = patient['name'].strip()
             telecom = patient_resource.find('d:telecom', ns)
             if telecom != None:
-                patient['telecom'] = telecom.find('d:value', ns).attrib['value']
+                value = telecom.find('d:value', ns)
+                if value != None:
+                    patient['telecom'] = value.attrib['value']
             gender = patient_resource.find('d:gender', ns)
             if gender != None:
                 if gender.attrib['value'] == 'male':
@@ -1091,6 +1107,11 @@ def query_service(service_identifier, query_type):
                 display = performer.find('d:display', ns)
                 if display != None:
                     service['service_performer'] = display.attrib['value']
+            reason_code = service_resource.find('d:reasonCode', ns)
+            if reason_code != None:
+                text = reason_code.find('d:text', ns)
+                if text != None:
+                    service['service_reason_code'] = text.attrib['value']
             note = service_resource.find('d:note', ns)
             if note != None:
                 service['service_note'] = note.find('d:text', ns).attrib['value']
@@ -1229,29 +1250,36 @@ def query_procedure(procedure_identifier, query_type):
                     performed_datetime.attrib['value'])
             performer = procedure_resource.find('d:performer', ns)
             if performer != None:
-                display = performer.find('d:display', ns)
+                actor = performer.find('d:actor', ns)
+                display = actor.find('d:display', ns)
                 if display != None:
                     procedure['procedure_performer'] = display.attrib['value']
             reason_code = procedure_resource.find('d:reasonCode', ns)
             if reason_code != None:
-                procedure['procedure_reason_code'] = reason_code.find(
-                    'd:text', ns).attrib['value']
+                text = reason_code.find('d:text', ns)
+                if text != None:
+                    procedure['procedure_reason_code'] = text.attrib['value']
             outcome = procedure_resource.find('d:outcome', ns)
             if outcome != None:
-                procedure['procedure_outcome'] = outcome.find(
-                    'd:text', ns).attrib['value']
+                text = outcome.find('d:text', ns)
+                if text != None:
+                    procedure['procedure_outcome'] = text.attrib['value']
             complication = procedure_resource.find('d:complication', ns)
             if complication != None:
-                procedure['procedure_complication'] = complication.find(
-                    'd:text', ns).attrib['value']
+                text = complication.find('d:text', ns)
+                if text != None:
+                    procedure['procedure_complication'] = text.attrib['value']
             follow_up = procedure_resource.find('d:followUp', ns)
             if follow_up != None:
-                procedure['procedure_follow_up'] = follow_up.find(
-                    'd:text', ns).attrib['value']
+                text = follow_up.find('d:text', ns)
+                if text != None:
+                    procedure['procedure_follow_up'] = text.attrib['value']
             note = procedure_resource.find('d:note', ns)
             if note != None:
-                procedure['procedure_note'] = note.find(
-                    'd:text', ns).attrib['value']
+                text = note.find('d:text', ns)
+                if text != None:
+                    procedure['procedure_note'] = note.find(
+                        'd:text', ns).attrib['value']
     return procedure
 
 
@@ -1418,14 +1446,18 @@ def query_diagnostic_report(diagnostic_report_identifier, query_type):
             if category != None:
                 diagnostic_report['diagnostic_category'] = category.find(
                     'd:text', ns).attrib['value']
-
             code = diagnostic_report_resource.find('d:code', ns)
             if code != None:
                 diagnostic_report['diagnostic_code'] = code.find('d:text', ns).attrib['value']
             effective = diagnostic_report_resource.find('d:effectiveDateTime', ns)
             if effective != None:
                 diagnostic_report['diagnostic_effective'] = effective.attrib['value']
-            conclusion = diagnostic_report_resource.find('d:conclusion', ns)
+            performer = diagnostic_report_resource.find('d:performer', ns)
+            if performer != None:
+                display = performer.find('d:display', ns)
+                if display != None:
+                    diagnostic_report['performer'] = display.attrib['value']
+            conclusion = diagnostic_report_resource.find('d:conclusion', ns)                    
             if conclusion != None:
                 diagnostic_report['diagnostic_conclusion'] = conclusion.attrib['value']
     return diagnostic_report

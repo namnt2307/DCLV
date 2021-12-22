@@ -146,10 +146,11 @@ class ServiceRequestForm(forms.ModelForm):
     class Meta:
         model = ServiceRequestModel
         fields = (
-            'service_code', 'service_occurrence', 'service_note'
+            'service_code', 'service_reason_code', 'service_occurrence', 'service_note'
         )
         labels = {
             'service_code': 'Tên xét nghiệm',
+            'service_reason_code': 'Mục đích thực hiện',
             'service_occurrence': 'Ngày dự kiến thực hiện',
             'service_note': 'Ghi chú thêm'
         }

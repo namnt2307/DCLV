@@ -87,7 +87,7 @@
             </div>
         {% endif %}
         </form>
-        <h1>Bác sĩ làm xét nghiệm: {{service.service_performer}}</h1>
+        <h1>Bác sĩ làm xét nghiệm: {{service.service_performer|default_if_none:"Xét nghiệm chưa được thực hiện"}}</h1>
 
         <form action="{% url 'fhir:delete' %}" method="post" id="delete-form" style="display: none;">
             {% csrf_token %}

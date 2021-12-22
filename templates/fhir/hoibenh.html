@@ -197,7 +197,7 @@
                             <tr>
                                 <td colspan="6" style="text-align: left;">
                                     <div class="flex_container">
-                                        <p class="title">Thành phần dị ứng:</p> <p>{{allergy.allergy_reaction_substance}}</p>
+                                        <p class="title">Thành phần dị ứng:</p> <p>{{allergy.allergy_reaction_substance|default_if_none:"Không"}}</p>
                                     </div>
                                     <div class="flex_container">
                                         <p class="title">Phản ứng:</p> <p>{{allergy.allergy_reaction_manifestation}}</p>

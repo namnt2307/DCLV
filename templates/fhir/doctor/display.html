@@ -214,6 +214,7 @@
                 {%else%}
                     <td></td>
                 {%endif%}
+                {% if encounter.encounter_storage == 'local' %}
                 {% if encounter.encounter_sharing_status %}
                     <td>
                         <form action="{% url 'fhir:delete' %}" method="post">
@@ -226,6 +227,9 @@
                     </td>
                 {% else %}
                     <td><button class="btn" type="button"><a href="{% url 'fhir:save' data.Patient.identifier encounter.encounter_identifier %}">Chia sẻ</a></button></td>
+                {% endif %}
+                {% elif encounter.encounter_storage == 'hapi' %}
+                    <td>Được chia sẻ từ kho FHIR</td>
                 {% endif %}
                 <td><a href="{% url 'fhir:view_benhan' data.Patient.identifier encounter.encounter_identifier %}">Xem</a></td>
             </tr>

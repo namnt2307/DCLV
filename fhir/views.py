@@ -1,3 +1,4 @@
+from django.db import connection
 from django.db.models import query
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, request, HttpResponseRedirect
@@ -10,6 +11,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.template.defaulttags import register
 from django.shortcuts import get_object_or_404
 from django.contrib import messages
+from django.utils import timezone
 from login.forms import UserCreationForm
 from handlers import handlers
 from .forms import EncounterForm, ConditionForm, ProcedureForm, ProcedureDetailForm, MedicationForm, ServiceRequestForm, DiagnosticReportForm, AllergyForm, PatientForm
@@ -27,12 +29,13 @@ import urllib.request
 # Create your views here.
 
 
-fhir_server = os.getenv('FHIR_SERVER',"http://10.0.0.25:8080/fhir") 
+fhir_server = os.getenv('FHIR_SERVER', "http://10.0.0.25:8080/fhir")
 
 
 @register.filter
 def get_item(dictionary, key):
     return dictionary.get(key)
+
 
 @register.filter
 def make_range(num):
@@ -239,7 +242,7 @@ def createobservations(encounter_instance, service_identifier, service_name):
     if request_observations:
         for key, value in request_observations.items():
             ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_instance, observation_identifier=service_identifier +
-                                            '_' + datetime.strftime(datetime.now(), "%d%m%Y%H%M%S%f"), observation_code=key, observation_category='laboratory', observation_value_unit=value['unit'], observation_reference_range=value['ref_range'])
+                                            '_' + datetime.strftime(timezone.localtime(timezone.now()), "%d%m%Y%H%M%S%f"), observation_code=key, observation_category='laboratory', observation_value_unit=value['unit'], observation_reference_range=value['ref_range'])
     else:
         print('no valid data')
 
@@ -249,7 +252,6 @@ def user_app(request):
     User = get_user_model()
     page = 'fhir/doctor.html'
     return render(request, page)
-
 
 
 @login_required(login_url='/login/')
@@ -277,30 +279,38 @@ def manage(request):
 class display_detail(LoginRequiredMixin, View):
     login_url = '/login/'
     # patient = get_user_model()
-    
+
     def dispatch(self, request, *args, **kwargs):
         print(request.user.role)
         if request.user.role != "doctor" and request.user.role != "medical assistant":
-            messages.error(request, "Bạn không có quyền truy cập trang này")            
+            messages.error(request, "Bạn không có quyền truy cập trang này")
             return HttpResponseRedirect('/')
         # Checks pass, let http method handlers process the request
-        return super().dispatch(request, *args, **kwargs)        
-    
+        return super().dispatch(request, *args, **kwargs)
+
     def get(self, request, patient_identifier):
         encounter_form = EncounterForm()
         patient_form = PatientForm()
         departments = {}
-        department_categories = ClinicalDepartment.objects.filter(department_type='lâm sàng').order_by().values_list('department_category', flat=True).distinct()
+        department_categories = ClinicalDepartment.objects.filter(
+            department_type='lâm sàng').order_by().values_list('department_category', flat=True).distinct()
         for category in department_categories:
-            departments[category] = ClinicalDepartment.objects.filter(department_category=category)
+            departments[category] = ClinicalDepartment.objects.filter(
+                department_category=category)
         data = {'Patient': {}, 'Encounter': []}
         instance = PatientModel.objects.get(
             identifier=patient_identifier)
         data['Patient'] = instance
-        
         try:
+            encounters = EncounterModel.objects.filter(
+                patient=patient_identifier)
+            for encounter in encounters:
+                get_encounter = requests.get(fhir_server + "/Encounter?identifier=urn:trinhcongminh|" +
+                                             encounter.encounter_identifier, headers={'Content-type': 'application/xml'})
+                if 'entry' not in get_encounter.content.decode('utf-8'):
+                    encounter.delete()
             get_encounter = requests.get(fhir_server + "/Encounter?subject.identifier=urn:trinhcongminh|" +
-                                        patient_identifier, headers={'Content-type': 'application/xml'})
+                                         patient_identifier, headers={'Content-type': 'application/xml'})
             if get_encounter.status_code == 200 and 'entry' in get_encounter.content.decode('utf-8'):
                 get_root = ET.fromstring(
                     get_encounter.content.decode('utf-8'))
@@ -328,7 +338,8 @@ class display_detail(LoginRequiredMixin, View):
                         EncounterModel.objects.create(
                             **encounter, patient=instance, encounter_storage='hapi')
         except Exception as e:
-            messages.error(request, "Kho FHIR không hoạt động") 
+            print(e)
+            messages.error(request, "Kho FHIR không hoạt động")
         data['Encounter'] = EncounterModel.objects.all().filter(
             patient=patient_identifier)
         img_dir = f'/static/img/patient/{patient_identifier}.jpg'
@@ -341,45 +352,48 @@ class display_detail(LoginRequiredMixin, View):
             'departments': departments
         }
         return render(request, 'fhir/doctor/display.html', context)
-        
-    
+
     def post(self, request, patient_identifier):
-        try: 
+        try:
             patient = PatientModel.objects.get(identifier=patient_identifier)
         except PatientModel.DoesNotExist:
             messages.errors(request, "Mã y tế cung cấp không tồn tại")
             return HttpResponseRedirect('/fhir/create')
         try:
             patient_id = dt.query_patient(patient_identifier, query_type='id')
-            patient_update = PatientForm(request.POST or None, instance=patient)
+            patient_update = PatientForm(
+                request.POST or None, instance=patient)
             if patient_update.is_valid():
                 patient_data = request.POST.copy()
                 patient_data['id'] = patient_id['id']
                 patient_resource = dt.create_patient_resource(patient_data)
-                put_patient = requests.put(fhir_server + "/Patient/" + patient_id['id']
-                                           , headers={'Content-type': 'application/xml'}, data=patient_resource.decode('utf-8'))
+                put_patient = requests.put(fhir_server + "/Patient/" + patient_id['id'], headers={
+                                           'Content-type': 'application/xml'}, data=patient_resource.decode('utf-8'))
                 if put_patient.status_code == 200:
                     patient_update.save()
                     messages.success(request, "Cập nhật thông tin thành công")
                     return HttpResponseRedirect(self.request.path_info)
                 else:
-                    messages.error(request, "Cập nhật thông tin không thành công, hệ thống không cập nhật được trên FHIR")
+                    messages.error(
+                        request, "Cập nhật thông tin không thành công, hệ thống không cập nhật được trên FHIR")
                     return HttpResponseRedirect(self.request.path_info)
             else:
                 print(patient_update.errors)
-                messages.error(request, "Cập nhật thông tin không thành công, thông tin cung cấp không phù hợp, vui lòng kiểm tra lại")
+                messages.error(
+                    request, "Cập nhật thông tin không thành công, thông tin cung cấp không phù hợp, vui lòng kiểm tra lại")
                 return HttpResponseRedirect(self.request.path_info)
         except Exception as e:
-            messages.error(request, "Kho FHIR không hoạt động, vui lòng thử lại sau")
+            messages.error(
+                request, "Kho FHIR không hoạt động, vui lòng thử lại sau")
             return HttpResponseRedirect(self.request.path_info)
-                
+
 
 class register(LoginRequiredMixin, View):
     login_url = '/login/'
 
     def dispatch(self, request, *args, **kwargs):
         if request.user.role != "doctor" and request.user.role != "medical assistant":
-            messages.error(request, "Bạn không có quyền truy cập trang này")            
+            messages.error(request, "Bạn không có quyền truy cập trang này")
             return HttpResponseRedirect('/')
         # Checks pass, let http method handlers process the request
         return super().dispatch(request, *args, **kwargs)
@@ -396,39 +410,45 @@ class register(LoginRequiredMixin, View):
         try:
             connection_test = requests.get(fhir_server + "/Patient")
             if connection_test.status_code != 200:
-                messages.error(request, "Có lỗi khi kết nối với kho FHIR, vui lòng liên hệ kĩ thuật viên")
+                messages.error(
+                    request, "Có lỗi khi kết nối với kho FHIR, vui lòng liên hệ kĩ thuật viên")
                 return HttpResponseRedirect('/fhir/create/')
         except:
-            messages.error(request, "Kho FHIR không hoạt động, vui lòng liên hệ kĩ thuật viên")
+            messages.error(
+                request, "Kho FHIR không hoạt động, vui lòng liên hệ kĩ thuật viên")
             return HttpResponseRedirect('/fhir/create/')
         try:
             PatientModel.objects.get(identifier=request.POST['identifier'])
-            messages.error(request, "Mã y tế cung cấp đã tồn tại, vui lòng kiểm tra lại")
+            messages.error(
+                request, "Mã y tế cung cấp đã tồn tại, vui lòng kiểm tra lại")
             return HttpResponseRedirect('/fhir/create/')
         except PatientModel.DoesNotExist:
             get_patient = requests.get(fhir_server + "/Patient?identifier=urn:trinhcongminh|" +
-                                    request.POST['identifier'], headers={'Content-type': 'application/xml'})
+                                       request.POST['identifier'], headers={'Content-type': 'application/xml'})
             if get_patient.status_code == 200 and 'entry' in get_patient.content.decode('utf-8'):
-                messages.error(request, "Mã y tế cung cấp đã tồn tại, vui lòng kiểm tra lại")
-                return HttpResponseRedirect('/fhir/create')                
-            else:      
+                messages.error(
+                    request, "Mã y tế cung cấp đã tồn tại, vui lòng kiểm tra lại")
+                return HttpResponseRedirect('/fhir/create')
+            else:
                 patient_form = PatientForm(
                     request.POST or None)
                 if patient_form.is_valid():
-                    patient_form.save()                          
+                    patient_form.save()
                     patient = dt.create_patient_resource(request.POST)
                     post_patient = requests.post(fhir_server + "/Patient/", headers={
                         'Content-type': 'application/xml'}, data=patient.decode('utf-8'))
                     user = get_user_model().objects.create_user(
-                                username=request.POST['identifier'], password="1")
+                        username=request.POST['identifier'], password="1")
                     if post_patient.status_code == 201:
                         messages.success(request, "Tạo hồ sơ thành công")
                         return HttpResponseRedirect('/fhir/display_detail/' + request.POST['identifier'])
                     else:
-                        messages.error(request, "Thông tin cung cấp chính xác nhưng hệ thống có lỗi khi lưu hồ sơ lên FHIR, vui lòng liên hệ kĩ thuật viên")
+                        messages.error(
+                            request, "Thông tin cung cấp chính xác nhưng hệ thống có lỗi khi lưu hồ sơ lên FHIR, vui lòng liên hệ kĩ thuật viên")
                         return HttpResponseRedirect('/fhir/create/')
                 else:
-                    messages.error(request, "Thông tin cung cấp không phù hợp, vui lòng kiểm tra lại")
+                    messages.error(
+                        request, "Thông tin cung cấp không phù hợp, vui lòng kiểm tra lại")
                     return HttpResponseRedirect('/fhir/create/')
 
 
@@ -615,7 +635,8 @@ class search(LoginRequiredMixin, View):
                                 request, "Không có dữ liệu với mã y tế đã nhập")
                             return HttpResponseRedirect(self.request.path_info)
                     except:
-                        messages.error(request, "Gặp lỗi khi kết nối với cơ sở dữ liệu FHIR")
+                        messages.error(
+                            request, "Gặp lỗi khi kết nối với cơ sở dữ liệu FHIR")
                         return HttpResponseRedirect(self.request.path_info)
             elif request.GET['search_type'] == 'name_type':
                 instance = PatientModel.objects.all().filter(
@@ -667,8 +688,7 @@ class search(LoginRequiredMixin, View):
 
 class hanhchinh(LoginRequiredMixin, View):
     login_url = '/login/'
-    
-    
+
     def dispatch(self, request, *args, **kwargs):
         if request.user.role != "doctor":
             messages.error(request, "Bạn không có quyền truy cập trang này")
@@ -676,7 +696,8 @@ class hanhchinh(LoginRequiredMixin, View):
         if not kwargs.get('encounter_identifier') or not kwargs.get('patient_identifier'):
             return HttpResponseRedirect('/login/')
         try:
-            patient = PatientModel.objects.get(identifier=kwargs['patient_identifier'])
+            patient = PatientModel.objects.get(
+                identifier=kwargs['patient_identifier'])
         except PatientModel.DoesNotExist:
             messages.error(request, "Mã y tế không tồn tại")
             return HttpResponseRedirect('/')
@@ -686,11 +707,13 @@ class hanhchinh(LoginRequiredMixin, View):
             messages.error(request, "Mã thăm khám không tồn tại")
             return HttpResponseRedirect('/')
         try:
-            encounter = EncounterModel.objects.get(encounter_identifier=kwargs['encounter_identifier'])
-            
+            encounter = EncounterModel.objects.get(
+                encounter_identifier=kwargs['encounter_identifier'])
+
             if self.request.user.username != encounter.encounter_participant_identifier.identifier:
                 # Redirect the user to somewhere else - add your URL here
-                messages.error(request, "Bạn không có quyền truy cập trang này")
+                messages.error(
+                    request, "Bạn không có quyền truy cập trang này")
                 return HttpResponseRedirect('/')
         except EncounterModel.DoesNotExist:
             print('encounter không tồn tại')
@@ -699,7 +722,6 @@ class hanhchinh(LoginRequiredMixin, View):
 
         # Checks pass, let http method handlers process the request
         return super().dispatch(request, *args, **kwargs)
-    
 
     def get(self, request, patient_identifier, encounter_identifier):
 
@@ -727,7 +749,7 @@ class hanhchinh(LoginRequiredMixin, View):
 
 class encounter(LoginRequiredMixin, View):
     login_url = '/login/'
-    
+
     def dispatch(self, request, *args, **kwargs):
         if request.user.role != "medical assistant" and request.user.role != "doctor":
             messages.error(request, "Bạn không có quyền truy cập trang này")
@@ -735,7 +757,8 @@ class encounter(LoginRequiredMixin, View):
         if not kwargs.get('patient_identifier'):
             return HttpResponseRedirect('/login/')
         try:
-            patient = PatientModel.objects.get(identifier=kwargs['patient_identifier'])
+            patient = PatientModel.objects.get(
+                identifier=kwargs['patient_identifier'])
             return super().dispatch(request, *args, **kwargs)
         except PatientModel.DoesNotExist:
             messages.error(request, "Mã y tế không tồn tại")
@@ -745,13 +768,14 @@ class encounter(LoginRequiredMixin, View):
         data = {'Patient': {}, 'Encounter': {}}
         instance = PatientModel.objects.get(
             identifier=patient_identifier)
-        encounters = EncounterModel.objects.filter(patient=patient_identifier).exclude(encounter_status="finished")
+        encounters = EncounterModel.objects.filter(
+            patient=patient_identifier).exclude(encounter_status="finished")
         print(encounters)
         if len(encounters) > 0:
             messages.error(request, "Bệnh nhân đang trong lần thăm khám khác")
             return HttpResponseRedirect('/fhir/display_detail/' + patient_identifier)
         new_encounter_identifier = patient_identifier + \
-            '_' + datetime.strftime(datetime.now(), "%d%m%Y%H%M%S%f")
+            '_' + datetime.strftime(timezone.localtime(timezone.now()), "%d%m%Y%H%M%S%f")
         form = EncounterForm(request.POST)
         data['Patient'] = instance
         if form.is_valid():
@@ -780,7 +804,8 @@ class dangky(LoginRequiredMixin, View):
         if not kwargs.get('encounter_identifier') or not kwargs.get('patient_identifier'):
             return HttpResponseRedirect('/login/')
         try:
-            patient = PatientModel.objects.get(identifier=kwargs['patient_identifier'])
+            patient = PatientModel.objects.get(
+                identifier=kwargs['patient_identifier'])
         except PatientModel.DoesNotExist:
             messages.error(request, "Mã y tế không tồn tại")
             return HttpResponseRedirect('/')
@@ -788,11 +813,13 @@ class dangky(LoginRequiredMixin, View):
             messages.error(request, "Mã thăm khám không tồn tại")
             return HttpResponseRedirect('/')
         try:
-            encounter = EncounterModel.objects.get(encounter_identifier=kwargs['encounter_identifier'])
-            
+            encounter = EncounterModel.objects.get(
+                encounter_identifier=kwargs['encounter_identifier'])
+
             if self.request.user.username != encounter.encounter_participant_identifier.identifier:
                 # Redirect the user to somewhere else - add your URL here
-                messages.error(request, "Bạn không có quyền truy cập trang này")
+                messages.error(
+                    request, "Bạn không có quyền truy cập trang này")
                 return HttpResponseRedirect('/')
         except EncounterModel.DoesNotExist:
             messages.error(request, 'Mã thăm khám không tồn tại')
@@ -838,7 +865,8 @@ class hoibenh(LoginRequiredMixin, View):
         if not kwargs.get('encounter_identifier') or not kwargs.get('patient_identifier'):
             return HttpResponseRedirect('/login/')
         try:
-            patient = PatientModel.objects.get(identifier=kwargs['patient_identifier'])
+            patient = PatientModel.objects.get(
+                identifier=kwargs['patient_identifier'])
         except PatientModel.DoesNotExist:
             messages.error(request, "Mã y tế không tồn tại")
             return HttpResponseRedirect('/')
@@ -846,11 +874,13 @@ class hoibenh(LoginRequiredMixin, View):
             messages.error(request, "Mã thăm khám không tồn tại")
             return HttpResponseRedirect('/')
         try:
-            encounter = EncounterModel.objects.get(encounter_identifier=kwargs['encounter_identifier'])
-            
+            encounter = EncounterModel.objects.get(
+                encounter_identifier=kwargs['encounter_identifier'])
+
             if self.request.user.username != encounter.encounter_participant_identifier.identifier:
                 # Redirect the user to somewhere else - add your URL here
-                messages.error(request, "Bạn không có quyền truy cập trang này")
+                messages.error(
+                    request, "Bạn không có quyền truy cập trang này")
                 return HttpResponseRedirect('/')
         except EncounterModel.DoesNotExist:
             messages.error(request, 'Mã thăm khám không tồn tại')
@@ -893,9 +923,9 @@ class hoibenh(LoginRequiredMixin, View):
             encounter_identifier=encounter_identifier)
         data['Encounter'] = encounter_instance
         condition_identifier = encounter_identifier + '_' + \
-            datetime.strftime(datetime.now(), "%d%m%Y%H%M%S%f")
+            datetime.strftime(timezone.localtime(timezone.now()), "%d%m%Y%H%M%S%f")
         allergy_identifier = encounter_identifier + '_' + \
-            datetime.strftime(datetime.now(), "%d%m%Y%H%M%S%f")
+            datetime.strftime(timezone.localtime(timezone.now()), "%d%m%Y%H%M%S%f")
         if request.POST['classifier'] == 'benhly' or request.POST['classifier'] == 'tiensubanthan':
             if request.POST.get('condition_identifier'):
                 condition_instance = ConditionModel.objects.get(
@@ -966,7 +996,8 @@ class khambenh(LoginRequiredMixin, View):
         if not kwargs.get('encounter_identifier') or not kwargs.get('patient_identifier'):
             return HttpResponseRedirect('/login/')
         try:
-            patient = PatientModel.objects.get(identifier=kwargs['patient_identifier'])
+            patient = PatientModel.objects.get(
+                identifier=kwargs['patient_identifier'])
         except PatientModel.DoesNotExist:
             messages.error(request, "Mã y tế không tồn tại")
             return HttpResponseRedirect('/')
@@ -974,11 +1005,13 @@ class khambenh(LoginRequiredMixin, View):
             messages.error(request, "Mã thăm khám không tồn tại")
             return HttpResponseRedirect('/')
         try:
-            encounter = EncounterModel.objects.get(encounter_identifier=kwargs['encounter_identifier'])
-            
+            encounter = EncounterModel.objects.get(
+                encounter_identifier=kwargs['encounter_identifier'])
+
             if self.request.user.username != encounter.encounter_participant_identifier.identifier:
                 # Redirect the user to somewhere else - add your URL here
-                messages.error(request, "Bạn không có quyền truy cập trang này")
+                messages.error(
+                    request, "Bạn không có quyền truy cập trang này")
                 return HttpResponseRedirect('/')
         except EncounterModel.DoesNotExist:
             messages.error(request, 'Mã thăm khám không tồn tại')
@@ -1056,10 +1089,12 @@ class khambenh(LoginRequiredMixin, View):
     def post(self, request, patient_identifier, encounter_identifier):
         encounter_instance = EncounterModel.objects.get(
             encounter_identifier=encounter_identifier)
-        practitioner = PractitionerModel.objects.get(identifier=request.user.username)
+        practitioner = PractitionerModel.objects.get(
+            identifier=request.user.username)
         if request.POST['classifier'] == 'observation':
             try:
-                observation_instance = ObservationModel.objects.get(encounter_identifier=encounter_instance, observation_code='mạch', observation_category='vital-signs')
+                observation_instance = ObservationModel.objects.get(
+                    encounter_identifier=encounter_instance, observation_code='mạch', observation_category='vital-signs')
                 if request.POST['mach']:
                     observation_instance.observation_value_quantity = request.POST['mach']
                     observation_instance.save()
@@ -1067,80 +1102,146 @@ class khambenh(LoginRequiredMixin, View):
                     observation_instance.delete()
             except:
                 if request.POST['mach']:
+                    observation = {}
                     observation_identifier = encounter_identifier + \
-                        '_' + datetime.strftime(datetime.now(), "%d%m%Y%H%M%S%f")
-                    ObservationModel.objects.create(encounter_identifier=encounter_instance, observation_identifier=observation_identifier, observation_status='final',
-                                                    observation_code='mạch', observation_category='vital-signs', observation_value_quantity=request.POST['mach'], observation_value_unit='lần/ph')
-            
+                        '_' + \
+                        datetime.strftime(timezone.localtime(timezone.now()), "%d%m%Y%H%M%S%f")
+                    observation['encounter_identifier']=encounter_instance 
+                    observation['observation_identifier']=observation_identifier
+                    observation['observation_status']='final'
+                    observation['observation_code']='mạch'
+                    observation['observation_category']='vital-signs'
+                    observation['observation_value_quantity']=request.POST['mach']
+                    observation['observation_value_unit']='lần/ph'                        
+                    observation['observation_performer'] = practitioner.name
+                    observation['observation_performer_identifier'] = practitioner
+                    ObservationModel.objects.create(**observation)
+
             try:
-                observation_instance = ObservationModel.objects.get(encounter_identifier=encounter_instance, observation_code='nhiệt độ', observation_category='vital-signs')
+                observation_instance = ObservationModel.objects.get(
+                    encounter_identifier=encounter_instance, observation_code='nhiệt độ', observation_category='vital-signs')
                 if request.POST['nhietdo']:
                     observation_instance.observation_value_quantity = request.POST['nhietdo']
                     observation_instance.save()
                 else:
                     observation_instance.delete()
-            except:                
+            except:
                 if request.POST['nhietdo']:
+                    observation = {}
                     observation_identifier = encounter_identifier + \
-                        '_' + datetime.strftime(datetime.now(), "%d%m%Y%H%M%S%f")
-                    ObservationModel.objects.create(encounter_identifier=encounter_instance, observation_identifier=observation_identifier, observation_status='final',
-                                                    observation_code='nhiệt độ', observation_category='vital-signs', observation_value_quantity=request.POST['nhietdo'], observation_value_unit='Cel')
-            
+                        '_' + \
+                        datetime.strftime(timezone.localtime(timezone.now()), "%d%m%Y%H%M%S%f")
+                    encounter_identifier=encounter_instance
+                    observation['observation_identifier']=observation_identifier
+                    observation['observation_status']='final'
+                    observation['observation_code']='nhiệt độ'
+                    observation['observation_category']='vital-signs'
+                    observation['observation_value_quantity']=request.POST['nhietdo']
+                    observation['observation_value_unit']='Cel'
+                    observation['observation_performer'] = practitioner.name
+                    observation['observation_performer_identifier'] = practitioner
+                    ObservationModel.objects.create(**observation)
+
             try:
-                observation_instance = ObservationModel.objects.get(encounter_identifier=encounter_instance, observation_code='huyết áp tâm thu', observation_category='vital-signs')
+                observation_instance = ObservationModel.objects.get(
+                    encounter_identifier=encounter_instance, observation_code='huyết áp tâm thu', observation_category='vital-signs')
                 if request.POST['huyetaptamthu']:
                     observation_instance.observation_value_quantity = request.POST['huyetaptamthu']
                     observation_instance.save()
                 else:
                     observation_instance.delete()
-            except:                
+            except:
                 if request.POST['huyetaptamthu']:
+                    observation = {}
                     observation_identifier = encounter_identifier + \
-                        '_' + datetime.strftime(datetime.now(), "%d%m%Y%H%M%S%f")
-                    ObservationModel.objects.create(encounter_identifier=encounter_instance, observation_identifier=observation_identifier, observation_status='final',
-                                                    observation_code='huyết áp tâm thu', observation_category='vital-signs', observation_value_quantity=request.POST['huyetaptamthu'], observation_value_unit='mmHg')
-            
+                        '_' + \
+                        datetime.strftime(timezone.localtime(timezone.now()), "%d%m%Y%H%M%S%f")
+                    encounter_identifier=encounter_instance
+                    observation_identifier=observation_identifier
+                    observation['observation_status']='final'
+                    observation['observation_code']='huyết áp tâm thu'
+                    observation['observation_category']='vital-signs'
+                    observation['observation_value_quantity']=request.POST['huyetaptamthu']
+                    observation['observation_value_unit']='mmHg'
+                    observation['observation_performer'] = practitioner.name
+                    observation['observation_performer_identifier'] = practitioner                    
+                    ObservationModel.objects.create(**observation)
+
             try:
-                observation_instance = ObservationModel.objects.get(encounter_identifier=encounter_instance, observation_code='huyết áp tâm trương', observation_category='vital-signs')
+                observation_instance = ObservationModel.objects.get(
+                    encounter_identifier=encounter_instance, observation_code='huyết áp tâm trương', observation_category='vital-signs')
                 if request.POST['huyetaptamtruong']:
-                    observation_instance.observation_value_quantity = request.POST['huyetaptamtruong']
+                    observation_instance.observation_value_quantity = request.POST[
+                        'huyetaptamtruong']
                     observation_instance.save()
                 else:
                     observation_instance.delete()
-            except:                
+            except:
                 if request.POST['huyetaptamtruong']:
+                    observation = {}
                     observation_identifier = encounter_identifier + \
-                        '_' + datetime.strftime(datetime.now(), "%d%m%Y%H%M%S%f")
-                    ObservationModel.objects.create(encounter_identifier=encounter_instance, observation_identifier=observation_identifier, observation_status='final',
-                                                    observation_code='huyết áp tâm trương', observation_category='vital-signs', observation_value_quantity=request.POST['huyetaptamtruong'], observation_value_unit='mmHg')
+                        '_' + \
+                        datetime.strftime(timezone.localtime(timezone.now()), "%d%m%Y%H%M%S%f")
+                    encounter_identifier=encounter_instance
+                    observation['observation_identifier']=observation_identifier
+                    observation['observation_status']='final'
+                    observation['observation_code']='huyết áp tâm trương'
+                    observation['observation_category']='vital-signs'
+                    observation['observation_value_quantity']=request.POST['huyetaptamtruong']
+                    observation['observation_value_unit']='mmHg'
+                    observation['observation_performer'] = practitioner.name
+                    observation['observation_performer_identifier'] = practitioner
+                    ObservationModel.objects.create(**observation)
 
             try:
-                observation_instance = ObservationModel.objects.get(encounter_identifier=encounter_instance, observation_code='nhịp thở', observation_category='vital-signs')
+                observation_instance = ObservationModel.objects.get(
+                    encounter_identifier=encounter_instance, observation_code='nhịp thở', observation_category='vital-signs')
                 if request.POST['nhiptho']:
                     observation_instance.observation_value_quantity = request.POST['nhiptho']
                     observation_instance.save()
                 else:
                     observation_instance.delete()
-            except:                
+            except:
                 if request.POST['nhiptho']:
+                    observation = {}
                     observation_identifier = encounter_identifier + \
-                        '_' + datetime.strftime(datetime.now(), "%d%m%Y%H%M%S%f")
-                    ObservationModel.objects.create(encounter_identifier=encounter_instance, observation_identifier=observation_identifier, observation_status='final',
-                                                    observation_code='nhịp thở', observation_category='vital-signs', observation_value_quantity=request.POST['nhiptho'], observation_value_unit='lần/ph')
+                        '_' + \
+                        datetime.strftime(timezone.localtime(timezone.now()), "%d%m%Y%H%M%S%f")
+                    encounter_identifier=encounter_instance
+                    observation_identifier=observation_identifier
+                    observation['observation_status']='final'
+                    observation['observation_code']='nhịp thở'
+                    observation['observation_category']='vital-signs'
+                    observation['observation_value_quantity']=request.POST['nhiptho']
+                    observation['observation_value_unit']='lần/ph'
+                    observation['observation_performer'] = practitioner.name
+                    observation['observation_performer_identifier'] = practitioner
+                    ObservationModel.objects.create(**observation)
 
             try:
-                observation_instance = ObservationModel.objects.get(encounter_identifier=encounter_instance, observation_code='cân nặng', observation_category='vital-signs')
+                observation_instance = ObservationModel.objects.get(
+                    encounter_identifier=encounter_instance, observation_code='cân nặng', observation_category='vital-signs')
                 if request.POST['cannang']:
                     observation_instance.observation_value_quantity = request.POST['cannang']
                     observation_instance.save()
-                else: 
+                else:
                     observation_instance.delete()
             except:
                 if request.POST['cannang']:
+                    observation = {}
                     observation_identifier = encounter_identifier + \
-                        '_' + datetime.strftime(datetime.now(), "%d%m%Y%H%M%S%f")
-                    ObservationModel.objects.create(encounter_identifier=encounter_instance, observation_identifier=observation_identifier, observation_status='final',
-                                                    observation_code='cân nặng', observation_category='vital-signs', observation_value_quantity=request.POST['cannang'], observation_value_unit='kg')
+                        '_' + \
+                        datetime.strftime(timezone.localtime(timezone.now()), "%d%m%Y%H%M%S%f")
+                    encounter_identifier=encounter_instance
+                    observation['observation_identifier']=observation_identifier
+                    observation['observation_status']='final'
+                    observation['observation_code']='cân nặng'
+                    observation['observation_category']='vital-signs'
+                    observation['observation_value_quantity']=request.POST['cannang']
+                    observation['observation_value_unit']='kg'
+                    observation['observation_performer'] = practitioner.name
+                    observation['observation_performer_identifier'] = practitioner
+                    ObservationModel.objects.create(**observation)
         elif request.POST['classifier'] == 'condition':
             if request.POST.get('condition_identifier'):
                 condition_instance = ConditionModel.objects.get(
@@ -1154,7 +1255,7 @@ class khambenh(LoginRequiredMixin, View):
                 condition_instance.save()
             else:
                 condition_identifier = encounter_identifier + '_' + \
-                    datetime.strftime(datetime.now(), "%d%m%Y%H%M%S%f")
+                    datetime.strftime(timezone.localtime(timezone.now()), "%d%m%Y%H%M%S%f")
                 condition_object = {}
                 condition_object['condition_identifier'] = condition_identifier
                 condition_object['condition_code'] = request.POST['condition_code']
@@ -1179,7 +1280,8 @@ class xetnghiem(LoginRequiredMixin, View):
         if not kwargs.get('encounter_identifier') or not kwargs.get('patient_identifier'):
             return HttpResponseRedirect('/login/')
         try:
-            patient = PatientModel.objects.get(identifier=kwargs['patient_identifier'])
+            patient = PatientModel.objects.get(
+                identifier=kwargs['patient_identifier'])
         except PatientModel.DoesNotExist:
             messages.error(request, "Mã y tế không tồn tại")
             return HttpResponseRedirect('/')
@@ -1187,11 +1289,13 @@ class xetnghiem(LoginRequiredMixin, View):
             messages.error(request, "Mã thăm khám không tồn tại")
             return HttpResponseRedirect('/')
         try:
-            encounter = EncounterModel.objects.get(encounter_identifier=kwargs['encounter_identifier'])
-            
+            encounter = EncounterModel.objects.get(
+                encounter_identifier=kwargs['encounter_identifier'])
+
             if self.request.user.username != encounter.encounter_participant_identifier.identifier:
                 # Redirect the user to somewhere else - add your URL here
-                messages.error(request, "Bạn không có quyền truy cập trang này")
+                messages.error(
+                    request, "Bạn không có quyền truy cập trang này")
                 return HttpResponseRedirect('/')
         except EncounterModel.DoesNotExist:
             messages.error(request, 'Mã thăm khám không tồn tại')
@@ -1201,7 +1305,6 @@ class xetnghiem(LoginRequiredMixin, View):
         return super().dispatch(request, *args, **kwargs)
 
         # Checks pass, let http method handlers process the request
-
 
     def get(self, request, patient_identifier, encounter_identifier):
         data = {'Patient': {'identifier': patient_identifier},
@@ -1213,7 +1316,8 @@ class xetnghiem(LoginRequiredMixin, View):
             encounter_identifier=encounter_instance, service_category='Laboratory procedure')
         service_form = ServiceRequestForm()
         tests = {}
-        test_categories = Test.objects.order_by().values_list('test_category', flat=True).distinct()
+        test_categories = Test.objects.order_by().values_list(
+            'test_category', flat=True).distinct()
         print(test_categories)
         for category in test_categories:
             tests[category] = Test.objects.filter(test_category=category)
@@ -1229,14 +1333,15 @@ class xetnghiem(LoginRequiredMixin, View):
     def post(self, request, patient_identifier, encounter_identifier):
         encounter_instance = EncounterModel.objects.get(
             encounter_identifier=encounter_identifier)
-        practitioner = PractitionerModel.objects.get(identifier=request.user.username)
+        practitioner = PractitionerModel.objects.get(
+            identifier=request.user.username)
         form = ServiceRequestForm(request.POST)
         if form.is_valid():
             service = form.save(commit=False)
             service.encounter_identifier = encounter_instance
             service.service_identifier = encounter_instance.encounter_identifier + \
-                '_' + datetime.strftime(datetime.now(), "%d%m%Y%H%M%S%f")
-            service.service_authored = datetime.now().date()
+                '_' + datetime.strftime(timezone.localtime(timezone.now()), "%d%m%Y%H%M%S%f")
+            service.service_authored = timezone.localtime(timezone.now()).date()
             service.service_category = 'Laboratory procedure'
             service.service_requester = practitioner.name
             service.service_requester_identifier = practitioner
@@ -1260,7 +1365,8 @@ class chitietxetnghiem(LoginRequiredMixin, View):
         if not kwargs.get('encounter_identifier') or not kwargs.get('patient_identifier') or not kwargs.get('service_identifier'):
             return HttpResponseRedirect('/login/')
         try:
-            patient = PatientModel.objects.get(identifier=kwargs['patient_identifier'])
+            patient = PatientModel.objects.get(
+                identifier=kwargs['patient_identifier'])
         except PatientModel.DoesNotExist:
             messages.error(request, "Mã y tế không tồn tại")
             return HttpResponseRedirect('/')
@@ -1268,17 +1374,20 @@ class chitietxetnghiem(LoginRequiredMixin, View):
             messages.error(request, "Mã thăm khám không tồn tại")
             return HttpResponseRedirect('/')
         try:
-            encounter = EncounterModel.objects.get(encounter_identifier=kwargs['encounter_identifier'])
-            if request.user.role == "doctor":         
+            encounter = EncounterModel.objects.get(
+                encounter_identifier=kwargs['encounter_identifier'])
+            if request.user.role == "doctor":
                 if self.request.user.username != encounter.encounter_participant_identifier.identifier:
                     # Redirect the user to somewhere else - add your URL here
-                    messages.error(request, "Bạn không có quyền truy cập trang này")
+                    messages.error(
+                        request, "Bạn không có quyền truy cập trang này")
                     return HttpResponseRedirect('/')
             if kwargs['encounter_identifier'] not in kwargs['service_identifier']:
                 messages.error(request, "Mã xét nghiệm không tồn tại")
                 return HttpResponseRedirect("/fhir/" + kwargs['patient_identifier'] + "/" + kwargs['encounter_identifier'] + "/xetnghiem")
             try:
-                service = ServiceRequestModel.objects.get(service_identifier=kwargs['service_identifier'], service_category="Laboratory procedure")
+                service = ServiceRequestModel.objects.get(
+                    service_identifier=kwargs['service_identifier'], service_category="Laboratory procedure")
                 return super().dispatch(request, *args, **kwargs)
             except ServiceRequestModel.DoesNotExist:
                 messages.error(request, "Mã xét nghiệm không tồn tại")
@@ -1319,26 +1428,26 @@ class chitietxetnghiem(LoginRequiredMixin, View):
             service_identifier=service_identifier)
         post = request.POST.copy()
         observation_dict = dict(request.POST)
-        practitioner = PractitionerModel.objects.get(identifier=request.user.username)
-        print(observation_dict)
+        practitioner = PractitionerModel.objects.get(
+            identifier=request.user.username)
         if observation_dict.get('diagnostic_report_conclusion'):
             diagnostic_report_conclusion = observation_dict['diagnostic_report_conclusion'][0]
             observation_dict.pop('diagnostic_report_conclusion')
-            if observation_dict.get('diagnostic_report_identifier'):                
-                diagnostic_report_identifier = observation_dict['diagnostic_report_identifier'][0]                
+            if observation_dict.get('diagnostic_report_identifier'):
+                diagnostic_report_identifier = observation_dict['diagnostic_report_identifier'][0]
                 observation_dict.pop('diagnostic_report_identifier')
-                print(diagnostic_report_identifier)
-                diagnostic_report = DiagnosticReportModel.objects.get(diagnostic_identifier=diagnostic_report_identifier)
-                diagnostic_report.diagnostic_effective = datetime.now()
+                diagnostic_report = DiagnosticReportModel.objects.get(
+                    diagnostic_identifier=diagnostic_report_identifier)
+                diagnostic_report.diagnostic_effective = timezone.localtime(timezone.now())
                 diagnostic_report.diagnostic_conclusion = diagnostic_report_conclusion
                 diagnostic_report.save()
             else:
                 diagnostic_report = {}
                 diagnostic_report['diagnostic_identifier'] = encounter_identifier + '_' + \
-                    datetime.strftime(datetime.now(), "%d%m%Y%H%M%S%f")
+                    datetime.strftime(timezone.localtime(timezone.now()), "%d%m%Y%H%M%S%f")
                 diagnostic_report['encounter_identifier'] = encounter_instance
                 diagnostic_report['service_identifier'] = service_instance
-                diagnostic_report['diagnostic_effective'] = datetime.now()
+                diagnostic_report['diagnostic_effective'] = timezone.localtime(timezone.now())
                 diagnostic_report['diagnostic_status'] = 'final'
                 diagnostic_report['diagnostic_category'] = service_instance.service_category
                 diagnostic_report['diagnostic_code'] = service_instance.service_code
@@ -1362,7 +1471,7 @@ class chitietxetnghiem(LoginRequiredMixin, View):
                 print(value[1])
                 if value[0] != '' and value[1] != '':
                     ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_instance, observation_identifier=service_identifier +
-                                    '_' + datetime.strftime(datetime.now(), "%d%m%Y%H%M%S%f"), observation_code=value[0], observation_category='laboratory', observation_value_quantity=value[1], observation_value_unit=value[3], observation_reference_range=value[2])
+                                                    '_' + datetime.strftime(timezone.localtime(timezone.now()), "%d%m%Y%H%M%S%f"), observation_code=value[0], observation_category='laboratory', observation_value_quantity=value[1], observation_value_unit=value[3], observation_reference_range=value[2])
         service_instance.service_performer = practitioner.name
         service_instance.service_performer_identifier = practitioner
         service_instance.save()
@@ -1393,14 +1502,15 @@ class thuthuat(LoginRequiredMixin, View):
         service_instances = ServiceRequestModel.objects.filter(
             encounter_identifier=encounter_instance)
         service_identifier = encounter_identifier + \
-            '_' + datetime.strftime(datetime.now(), "%d%m%Y%H%M%S%f")
+            '_' + datetime.strftime(timezone.localtime(timezone.now()), "%d%m%Y%H%M%S%f")
         form = ServiceRequestForm(request.POST)
-        practitioner = PractitionerModel.objects.get(identifier=request.user.username)
+        practitioner = PractitionerModel.objects.get(
+            identifier=request.user.username)
         if form.is_valid():
             service = form.save(commit=False)
             service.encounter_identifier = encounter_instance
             service.service_identifier = service_identifier
-            service.service_authored = datetime.now().date()
+            service.service_authored = timezone.localtime(timezone.now()).date()
             service.service_category = 'laboratory'
             service.service_requester = practitioner.name
             service.service_requester_identifier = practitioner
@@ -1431,13 +1541,14 @@ class chitietthuthuat(LoginRequiredMixin, View):
         form = ProcedureDetailForm()
         procedure = ProcedureModel.objects.get(
             procedure_identifier=procedure_identifier)
-        service_instance = ServiceRequestModel.objects.get(service_identifier=procedure_identifier)
+        service_instance = ServiceRequestModel.objects.get(
+            service_identifier=procedure_identifier)
         try:
             diagnostic_report_instance = DiagnosticReportModel.objects.get(
                 service_identifier=service_instance)
         except:
             diagnostic_report_instance = None
-        diagnostic_form = DiagnosticReportForm()        
+        diagnostic_form = DiagnosticReportForm()
         context = {
             'data': data,
             'services': services,
@@ -1457,12 +1568,13 @@ class chitietthuthuat(LoginRequiredMixin, View):
             encounter_identifier=encounter_instance)
         procedure_instance = ProcedureModel.objects.get(
             procedure_identifier=procedure_identifier)
-        practitioner = PractitionerModel.objects.get(identifier=request.user.username)
+        practitioner = PractitionerModel.objects.get(
+            identifier=request.user.username)
         form = ProcedureDetailForm(request.POST, instance=procedure_instance)
         if form.is_valid():
             procedure = form.save(commit=False)
             procedure.procedure_status = 'completed'
-            procedure.procedure_performed_datetime = datetime.now()
+            procedure.procedure_performed_datetime = timezone.localtime(timezone.now())
             procedure.procedure_performer = practitioner.name
             procedure.procedure_performer_identifier = practitioner
             form.save()
@@ -1485,7 +1597,8 @@ class thuoc(LoginRequiredMixin, View):
         if not kwargs.get('encounter_identifier') or not kwargs.get('patient_identifier'):
             return HttpResponseRedirect('/login/')
         try:
-            patient = PatientModel.objects.get(identifier=kwargs['patient_identifier'])
+            patient = PatientModel.objects.get(
+                identifier=kwargs['patient_identifier'])
         except PatientModel.DoesNotExist:
             messages.error(request, "Mã y tế không tồn tại")
             return HttpResponseRedirect('/')
@@ -1493,11 +1606,13 @@ class thuoc(LoginRequiredMixin, View):
             messages.error(request, "Mã thăm khám không tồn tại")
             return HttpResponseRedirect('/')
         try:
-            encounter = EncounterModel.objects.get(encounter_identifier=kwargs['encounter_identifier'])
-            
+            encounter = EncounterModel.objects.get(
+                encounter_identifier=kwargs['encounter_identifier'])
+
             if self.request.user.username != encounter.encounter_participant_identifier.identifier:
                 # Redirect the user to somewhere else - add your URL here
-                messages.error(request, "Bạn không có quyền truy cập trang này")
+                messages.error(
+                    request, "Bạn không có quyền truy cập trang này")
                 return HttpResponseRedirect('/')
         except EncounterModel.DoesNotExist:
             messages.error(request, 'Mã thăm khám không tồn tại')
@@ -1532,7 +1647,7 @@ class thuoc(LoginRequiredMixin, View):
         comorbidity_conditions = ConditionModel.objects.all().filter(
             encounter_identifier=encounter_instance, condition_note='comorbidity condition by doctor')
         for condition in comorbidity_conditions:
-            condition_displays[condition.condition_identifier] = ""
+            condition_displays[condition.condition_identifier] = []
             if ' ' in condition.condition_code:
                 codes = condition.condition_code.split(' ')
                 for code in codes:
@@ -1540,7 +1655,7 @@ class thuoc(LoginRequiredMixin, View):
                         DischargeDisease.objects.get(disease_code=code))
             else:
                 condition_displays[condition.condition_identifier].append(
-                    DischargeDisease.objects.get(disease_code=code))
+                    DischargeDisease.objects.get(disease_code=condition.condition_code))
         discharge_diseases = DischargeDisease.objects.all()
         comorbidity_diseases = ComorbidityDisease.objects.all()
         medicines = Medicine.objects.all()
@@ -1565,7 +1680,8 @@ class thuoc(LoginRequiredMixin, View):
     def post(self, request, patient_identifier, encounter_identifier):
         encounter_instance = EncounterModel.objects.get(
             encounter_identifier=encounter_identifier)
-        practitioner = PractitionerModel.objects.get(identifier=request.user.username)
+        practitioner = PractitionerModel.objects.get(
+            identifier=request.user.username)
         if request.POST['classifier'] == 'medication':
             if request.POST.get('medication_identifier'):
                 instance = MedicationModel.objects.get(
@@ -1573,7 +1689,7 @@ class thuoc(LoginRequiredMixin, View):
                 form = MedicationForm(request.POST or None, instance=instance)
                 if form.is_valid():
                     medication = form.save(commit=False)
-                    medication.medication_date_asserted = datetime.now().date()
+                    medication.medication_date_asserted = timezone.localtime(timezone.now()).date()
                     form.save()
             else:
                 form = MedicationForm(request.POST or None)
@@ -1582,9 +1698,9 @@ class thuoc(LoginRequiredMixin, View):
                     medication.encounter_identifier = encounter_instance
                     medication.medication_identifier = encounter_instance.encounter_identifier + \
                         '_' + \
-                        datetime.strftime(datetime.now(), "%d%m%Y%H%M%S%f")
-                    medication.medication_date_asserted = datetime.now().date()
-                    medication.medication_effective = datetime.now().date()
+                        datetime.strftime(timezone.localtime(timezone.now()), "%d%m%Y%H%M%S%f")
+                    medication.medication_date_asserted = timezone.localtime(timezone.now()).date()
+                    medication.medication_effective = timezone.localtime(timezone.now()).date()
                     form.save()
                 else:
                     print(form.errors)
@@ -1605,7 +1721,7 @@ class thuoc(LoginRequiredMixin, View):
                     else:
                         condition.condition_note = 'comorbidity condition by doctor'
                     condition.condition_asserter = practitioner.name
-                    condition.condition_asserter_identifier = practitioner.identifier                    
+                    condition.condition_asserter_identifier = practitioner.identifier
                     form.save()
             else:
                 form = ConditionForm(request.POST)
@@ -1614,7 +1730,7 @@ class thuoc(LoginRequiredMixin, View):
                     condition.condition_clinical_status = 'active'
                     condition.condition_identifier = encounter_instance.encounter_identifier + \
                         '_' + \
-                        datetime.strftime(datetime.now(), "%d%m%Y%H%M%S%f")
+                        datetime.strftime(timezone.localtime(timezone.now()), "%d%m%Y%H%M%S%f")
                     condition.encounter_identifier = encounter_instance
                     if request.POST['classifier'] == 'discharge':
                         condition.condition_note = 'discharge condition by doctor'
@@ -1639,7 +1755,8 @@ class hinhanh(LoginRequiredMixin, View):
         if not kwargs.get('encounter_identifier') or not kwargs.get('patient_identifier'):
             return HttpResponseRedirect('/login/')
         try:
-            patient = PatientModel.objects.get(identifier=kwargs['patient_identifier'])
+            patient = PatientModel.objects.get(
+                identifier=kwargs['patient_identifier'])
         except PatientModel.DoesNotExist:
             messages.error(request, "Mã y tế không tồn tại")
             return HttpResponseRedirect('/')
@@ -1647,11 +1764,13 @@ class hinhanh(LoginRequiredMixin, View):
             messages.error(request, "Mã thăm khám không tồn tại")
             return HttpResponseRedirect('/')
         try:
-            encounter = EncounterModel.objects.get(encounter_identifier=kwargs['encounter_identifier'])
-            
+            encounter = EncounterModel.objects.get(
+                encounter_identifier=kwargs['encounter_identifier'])
+
             if self.request.user.username != encounter.encounter_participant_identifier.identifier:
                 # Redirect the user to somewhere else - add your URL here
-                messages.error(request, "Bạn không có quyền truy cập trang này")
+                messages.error(
+                    request, "Bạn không có quyền truy cập trang này")
                 return HttpResponseRedirect('/')
         except EncounterModel.DoesNotExist:
             messages.error(request, 'Mã thăm khám không tồn tại')
@@ -1670,10 +1789,11 @@ class hinhanh(LoginRequiredMixin, View):
             encounter_identifier=encounter_instance, service_category='Imaging')
         service_form = ServiceRequestForm()
         images = {}
-        image_categories = Image.objects.order_by().values_list('image_category', flat=True).distinct()
+        image_categories = Image.objects.order_by().values_list(
+            'image_category', flat=True).distinct()
         print(image_categories)
         for category in image_categories:
-            images[category] = Image.objects.filter(image_category=category)        
+            images[category] = Image.objects.filter(image_category=category)
         context = {
             'data': data,
             'service_form': service_form,
@@ -1688,14 +1808,15 @@ class hinhanh(LoginRequiredMixin, View):
         encounter_instance = EncounterModel.objects.get(
             encounter_identifier=encounter_identifier)
         new_service_identifier = encounter_identifier + \
-            '_' + datetime.strftime(datetime.now(), "%d%m%Y%H%M%S%f")
-        practitioner = PractitionerModel.objects.get(identifier=request.user.username)
+            '_' + datetime.strftime(timezone.localtime(timezone.now()), "%d%m%Y%H%M%S%f")
+        practitioner = PractitionerModel.objects.get(
+            identifier=request.user.username)
         form = ServiceRequestForm(request.POST)
         if form.is_valid():
             service = form.save(commit=False)
             service.encounter_identifier = encounter_instance
             service.service_identifier = new_service_identifier
-            service.service_authored = datetime.now().date()
+            service.service_authored = timezone.localtime(timezone.now()).date()
             service.service_category = 'Imaging'
             service.service_requester = practitioner.name
             service.service_requester_identifier = practitioner
@@ -1709,6 +1830,7 @@ class hinhanh(LoginRequiredMixin, View):
             new_procedure.procedure_status = 'preparation'
             new_procedure.procedure_category = '103693007'
             new_procedure.procedure_code = service.service_code
+            new_procedure.procedure_reason_code = service.service_reason_code
             new_procedure.save()
             return HttpResponseRedirect(self.request.path_info)
         else:
@@ -1725,7 +1847,8 @@ class chitiethinhanh(LoginRequiredMixin, View):
         if not kwargs.get('encounter_identifier') or not kwargs.get('patient_identifier') or not kwargs.get('service_identifier'):
             return HttpResponseRedirect('/login/')
         try:
-            patient = PatientModel.objects.get(identifier=kwargs['patient_identifier'])
+            patient = PatientModel.objects.get(
+                identifier=kwargs['patient_identifier'])
         except PatientModel.DoesNotExist:
             messages.error(request, "Mã y tế không tồn tại")
             return HttpResponseRedirect('/')
@@ -1733,17 +1856,20 @@ class chitiethinhanh(LoginRequiredMixin, View):
             messages.error(request, "Mã thăm khám không tồn tại")
             return HttpResponseRedirect('/')
         try:
-            encounter = EncounterModel.objects.get(encounter_identifier=kwargs['encounter_identifier'])    
+            encounter = EncounterModel.objects.get(
+                encounter_identifier=kwargs['encounter_identifier'])
             if request.user.role == "doctor":
                 if self.request.user.username != encounter.encounter_participant_identifier.identifier:
                     # Redirect the user to somewhere else - add your URL here
-                    messages.error(request, "Bạn không có quyền truy cập trang này")
+                    messages.error(
+                        request, "Bạn không có quyền truy cập trang này")
                     return HttpResponseRedirect('/')
             if kwargs['encounter_identifier'] not in kwargs['service_identifier']:
                 messages.error(request, "Mã xét nghiệm không tồn tại")
                 return HttpResponseRedirect("/fhir/" + kwargs['patient_identifier'] + "/" + kwargs['encounter_identifier'] + "/xetnghiem")
             try:
-                service = ServiceRequestModel.objects.get(service_identifier=kwargs['service_identifier'], service_category="Imaging")
+                service = ServiceRequestModel.objects.get(
+                    service_identifier=kwargs['service_identifier'], service_category="Imaging")
                 return super().dispatch(request, *args, **kwargs)
             except ServiceRequestModel.DoesNotExist:
                 messages.error(request, "Mã xét nghiệm không tồn tại")
@@ -1761,7 +1887,8 @@ class chitiethinhanh(LoginRequiredMixin, View):
         procedure_form = ProcedureDetailForm()
         procedure = ProcedureModel.objects.get(
             encounter_identifier=encounter_instance, service_identifier=service_identifier)
-        service_instance = ServiceRequestModel.objects.get(service_identifier=service_identifier)
+        service_instance = ServiceRequestModel.objects.get(
+            service_identifier=service_identifier)
         try:
             diagnostic_report_instance = DiagnosticReportModel.objects.get(
                 service_identifier=service_instance)
@@ -1774,7 +1901,7 @@ class chitiethinhanh(LoginRequiredMixin, View):
             'service': service_instance,
             'procedure': procedure,
             'diagnostic_report': diagnostic_report_instance,
-            'diagnostic_form': diagnostic_form            
+            'diagnostic_form': diagnostic_form
         }
         return render(request, 'fhir/chitietthuthuat.html', context)
 
@@ -1784,8 +1911,9 @@ class chitiethinhanh(LoginRequiredMixin, View):
         procedure_instance = ProcedureModel.objects.get(
             encounter_identifier=encounter_instance, service_identifier=service_identifier)
         service_instance = ServiceRequestModel.objects.get(
-                service_identifier=service_identifier)
-        practitioner = PractitionerModel.objects.get(identifier=request.user.username)
+            service_identifier=service_identifier)
+        practitioner = PractitionerModel.objects.get(
+            identifier=request.user.username)
         form = ProcedureDetailForm(request.POST, instance=procedure_instance)
         if form.is_valid():
             print(request.POST)
@@ -1793,21 +1921,23 @@ class chitiethinhanh(LoginRequiredMixin, View):
             procedure.procedure_status = 'completed'
             procedure.procedure_performer = practitioner.name
             procedure.procedure_performer_identifier = practitioner
-            procedure.procedure_performed_datetime = datetime.now()
+            procedure.procedure_performed_datetime = timezone.localtime(timezone.now())
             form.save()
             if request.POST.get('diagnostic_report_conclusion'):
                 if request.POST.get('diagnostic_report_identifier'):
-                    diagnostic_report = DiagnosticReportModel.objects.get(diagnostic_identifier=request.POST['diagnostic_report_identifier'])
-                    diagnostic_report.diagnostic_effective = datetime.now()
-                    diagnostic_report.diagnostic_conclusion = request.POST['diagnostic_report_conclusion']
+                    diagnostic_report = DiagnosticReportModel.objects.get(
+                        diagnostic_identifier=request.POST['diagnostic_report_identifier'])
+                    diagnostic_report.diagnostic_effective = timezone.localtime(timezone.now())
+                    diagnostic_report.diagnostic_conclusion = request.POST[
+                        'diagnostic_report_conclusion']
                     diagnostic_report.save()
                 else:
                     diagnostic_report = {}
                     diagnostic_report['diagnostic_identifier'] = encounter_identifier + '_' + \
-                        datetime.strftime(datetime.now(), "%d%m%Y%H%M%S%f")
+                        datetime.strftime(timezone.localtime(timezone.now()), "%d%m%Y%H%M%S%f")
                     diagnostic_report['encounter_identifier'] = encounter_instance
                     diagnostic_report['service_identifier'] = service_instance
-                    diagnostic_report['diagnostic_effective'] = datetime.now()
+                    diagnostic_report['diagnostic_effective'] = timezone.localtime(timezone.now())
                     diagnostic_report['diagnostic_status'] = 'final'
                     diagnostic_report['diagnostic_category'] = service_instance.service_category
                     diagnostic_report['diagnostic_code'] = service_instance.service_code
@@ -1826,18 +1956,19 @@ class chitiethinhanh(LoginRequiredMixin, View):
 
 class chandoan(LoginRequiredMixin, View):
     login_url = '/login/'
-    
+
     def dispatch():
         pass
 
     def get(self, request, patient_identifier, encounter_identifier, service_identifier):
         data = {'Patient': {'identifier': patient_identifier},
                 'Encounter': {}}
-        encounter_instance = EncounterModel.objects.get(encounter_identifier=encounter_identifier)
+        encounter_instance = EncounterModel.objects.get(
+            encounter_identifier=encounter_identifier)
         data['Encounter'] = encounter_instance
         service_instance = ServiceRequestModel.objects.get(
             service_identifier=service_identifier)
-        
+
         try:
             diagnostic_report_instance = DiagnosticReportModel.objects.get(
                 service_identifier=service_instance)
@@ -1857,25 +1988,26 @@ class chandoan(LoginRequiredMixin, View):
             encounter_identifier=encounter_identifier)
         service_instance = ServiceRequestModel.objects.get(
             service_identifier=service_identifier)
-        practitioner = PractitionerModel.objects.get(identifier=request.user.username)
+        practitioner = PractitionerModel.objects.get(
+            identifier=request.user.username)
         if request.POST.get('diagnostic_identifier'):
             diagnostic_instance = DiagnosticReportModel.objects.get(
                 service_identifier=service_identifier)
             diagnostic_instance.diagnostic_conclusion = request.POST['diagnostic_conclusion']
             diagnostic_instance.diagnostic_performer = practitioner.name
             diagnostic_instance.diagnostic_performer_identifier = practitioner
-            diagnostic_instance.diagnostic_effective = datetime.now()
+            diagnostic_instance.diagnostic_effective = timezone.localtime(timezone.now())
             diagnostic_instance.save()
         else:
             diagnostic_identifier = encounter_identifier + '_' + \
-                datetime.strftime(datetime.now(), "%d%m%Y%H%M%S%f")
+                datetime.strftime(timezone.localtime(timezone.now()), "%d%m%Y%H%M%S%f")
             form = DiagnosticReportForm(request.POST)
             if form.is_valid():
                 diagnostic = form.save(commit=False)
                 diagnostic.encounter_identifier = encounter_instance
                 diagnostic.service_identifier = service_instance
                 diagnostic.diagnostic_identifier = diagnostic_identifier
-                diagnostic.diagnostic_effective = datetime.now()
+                diagnostic.diagnostic_effective = timezone.localtime(timezone.now())
                 diagnostic.diagnostic_status = 'registered'
                 diagnostic.diagnostic_category = service_instance.service_category
                 diagnostic.diagnostic_code = service_instance.service_code
@@ -1895,15 +2027,17 @@ class save(LoginRequiredMixin, View):
         if not kwargs.get('encounter_identifier') or not kwargs.get('patient_identifier'):
             return HttpResponseRedirect('/login/')
         try:
-            patient = PatientModel.objects.get(identifier=kwargs['patient_identifier'])
+            patient = PatientModel.objects.get(
+                identifier=kwargs['patient_identifier'])
         except PatientModel.DoesNotExist:
             messages.error(request, "Mã y tế không tồn tại")
             return HttpResponseRedirect('/')
-        if kwargs['patient_identifier'] not in  kwargs['encounter_identifier']:
+        if kwargs['patient_identifier'] not in kwargs['encounter_identifier']:
             messages.error(request, "Mã thăm khám không tồn tại")
             return HttpResponseRedirect('/')
         try:
-            encounter = EncounterModel.objects.get(encounter_identifier=kwargs['encounter_identifier'])            
+            encounter = EncounterModel.objects.get(
+                encounter_identifier=kwargs['encounter_identifier'])
             # if self.request.user.username != encounter.encounter_participant_identifier.identifier:
             #     # Redirect the user to somewhere else - add your URL here
             #     messages.error(request, "Bạn không có quyền truy cập trang này")
@@ -1913,7 +2047,7 @@ class save(LoginRequiredMixin, View):
             return HttpResponseRedirect('/')
 
         # Checks pass, let http method handlers process the request
-        return super().dispatch(request, *args, **kwargs)    
+        return super().dispatch(request, *args, **kwargs)
     login_url = '/login/'
 
     def get(self, request, patient_identifier, encounter_identifier):
@@ -1922,9 +2056,16 @@ class save(LoginRequiredMixin, View):
             identifier=request.user.username)
         encounter_instance = EncounterModel.objects.get(
             encounter_identifier=encounter_identifier)
+        service_instances = ServiceRequestModel.objects.all().filter(
+            encounter_identifier=encounter_identifier)
+        for service in service_instances:
+            if service.service_status != 'completed':
+                messages.error(
+                    request, "Có xét nghiệm/chẩn đoán chưa hoàn tất")
+                return HttpResponseRedirect('/fhir/encounter/' + patient_identifier + '/' + encounter_identifier + '/hanhchinh')
         if encounter_instance.encounter_status != 'finished':
             encounter_instance.encounter_status = 'finished'
-            encounter_instance.encounter_end = datetime.now()
+            encounter_instance.encounter_end = timezone.localtime(timezone.now())
             delta = encounter_instance.encounter_end.date(
             ) - encounter_instance.encounter_start.date()
             if delta.days == 0:
@@ -1935,10 +2076,12 @@ class save(LoginRequiredMixin, View):
         try:
             connection_test = requests.get(fhir_server + "/Patient")
             if connection_test.status_code != 200:
-                messages.error(request, "Không thể kết nối đến kho FHIR, vui lòng liên hệ kĩ thuật viên")
+                messages.error(
+                    request, "Không thể kết nối đến kho FHIR, vui lòng liên hệ kĩ thuật viên")
                 return HttpResponseRedirect('/fhir/display_detail/' + patient_identifier)
         except:
-            messages.error(request, "Kho FHIR không hoạt động, không thể chia sẻ dữ liệu")
+            messages.error(
+                request, "Kho FHIR không hoạt động, không thể chia sẻ dữ liệu")
             return HttpResponseRedirect('/fhir/display_detail/' + patient_identifier)
         patient = dt.query_patient(patient_identifier, query_type='all')
         get_encounter = dt.query_encounter(
@@ -1958,12 +2101,17 @@ class save(LoginRequiredMixin, View):
         data['Encounter']['priority'] = {}
         data['Encounter']['priority']['code'] = encounter_instance.encounter_priority
         data['Encounter']['priority']['display'] = encounter_instance.get_encounter_priority_display()
+        data['Encounter']['location'] = encounter_instance.encounter_location.department_name
         data['Encounter']['reason_code'] = encounter_instance.encounter_reason
         data['Encounter']['length'] = encounter_instance.encounter_length
         if get_encounter:
             data['Encounter']['id'] = get_encounter['id']
         encounter_data = dt.create_encounter_resource(
             data['Encounter'], patient['id'], patient['name'], participant_id['id'], participant.name)
+        print(encounter_data)
+        test_encounter = requests.post(fhir_server + "/Encounter/$validate", headers={
+            'Content-type': 'application/xml'}, data=encounter_data.decode('utf-8'))
+        print(test_encounter.content.decode('utf-8'))
         if get_encounter:
             put_encounter = requests.put(fhir_server + "/Encounter/" + get_encounter['id'], headers={
                 'Content-type': 'application/xml'}, data=encounter_data.decode('utf-8'))
@@ -1984,7 +2132,7 @@ class save(LoginRequiredMixin, View):
                     encounter_resource, query_type='all')
             else:
                 print("có lỗi khi lưu allergy")
-        if encounter:                
+        if encounter:
             encounter_instance.encounter_version = encounter['version']
             encounter_sharing_status = True
             encounter_instance.save()
@@ -2012,7 +2160,8 @@ class save(LoginRequiredMixin, View):
                         condition['asserter']['name'] = condition_instance.condition_asserter
                 condition['severity'] = {}
                 condition['severity']['code'] = condition_instance.condition_severity
-                condition['severity']['display'] = condition_instance.get_condition_severity_display()
+                condition['severity']['display'] = condition_instance.get_condition_severity_display(
+                )
                 condition['code'] = condition_instance.condition_code
                 if condition['code']:
                     condition['display_code'] = ""
@@ -2022,7 +2171,8 @@ class save(LoginRequiredMixin, View):
                             try:
                                 disease = DischargeDisease.objects.get(
                                     disease_code=code)
-                                condition['display_code'] = (condition['display_code'] + " " + disease.disease_name).strip()
+                                condition['display_code'] = (
+                                    condition['display_code'] + " " + disease.disease_name).strip()
                             except:
                                 break
                     else:
@@ -2045,11 +2195,13 @@ class save(LoginRequiredMixin, View):
                     condition['id'] = get_condition['id']
                 condition_data = dt.create_condition_resource(
                     condition, patient['id'], patient['name'], encounter['id'])
-                
+                test_condition = requests.post(fhir_server + "/Condition/$validate",
+                                               headers={'Content-type': 'application/xml'}, data=condition_data.decode('utf-8'))
+                print(test_condition.content.decode('utf-8'))
                 if get_condition:
                     put_condition = requests.put(fhir_server + "/Condition/"+get_condition['id'], headers={
                         'Content-type': 'application/xml'}, data=condition_data.decode('utf-8'))
-                    
+
                     if put_condition.status_code == 200:
                         condition_resource = ET.fromstring(
                             put_condition.content.decode('utf-8'))
@@ -2067,7 +2219,7 @@ class save(LoginRequiredMixin, View):
                         condition_meta = dt.get_condition(
                             condition_resource, query_type='meta')
                     else:
-                        print("có lỗi khi lưu condition")                        
+                        print("có lỗi khi lưu condition")
                 condition_instance.condition_version = condition_meta['version']
                 condition_instance.save()
             allergy_instances = AllergyModel.objects.all().filter(
@@ -2100,6 +2252,9 @@ class save(LoginRequiredMixin, View):
                     allergy['id'] = get_allergy['id']
                 allergy_data = dt.create_allergy_resource(
                     allergy, patient['id'], patient['name'], encounter['id'])
+                test_allergy = requests.post(fhir_server + '/AllergyIntolerance/$validate',
+                                             headers={'Content-type': 'application/xml'}, data=allergy_data.decode('utf-8'))
+                print(test_allergy.content.decode('utf-8'))
                 if get_allergy:
                     put_allergy = requests.put(fhir_server + '/AllergyIntolerance/' + allergy['id'],  headers={
                         'Content-type': 'application/xml'}, data=allergy_data.decode('utf-8'))
@@ -2115,13 +2270,11 @@ class save(LoginRequiredMixin, View):
                         allergy_resource = ET.fromstring(
                             post_allergy.content.decode('utf-8'))
                     else:
-                        print("có lỗi khi lưu allergy")                        
+                        print("có lỗi khi lưu allergy")
                 allergy_meta = dt.get_condition(
                     allergy_resource, query_type='meta')
                 allergy_instance.allergy_version = allergy_meta['version']
                 allergy_instance.save()
-            service_instances = ServiceRequestModel.objects.all().filter(
-                encounter_identifier=encounter_identifier)
             for service_instance in service_instances:
                 put_service = None
                 post_service = None
@@ -2142,6 +2295,7 @@ class save(LoginRequiredMixin, View):
                 service['performer'] = {}
                 service['performer']['id'] = service_performer_id['id']
                 service['performer']['name'] = service_instance.service_performer
+                service['reason_code'] = service_instance.service_reason_code
                 service['code'] = service_instance.service_code
                 service['occurrence'] = service_instance.service_occurrence.strftime(
                     '%Y-%m-%d')
@@ -2153,6 +2307,9 @@ class save(LoginRequiredMixin, View):
                     service['id'] = get_service['id']
                 service_data = dt.create_service_resource(
                     service, patient['id'], patient['name'], encounter['id'])
+                test_service = requests.post(fhir_server + '/ServiceRequest/$validate', headers={                    
+                    'Content-type': 'application/xml'}, data=service_data.decode('utf-8'))
+                print(test_service.content.decode('utf-8'))
                 if get_service:
                     put_service = requests.put(fhir_server + "/ServiceRequest/" + get_service['id'], headers={
                         'Content-type': 'application/xml'}, data=service_data.decode('utf-8'))
@@ -2201,6 +2358,9 @@ class save(LoginRequiredMixin, View):
                                 observation['id'] = get_observation['id']
                             observation_data = dt.create_observation_resource(
                                 observation, patient['id'], patient['name'], encounter['id'], service_meta['id'])
+                            test_observation = requests.post(fhir_server + '/Observation/$validate', headers={                                
+                                'Content-type': 'application/xml'}, data=observation_data.decode('utf-8'))
+                            print(test_observation.content.decode('utf-8'))
                             if get_observation:
                                 put_observation = requests.put(fhir_server + "/Observation/" + get_observation['id'], headers={
                                     'Content-type': 'application/xml'}, data=observation_data.decode('utf-8'))
@@ -2211,7 +2371,7 @@ class save(LoginRequiredMixin, View):
                                     observation_meta = dt.get_observation(
                                         observation_resource, query_type='meta')
                                 else:
-                                    print("có lỗi khi lưu observation") 
+                                    print("có lỗi khi lưu observation")
                             else:
                                 post_observation = requests.post(fhir_server + "/Observation/", headers={
                                     'Content-type': 'application/xml'}, data=observation_data.decode('utf-8'))
@@ -2222,7 +2382,7 @@ class save(LoginRequiredMixin, View):
                                     observation_meta = dt.get_observation(
                                         observation_resource, query_type='meta')
                                 else:
-                                    print("có lỗi khi lưu observation")    
+                                    print("có lỗi khi lưu observation")
                             observation_instance.observation_version = observation_meta['version']
                             observation_instance.save()
                     procedures = ProcedureModel.objects.filter(
@@ -2248,12 +2408,16 @@ class save(LoginRequiredMixin, View):
                             procedure['performer'] = {}
                             procedure['performer']['id'] = service_performer_id['id']
                             procedure['performer']['name'] = service_instance.service_performer
+                            procedure['reason_code'] = procedure_instance.procedure_reason_code
                             get_procedure = dt.query_procedure(
                                 procedure['identifier'], query_type='id')
                             if get_procedure:
                                 procedure['id'] = get_procedure['id']
                             procedure_data = dt.create_procedure_resource(
                                 procedure, patient['id'], patient['name'], encounter['id'], service_meta['id'])
+                            test_procedure = requests.post(fhir_server + '/Procedure/$validate', headers={                                
+                                'Content-type': 'application/xml'}, data=procedure_data.decode('utf-8'))
+                            print(test_procedure.content.decode('utf-8'))
                             if get_procedure:
                                 put_procedure = requests.put(fhir_server + "/Procedure/" + get_procedure['id'], headers={
                                     'Content-type': 'application/xml'}, data=procedure_data.decode('utf-8'))
@@ -2263,7 +2427,7 @@ class save(LoginRequiredMixin, View):
                                     procedure_meta = dt.get_procedure(
                                         procedure_resource, query_type='meta')
                                 else:
-                                    print("có lỗi khi lưu procedủe")    
+                                    print("có lỗi khi lưu procedủe")
                             else:
                                 post_procedure = requests.post(fhir_server + "/Procedure/", headers={
                                     'Content-type': 'application/xml'}, data=procedure_data.decode('utf-8'))
@@ -2274,7 +2438,7 @@ class save(LoginRequiredMixin, View):
                                     procedure_meta = dt.get_procedure(
                                         procedure_resource, query_type='meta')
                                 else:
-                                    print("có lỗi khi lưu procedure")    
+                                    print("có lỗi khi lưu procedure")
                             procedure_instance.procedure_version = procedure_meta['version']
                             procedure_instance.save()
                     try:
@@ -2299,6 +2463,9 @@ class save(LoginRequiredMixin, View):
                             diagnostic_report['id'] = get_diagnostic_report['id']
                         diagnostic_report_data = dt.create_diagnostic_report_resource(
                             diagnostic_report, patient['id'], patient['name'], encounter['id'], service_meta['id'])
+                        test_diagnostic_report = requests.post(fhir_server + '/DiagnosticReport/$validate', headers={                            
+                            'Content-type': 'application/xml'}, data=diagnostic_report_data.decode('utf-8'))
+                        print(test_diagnostic_report.content.decode('utf-8'))
                         if get_diagnostic_report:
                             put_diagnostic_report = requests.put(fhir_server + '/DiagnosticReport/' + diagnostic_report['id'], headers={
                                 'Content-type': 'application/xml'}, data=diagnostic_report_data.decode('utf-8'))
@@ -2309,7 +2476,7 @@ class save(LoginRequiredMixin, View):
                                 diagnostic_report_meta = dt.get_diagnostic_report(
                                     diagnostic_report_resource, query_type='meta')
                             else:
-                                print("có lỗi khi lưu diagnostic report")                                
+                                print("có lỗi khi lưu diagnostic report")
                         else:
                             post_diagnostic_report = requests.post(fhir_server + '/DiagnosticReport/', headers={
                                 'Content-type': 'application/xml'}, data=diagnostic_report_data.decode('utf-8'))
@@ -2319,7 +2486,7 @@ class save(LoginRequiredMixin, View):
                                 diagnostic_report_meta = dt.get_diagnostic_report(
                                     diagnostic_report_resource, query_type='meta')
                             else:
-                                print("có lỗi khi lưu diagnostic report")    
+                                print("có lỗi khi lưu diagnostic report")
                         diagnostic_report_instance.diagnostic_version = diagnostic_report_meta[
                             'version']
                         diagnostic_report_instance.save()
@@ -2341,12 +2508,18 @@ class save(LoginRequiredMixin, View):
                     '%Y-%m-%dT%H:%M:%S+07:00')
                 observation['value_quantity'] = observation_instance.observation_value_quantity
                 observation['value_unit'] = observation_instance.observation_value_unit
+                observation['performer'] = {}
+                observation['performer']['id'] = service_performer_id['id']
+                observation['performer']['name'] = service_instance.service_performer                
                 get_observation = dt.query_observation(
                     observation['identifier'], query_type='id')
                 if get_observation:
                     observation['id'] = get_observation['id']
                 observation_data = dt.create_observation_resource(
                     observation, patient['id'], patient['name'], encounter['id'])
+                test_observation = requests.post(fhir_server + '/Observation/$validate', headers={                                
+                                'Content-type': 'application/xml'}, data=observation_data.decode('utf-8'))
+                print(test_observation.content.decode('utf-8'))
                 if get_observation:
                     put_observation = requests.put(fhir_server + "/Observation/" + get_observation['id'], headers={
                         'Content-type': 'application/xml'}, data=observation_data.decode('utf-8'))
@@ -2356,7 +2529,7 @@ class save(LoginRequiredMixin, View):
                         observation_meta = dt.get_observation(
                             observation_resource, query_type='meta')
                     else:
-                        print("có lỗi khi lưu observation")    
+                        print("có lỗi khi lưu observation")
                 else:
                     post_observation = requests.post(fhir_server + "/Observation/", headers={
                         'Content-type': 'application/xml'}, data=observation_data.decode('utf-8'))
@@ -2366,7 +2539,7 @@ class save(LoginRequiredMixin, View):
                         observation_meta = dt.get_observation(
                             observation_resource, query_type='meta')
                     else:
-                        print("có lỗi khi lưu observation")    
+                        print("có lỗi khi lưu observation")
                 observation_instance.observation_version = observation_meta['version']
                 observation_instance.save()
             medication_instances = MedicationModel.objects.all().filter(
@@ -2385,7 +2558,8 @@ class save(LoginRequiredMixin, View):
                 medication['reason_code'] = medication_instance.medication_reason_code
                 medication['additional_instruction'] = medication_instance.dosage_additional_instruction
                 medication['patient_instruction'] = medication_instance.dosage_patient_instruction
-                medication['frequency'] = str(medication_instance.dosage_frequency)
+                medication['frequency'] = str(
+                    medication_instance.dosage_frequency)
                 medication['period'] = str(medication_instance.dosage_period) + \
                     ' ' + medication_instance.dosage_period_unit
                 medication['duration'] = str(medication_instance.dosage_duration) + \
@@ -2393,13 +2567,16 @@ class save(LoginRequiredMixin, View):
                 medication['when'] = medication_instance.dosage_when
                 medication['offset'] = medication_instance.dosage_offset
                 medication['route'] = medication_instance.dosage_route
-                medication['quantity'] = str(medication_instance.dosage_quantity) + ' ' + medication_instance.dosage_quantity_unit
+                medication['quantity'] = str(
+                    medication_instance.dosage_quantity) + ' ' + medication_instance.dosage_quantity_unit
                 get_medication = dt.query_medication(
                     medication['identifier'], query_type='id')
                 if get_medication:
                     medication['id'] = get_medication['id']
                 medication_data = dt.create_medication_resource(
                     medication, patient['id'], patient['name'], encounter['id'])
+                test_medication = requests.post(fhir_server + '/MedicationStatement/$validate', headers={                    
+                    'Content-type': 'application/xml'}, data=medication_data.decode('utf-8'))
                 if get_medication:
                     put_medication = requests.put(fhir_server + "/MedicationStatement/" + get_medication['id'], headers={
                         'Content-type': 'application/xml'}, data=medication_data.decode('utf-8'))
@@ -2423,12 +2600,12 @@ class save(LoginRequiredMixin, View):
                         medication_meta = dt.get_observation(
                             medication_resource, query_type='meta')
                     else:
-                        print("có lỗi khi lưu medication")    
+                        print("có lỗi khi lưu medication")
                 medication_instance.medication_version = medication_meta['version']
                 medication_instance.save()
-                encounter_instance.encounter_sharing_status = True
-                encounter_instance.save()
-                messages.success(request, "Lưu thành công")
+            encounter_instance.encounter_sharing_status = True
+            encounter_instance.save()
+            messages.success(request, "Lưu thành công")
             return HttpResponseRedirect('/fhir/display_detail/' + patient_identifier)
         else:
             messages.error(request, "Xảy ra lỗi trong quá trình lưu")
@@ -2443,7 +2620,7 @@ def delete(request):
         resource_type = request.POST['resource_type']
         resource_identifier = request.POST.get('resource_identifier')
         url_next = request.POST['url_next']
-        if resource_type == 'condition':            
+        if resource_type == 'condition':
             try:
                 resource = ConditionModel.objects.get(
                     condition_identifier=resource_identifier)
@@ -2482,80 +2659,98 @@ def delete(request):
                 if request.user.username == resource.encounter_identifier.encounter_participant_identifier.identifier:
                     resource.delete()
             except:
-                messages.error(request, "Tài nguyên không tồn tại")                    
+                messages.error(request, "Tài nguyên không tồn tại")
         elif resource_type == 'schedule_value':
             practitioner = PractitionerModel.objects.get(
                 identifier=request.user.username)
             try:
                 value = Schedule.objects.get(practitioner_name=practitioner.name, practitioner_identifier=practitioner.identifier,
-                                            schedule_date=request.POST['delete_date'], session=request.POST['delete_session'])
+                                             schedule_date=request.POST['delete_date'], session=request.POST['delete_session'])
                 value.delete()
             except:
                 messages.error(request, "Dữ liệu không tồn tại")
         elif resource_type == 'sharing_encounter':
-            try:                
-                encounter = EncounterModel.objects.get(encounter_identifier=resource_identifier)
+            try:
+                encounter = EncounterModel.objects.get(
+                    encounter_identifier=resource_identifier)
             except:
+                messages.error(request, "Tài nguyên không tồn tại")
+                return HttpResponseRedirect(url_next)
+            if encounter.encounter_storage == 'hapi':
                 messages.error(request, "Tài nguyên không tồn tại")
                 return HttpResponseRedirect(url_next)
             try:
                 connection_test = requests.get(fhir_server + "/Patient")
                 if connection_test.status_code != 200:
-                    messages.error(request, "Không thể kết nối với kho FHIR, vui lòng liên hệ kĩ thuật viên")
+                    messages.error(
+                        request, "Không thể kết nối với kho FHIR, vui lòng liên hệ kĩ thuật viên")
                     return HttpResponseRedirect(url_next)
             except:
-                messages.error(request, "Kho FHIR không hoạt động, không thể ngừng chia sẻ tài nguyên")
-                return HttpResponseRedirect(url_next)            
-            observations = ObservationModel.objects.filter(encounter_identifier=resource_identifier)
-            service_requests = ServiceRequestModel.objects.filter(encounter_identifier=resource_identifier)
-            diagnostic_reports = DiagnosticReportModel.objects.filter(encounter_identifier=resource_identifier)
-            conditions = ConditionModel.objects.filter(encounter_identifier=resource_identifier)
-            allergies = AllergyModel.objects.filter(encounter_identifier=resource_identifier)
-            procedures = ProcedureModel.objects.filter(encounter_identifier=resource_identifier)
-            medication_statements = MedicationModel.objects.filter(encounter_identifier=resource_identifier)
-            for observation in observations:
-                delete_resource = requests.delete(fhir_server + "/Observation?identifier=urn:trinhcongminh|" +
-                                        observation.observation_identifier, headers={'Content-type': 'application/xml'})
-                if delete_resource.status_code != 200:
-                    print(delete_resource.content.decode('utf-8'))
-            for diagnostic_report in diagnostic_reports:
-                delete_resource = requests.delete(fhir_server + "/DiagnosticReport?identifier=urn:trinhcongminh|" +
-                                        diagnostic_report.diagnostic_identifier, headers={'Content-type': 'application/xml'})
-                if delete_resource.status_code != 200:
-                    print(delete_resource.content.decode('utf-8'))
-            for condition in conditions:
-                delete_resource = requests.delete(fhir_server + "/Condition?identifier=urn:trinhcongminh|" +
-                                        condition.condition_identifier, headers={'Content-type': 'application/xml'})
-                if delete_resource.status_code != 200:
-                    print(delete_resource.content.decode('utf-8'))
-            for procedure in procedures:
-                delete_resource = requests.delete(fhir_server + "/Procedure?identifier=urn:trinhcongminh|" +
-                                        procedure.procedure_identifier, headers={'Content-type': 'application/xml'})
-                if delete_resource.status_code != 200:
-                    print(delete_resource.content.decode('utf-8'))
-            for allergy in allergies:
-                delete_resource = requests.delete(fhir_server + "/AllergyIntolerance?identifier=urn:trinhcongminh|" +
-                                        allergy.allergy_identifier, headers={'Content-type': 'application/xml'})
-                if delete_resource.status_code != 200:
-                    print(delete_resource.content.decode('utf-8'))
-            for medication_statement in medication_statements:
-                delete_resource = requests.delete(fhir_server + "/MedicationStatement?identifier=urn:trinhcongminh|" +
-                                        medication_statement.medication_identifier, headers={'Content-type': 'application/xml'})
-                if delete_resource.status_code != 200:
-                    print(delete_resource.content.decode('utf-8'))
-            for service_request in service_requests:
-                delete_resource = requests.delete(fhir_server + "/ServiceRequest?identifier=urn:trinhcongminh|" +
-                                        service_request.service_identifier, headers={'Content-type': 'application/xml'})
-                if delete_resource.status_code != 200:
-                    print(delete_resource.content.decode('utf-8'))
-            delete_resource = requests.delete(fhir_server + "/Encounter?identifier=urn:trinhcongminh|" +
-                                    encounter.encounter_identifier, headers={'Content-type': 'application/xml'})                        
-            if delete_resource.status_code == 200:
-                encounter.encounter_sharing_status = False
-                encounter.save()                        
+                messages.error(
+                    request, "Kho FHIR không hoạt động, không thể ngừng chia sẻ tài nguyên")
+                return HttpResponseRedirect(url_next)
+            get_encounter = requests.delete(fhir_server + "/Encounter?identifier=urn:trinhcongminh|" +
+                                            encounter.encounter_identifier, headers={'Content-type': 'application/xml'})
+            if get_encounter.status_code == 200 and 'entry' in get_encounter.content.decode('utf-8'):
+                observations = ObservationModel.objects.filter(
+                    encounter_identifier=resource_identifier)
+                service_requests = ServiceRequestModel.objects.filter(
+                    encounter_identifier=resource_identifier)
+                diagnostic_reports = DiagnosticReportModel.objects.filter(
+                    encounter_identifier=resource_identifier)
+                conditions = ConditionModel.objects.filter(
+                    encounter_identifier=resource_identifier)
+                allergies = AllergyModel.objects.filter(
+                    encounter_identifier=resource_identifier)
+                procedures = ProcedureModel.objects.filter(
+                    encounter_identifier=resource_identifier)
+                medication_statements = MedicationModel.objects.filter(
+                    encounter_identifier=resource_identifier)
+                for observation in observations:
+                    delete_resource = requests.delete(fhir_server + "/Observation?identifier=urn:trinhcongminh|" +
+                                                      observation.observation_identifier, headers={'Content-type': 'application/xml'})
+                    if delete_resource.status_code != 200:
+                        print(delete_resource.content.decode('utf-8'))
+                for diagnostic_report in diagnostic_reports:
+                    delete_resource = requests.delete(fhir_server + "/DiagnosticReport?identifier=urn:trinhcongminh|" +
+                                                      diagnostic_report.diagnostic_identifier, headers={'Content-type': 'application/xml'})
+                    if delete_resource.status_code != 200:
+                        print(delete_resource.content.decode('utf-8'))
+                for condition in conditions:
+                    delete_resource = requests.delete(fhir_server + "/Condition?identifier=urn:trinhcongminh|" +
+                                                      condition.condition_identifier, headers={'Content-type': 'application/xml'})
+                    if delete_resource.status_code != 200:
+                        print(delete_resource.content.decode('utf-8'))
+                for procedure in procedures:
+                    delete_resource = requests.delete(fhir_server + "/Procedure?identifier=urn:trinhcongminh|" +
+                                                      procedure.procedure_identifier, headers={'Content-type': 'application/xml'})
+                    if delete_resource.status_code != 200:
+                        print(delete_resource.content.decode('utf-8'))
+                for allergy in allergies:
+                    delete_resource = requests.delete(fhir_server + "/AllergyIntolerance?identifier=urn:trinhcongminh|" +
+                                                      allergy.allergy_identifier, headers={'Content-type': 'application/xml'})
+                    if delete_resource.status_code != 200:
+                        print(delete_resource.content.decode('utf-8'))
+                for medication_statement in medication_statements:
+                    delete_resource = requests.delete(fhir_server + "/MedicationStatement?identifier=urn:trinhcongminh|" +
+                                                      medication_statement.medication_identifier, headers={'Content-type': 'application/xml'})
+                    if delete_resource.status_code != 200:
+                        print(delete_resource.content.decode('utf-8'))
+                for service_request in service_requests:
+                    delete_resource = requests.delete(fhir_server + "/ServiceRequest?identifier=urn:trinhcongminh|" +
+                                                      service_request.service_identifier, headers={'Content-type': 'application/xml'})
+                    if delete_resource.status_code != 200:
+                        print(delete_resource.content.decode('utf-8'))
+                delete_resource = requests.delete(fhir_server + "/Encounter?identifier=urn:trinhcongminh|" +
+                                                  encounter.encounter_identifier, headers={'Content-type': 'application/xml'})
+                if delete_resource.status_code == 200:
+                    encounter.encounter_sharing_status = False
+                    encounter.save()
+                else:
+                    messages.error(
+                        request, "Gặp lỗi trong quá trình ngừng chia sẻ")
             else:
-                messages.error(request, "Gặp lỗi trong quá trình ngừng chia sẻ")
-
+                messages.error(request, "Tài nguyên đang không được chia sẻ")
         return HttpResponseRedirect(url_next)
 
 
@@ -2589,6 +2784,7 @@ class view_benhan(LoginRequiredMixin, View):
         observations_history = {}
         discharge_conditions = []
         comorbidity_conditions = []
+        other_conditions = []
         diagnostic_reports = []
         diagnostic_reports_history = {}
         allergies = []
@@ -2627,13 +2823,17 @@ class view_benhan(LoginRequiredMixin, View):
                 if ' ' in condition.condition_code:
                     condition_displays[condition.condition_identifier] = ""
                     codes = condition.condition_code.split(' ')
-                    for code in codes: 
-                        disease = DischargeDisease.objects.get(disease_code=code)
-                        condition_displays[condition.condition_identifier] = (condition_displays[condition.condition_identifier] + ' ' + disease.disease_name).strip()
+                    for code in codes:
+                        disease = DischargeDisease.objects.get(
+                            disease_code=code)
+                        condition_displays[condition.condition_identifier] = (
+                            condition_displays[condition.condition_identifier] + ' ' + disease.disease_name).strip()
                 else:
                     condition_displays[condition.condition_identifier] = ""
-                    disease = DischargeDisease.objects.get(disease_code=condition.condition_code)
-                    condition_displays[condition.condition_identifier] += ' ' + disease.disease_name
+                    disease = DischargeDisease.objects.get(
+                        disease_code=condition.condition_code)
+                    condition_displays[condition.condition_identifier] += ' ' + \
+                        disease.disease_name
             comorbidity_conditions = ConditionModel.objects.filter(
                 encounter_identifier=encounter, condition_note='comorbidity condition by doctor')
             conditions = ConditionModel.objects.filter(
@@ -2683,7 +2883,8 @@ class view_benhan(LoginRequiredMixin, View):
             try:
                 connection_test = requests.get(fhir_server + "/Patient")
                 if connection_test.status_code != 200:
-                    messages.error(request, "Không thể kết nối tới kho FHIR, vui lòng liên hệ kĩ thuật viên")
+                    messages.error(
+                        request, "Không thể kết nối tới kho FHIR, vui lòng liên hệ kĩ thuật viên")
                     return HttpResponseRedirect('/fhir/display_detail/' + patient_identifier)
             except:
                 messages.error(request, "Kho FHIR không hoạt động")
@@ -2699,8 +2900,10 @@ class view_benhan(LoginRequiredMixin, View):
                     condition_resource = resource.find('d:Condition', ns)
                     condition_identifier = condition_resource.find(
                         'd:identifier', ns)
-                    condition = dt.query_condition(condition_identifier.find(
-                        'd:value', ns).attrib['value'], query_type='all')
+                    condition_identifier_value = condition_identifier.find(
+                        'd:value', ns).attrib['value']
+                    condition = dt.query_condition(
+                        condition_identifier_value, query_type='all')
                     if condition['condition_note'] == 'admission condition by patient':
                         admission_conditions['patient'].append(condition)
                     elif condition['condition_note'] == 'resolved condition by patient':
@@ -2712,6 +2915,8 @@ class view_benhan(LoginRequiredMixin, View):
                         discharge_conditions.append(condition)
                     elif condition['condition_note'] == 'comorbidity condition by doctor':
                         comorbidity_conditions.append(condition)
+                    else:
+                        other_conditions.append(condition)
                     # if int(condition['version']) > 1:
                     #     conditions_history[condition['condition_identifier']] = []
                     #     for i in range(int(condition['version'])-1, 0, -1):
@@ -2766,6 +2971,23 @@ class view_benhan(LoginRequiredMixin, View):
                     #     allergies_history[allergy['allergy_history']] = []
                     #     for i in range(int(allergy['version']), 0, -1):
                     #         allergies_history[allergy['allergy_history']].append(dt.query_allergy_history(allergy['id'], str(i), query_type='all'))
+            get_diagnostic_reports = requests.get(fhir_server + "/DiagnosticReport?encounter.identifier=urn:trinhcongminh|" +
+                                                  encounter_identifier, headers={'Content-type': 'application/xml'})
+            if get_diagnostic_reports.status_code == 200 and 'entry' in get_diagnostic_reports.content.decode('utf-8'):
+                get_root = ET.fromstring(
+                    get_diagnostic_reports.content.decode('utf-8'))
+                for entry in get_root.findall('d:entry', ns):
+                    diagnostic_report = {}
+                    resource = entry.find('d:resource', ns)
+                    diagnostic_report_resource = resource.find(
+                        'd:DiagnosticReport', ns)
+                    diagnostic_report_identifier = diagnostic_report_resource.find(
+                        'd:identifier', ns)
+                    diagnostic_report_identifier_value = diagnostic_report_identifier.find(
+                        'd:value', ns).attrib['value']
+                    diagnostic_report = dt.query_diagnostic_report(
+                        diagnostic_report_identifier_value, query_type='all')
+                    diagnostic_reports.append(diagnostic_report)
         context = {
             'data': data,
             'patient': patient,
@@ -2775,6 +2997,7 @@ class view_benhan(LoginRequiredMixin, View):
             'resolved_conditions': resolved_conditions,
             'discharge_conditions': discharge_conditions,
             'comorbidity_conditions': comorbidity_conditions,
+            'other_conditions': other_conditions,
             'allergies': allergies,
             'conditions_history': conditions_history,
             'observations_history': observations_history,
@@ -2835,11 +3058,12 @@ class view_xetnghiem(LoginRequiredMixin, View):
             try:
                 connection_test = requests.get(fhir_server + "/Patient")
                 if connection_test.status_code != 200:
-                    messages.error(request, "Không thể kết nối tới kho FHIR, vui lòng liên hệ kĩ thuật viên")
+                    messages.error(
+                        request, "Không thể kết nối tới kho FHIR, vui lòng liên hệ kĩ thuật viên")
                     return HttpResponseRedirect('/fhir/display_detail/' + patient_identifier)
             except:
                 messages.error(request, "Kho FHIR không hoạt động")
-                return HttpResponseRedirect('/fhir/display_detail/' + patient_identifier)            
+                return HttpResponseRedirect('/fhir/display_detail/' + patient_identifier)
             get_services = requests.get(fhir_server + '/ServiceRequest?encounter.identifier=urn:trinhcongminh|' +
                                         encounter_identifier + '&category:text=Laboratory procedure',  headers={'Content-type': 'application/xml'})
             if get_services.status_code == 200 and 'entry' in get_services.content.decode('utf-8'):
@@ -2854,7 +3078,7 @@ class view_xetnghiem(LoginRequiredMixin, View):
                         'd:identifier', ns)
                     service = dt.query_service(service_identifier.find(
                         'd:value', ns).attrib['value'], query_type='all')
-                    services.append(service)
+
                     # if int(service['version']) > 1:
                     #     services_history[service['service_identifier']] = []
                     #     for i in range(int(service['version'])-1, 0, -1):
@@ -2876,10 +3100,16 @@ class view_xetnghiem(LoginRequiredMixin, View):
                                 'd:value', ns).attrib['value'], query_type='all')
                             observations[service['service_identifier']].append(
                                 observation)
-                            # if int(observation['version']) > 1:
-                            #     observations_history[observation['observation_identifier']] = []
-                            #     for i in range(int(observation['version'])-1, 0, -1):
-                            #         observations_history[observation['observation_identifier']].append(dt.query_observation_history(observation['id'], str(i), query_type='all'))
+                        print(
+                            observations[service['service_identifier']][-1].get('observation_effective'))
+                        service['service_performed_date'] = observations[service['service_identifier']
+                                                                         ][-1].get('observation_effective')
+                        print(service)
+                        # if int(observation['version']) > 1:
+                        #     observations_history[observation['observation_identifier']] = []
+                        #     for i in range(int(observation['version'])-1, 0, -1):
+                        #         observations_history[observation['observation_identifier']].append(dt.query_observation_history(observation['id'], str(i), query_type='all'))
+                    services.append(service)
         context = {
             'data': data,
             'patient': patient,
@@ -2894,15 +3124,14 @@ class view_xetnghiem(LoginRequiredMixin, View):
 
 class view_thuthuat(LoginRequiredMixin, View):
     login_url = '/login/'
-    
+
     def dispatch(self, request, *args, **kwargs):
         if request.user.role != "doctor" and request.user.role != "medical assistant":
             messages.error(request, "Bạn không có quyền truy cập trang này")
             return HttpResponseRedirect('/')
 
         # Checks pass, let http method handlers process the request
-        return super().dispatch(request, *args, **kwargs)    
-    
+        return super().dispatch(request, *args, **kwargs)
 
     def get(self, request, patient_identifier, encounter_identifier):
         data = {'Patient': {'identifier': patient_identifier},
@@ -2949,11 +3178,12 @@ class view_thuthuat(LoginRequiredMixin, View):
             try:
                 connection_test = requests.get(fhir_server + "/Patient")
                 if connection_test.status_code != 200:
-                    messages.error(request, "Không thể kết nối tới kho FHIR, vui lòng liên hệ kĩ thuật viên")
+                    messages.error(
+                        request, "Không thể kết nối tới kho FHIR, vui lòng liên hệ kĩ thuật viên")
                     return HttpResponseRedirect('/fhir/display_detail/' + patient_identifier)
             except:
                 messages.error(request, "Kho FHIR không hoạt động")
-                return HttpResponseRedirect('/fhir/display_detail/' + patient_identifier)            
+                return HttpResponseRedirect('/fhir/display_detail/' + patient_identifier)
             get_services = requests.get(fhir_server + '/ServiceRequest?encounter.identifier=urn:trinhcongminh|' +
                                         encounter_identifier + '&category:text=Imaging',  headers={'Content-type': 'application/xml'})
             if get_services.status_code == 200 and 'entry' in get_services.content.decode('utf-8'):
@@ -2968,7 +3198,7 @@ class view_thuthuat(LoginRequiredMixin, View):
                         'd:identifier', ns)
                     service = dt.query_service(service_identifier.find(
                         'd:value', ns).attrib['value'], query_type='all')
-                    services.append(service)
+
                     # if int(service['version']) > 1:
                     #     services_history[service['service_identifier']] = []
                     #     for i in range(int(service['version'])-1, 0, -1):
@@ -2990,10 +3220,12 @@ class view_thuthuat(LoginRequiredMixin, View):
                                 'd:value', ns).attrib['value'], query_type='all')
                             procedures[service['service_identifier']].append(
                                 procedure)
-                            # if int(procedure['version']) > 1:
-                            #     procedures_history[procedure['procedure_identifier']] = []
-                            #     for i in range(int(procedure['version'])-1, 0, -1):
-                            #         procedures_history[procedure['procedure_identifier']].append(dt.query_procedure_history(service['id'], str(i), query_type='all'))
+                        service['service_performed_date'] = procedures[service['service_identifier']
+                                                                       ][-1].get('procedure_performed_datetime')
+                        # if int(procedure['version']) > 1:
+                        #     procedures_history[procedure['procedure_identifier']] = []
+                        #     for i in range(int(procedure['version'])-1, 0, -1):
+                        #         procedures_history[procedure['procedure_identifier']].append(dt.query_procedure_history(service['id'], str(i), query_type='all'))
                     diagnostic_reports[service['service_identifier']] = []
                     get_diagnostic_reports = requests.get(fhir_server + '/DiagnosticReport?based-on.identifier=urn:trinhcongminh|' +
                                                           service['service_identifier'], headers={'Content-type': 'application/xml'})
@@ -3015,6 +3247,7 @@ class view_thuthuat(LoginRequiredMixin, View):
                             #     diagnostic_reports_history[diagnostic_report['diagnostic_identifier']] = []
                             #     for i in range(int(diagnostic_report['version'])-1, 0, -1):
                             #         diagnostic_reports_history[diagnostic_report['diagnostic_identifier']].append(dt.query_diagnostic_report_history(diagnostic_report['id'], str(i), query_type='all'))
+                    services.append(service)
         context = {
             'data': data,
             'patient': patient,
@@ -3032,14 +3265,14 @@ class view_thuthuat(LoginRequiredMixin, View):
 
 class view_donthuoc(LoginRequiredMixin, View):
     login_url = '/login/'
-    
+
     def dispatch(self, request, *args, **kwargs):
         if request.user.role != "medical assistant" and request.user.role != "doctor":
             messages.error(request, "Bạn không có quyền truy cập trang này")
             return HttpResponseRedirect('/')
 
         # Checks pass, let http method handlers process the request
-        return super().dispatch(request, *args, **kwargs)    
+        return super().dispatch(request, *args, **kwargs)
 
     def get(self, request, patient_identifier, encounter_identifier):
         data = {'Patient': {'identifier': patient_identifier},
@@ -3063,11 +3296,12 @@ class view_donthuoc(LoginRequiredMixin, View):
             try:
                 connection_test = requests.get(fhir_server + "/Patient")
                 if connection_test.status_code != 200:
-                    messages.error(request, "Không thể kết nối tới kho FHIR, vui lòng liên hệ kĩ thuật viên")
+                    messages.error(
+                        request, "Không thể kết nối tới kho FHIR, vui lòng liên hệ kĩ thuật viên")
                     return HttpResponseRedirect('/fhir/display_detail/' + patient_identifier)
             except:
                 messages.error(request, "Kho FHIR không hoạt động")
-                return HttpResponseRedirect('/fhir/display_detail/' + patient_identifier)            
+                return HttpResponseRedirect('/fhir/display_detail/' + patient_identifier)
             get_medication_statements = requests.get(fhir_server + "/MedicationStatement?context.identifier=urn:trinhcongminh|" +
                                                      encounter_identifier, headers={'Content-type': 'application/xml'})
             if get_medication_statements.status_code == 200 and 'entry' in get_medication_statements.content.decode('utf-8'):
@@ -3113,7 +3347,7 @@ class schedule(LoginRequiredMixin, View):
     def get(self, request, practitioner_identifier):
         practitioner = PractitionerModel.objects.get(
             identifier=practitioner_identifier)
-        now = datetime.now().date()
+        now = timezone.localtime(timezone.now()).date()
         if now.weekday() == 6:
             monday = now + timedelta(days=1)
         else:
@@ -3192,29 +3426,29 @@ class schedule(LoginRequiredMixin, View):
         assigned_encounters = {'Monday': {}, 'Tuesday': {}, 'Wednesday': {
         }, 'Thursday': {}, 'Friday': {}, 'Saturday': {}}
         assigned_encounters['Monday']['morning'] = AssignedEncounter.objects.filter(
-            practitioner_name=practitioner.name, practitioner_identifier=practitioner, encounter_date=monday, session='morning', assigned_encounter__encounter_status = 'assigned')
+            practitioner_name=practitioner.name, practitioner_identifier=practitioner, encounter_date=monday, session='morning', assigned_encounter__encounter_status='assigned')
         assigned_encounters['Tuesday']['morning'] = AssignedEncounter.objects.filter(
-            practitioner_name=practitioner.name, practitioner_identifier=practitioner, encounter_date=tuesday, session='morning', assigned_encounter__encounter_status = 'assigned')
+            practitioner_name=practitioner.name, practitioner_identifier=practitioner, encounter_date=tuesday, session='morning', assigned_encounter__encounter_status='assigned')
         assigned_encounters['Wednesday']['morning'] = AssignedEncounter.objects.filter(
-            practitioner_name=practitioner.name, practitioner_identifier=practitioner, encounter_date=wednesday, session='morning', assigned_encounter__encounter_status = 'assigned')
+            practitioner_name=practitioner.name, practitioner_identifier=practitioner, encounter_date=wednesday, session='morning', assigned_encounter__encounter_status='assigned')
         assigned_encounters['Thursday']['morning'] = AssignedEncounter.objects.filter(
-            practitioner_name=practitioner.name, practitioner_identifier=practitioner, encounter_date=thursday, session='morning', assigned_encounter__encounter_status = 'assigned')
+            practitioner_name=practitioner.name, practitioner_identifier=practitioner, encounter_date=thursday, session='morning', assigned_encounter__encounter_status='assigned')
         assigned_encounters['Friday']['morning'] = AssignedEncounter.objects.filter(
-            practitioner_name=practitioner.name, practitioner_identifier=practitioner, encounter_date=friday, session='morning', assigned_encounter__encounter_status = 'assigned')
+            practitioner_name=practitioner.name, practitioner_identifier=practitioner, encounter_date=friday, session='morning', assigned_encounter__encounter_status='assigned')
         assigned_encounters['Saturday']['morning'] = AssignedEncounter.objects.filter(
-            practitioner_name=practitioner.name, practitioner_identifier=practitioner, encounter_date=saturday, session='morning', assigned_encounter__encounter_status = 'assigned')
+            practitioner_name=practitioner.name, practitioner_identifier=practitioner, encounter_date=saturday, session='morning', assigned_encounter__encounter_status='assigned')
         assigned_encounters['Monday']['afternoon'] = AssignedEncounter.objects.filter(
-            practitioner_name=practitioner.name, practitioner_identifier=practitioner, encounter_date=monday, session='afternoon', assigned_encounter__encounter_status = 'assigned')
+            practitioner_name=practitioner.name, practitioner_identifier=practitioner, encounter_date=monday, session='afternoon', assigned_encounter__encounter_status='assigned')
         assigned_encounters['Tuesday']['afternoon'] = AssignedEncounter.objects.filter(
-            practitioner_name=practitioner.name, practitioner_identifier=practitioner, encounter_date=tuesday, session='afternoon', assigned_encounter__encounter_status = 'assigned')
+            practitioner_name=practitioner.name, practitioner_identifier=practitioner, encounter_date=tuesday, session='afternoon', assigned_encounter__encounter_status='assigned')
         assigned_encounters['Wednesday']['afternoon'] = AssignedEncounter.objects.filter(
-            practitioner_name=practitioner.name, practitioner_identifier=practitioner, encounter_date=wednesday, session='afternoon', assigned_encounter__encounter_status = 'assigned')
+            practitioner_name=practitioner.name, practitioner_identifier=practitioner, encounter_date=wednesday, session='afternoon', assigned_encounter__encounter_status='assigned')
         assigned_encounters['Thursday']['afternoon'] = AssignedEncounter.objects.filter(
-            practitioner_name=practitioner.name, practitioner_identifier=practitioner, encounter_date=thursday, session='afternoon', assigned_encounter__encounter_status = 'assigned')
+            practitioner_name=practitioner.name, practitioner_identifier=practitioner, encounter_date=thursday, session='afternoon', assigned_encounter__encounter_status='assigned')
         assigned_encounters['Friday']['afternoon'] = AssignedEncounter.objects.filter(
-            practitioner_name=practitioner.name, practitioner_identifier=practitioner, encounter_date=friday, session='afternoon', assigned_encounter__encounter_status = 'assigned')
+            practitioner_name=practitioner.name, practitioner_identifier=practitioner, encounter_date=friday, session='afternoon', assigned_encounter__encounter_status='assigned')
         assigned_encounters['Saturday']['afternoon'] = AssignedEncounter.objects.filter(
-            practitioner_name=practitioner.name, practitioner_identifier=practitioner, encounter_date=saturday, session='afternoon', assigned_encounter__encounter_status = 'assigned')
+            practitioner_name=practitioner.name, practitioner_identifier=practitioner, encounter_date=saturday, session='afternoon', assigned_encounter__encounter_status='assigned')
         context = {
             'schedule_dates': schedule_dates,
             'days_of_week': days_of_week,
@@ -3227,7 +3461,7 @@ class schedule(LoginRequiredMixin, View):
             identifier=practitioner_identifier)
         date = request.POST['day_of_work']
         session = request.POST['session']
-        now = datetime.now().date()
+        now = timezone.localtime(timezone.now()).date()
         if now.weekday() == 6:
             monday = now + timedelta(days=1)
         else:
@@ -3242,8 +3476,9 @@ class manage_schedule(LoginRequiredMixin, View):
     login_url = '/login/'
 
     def get(self, request):
-        departments = ClinicalDepartment.objects.filter(department_type='lâm sàng')
-        now = datetime.now().date()
+        departments = ClinicalDepartment.objects.filter(
+            department_type='lâm sàng')
+        now = timezone.localtime(timezone.now()).date()
         if now.weekday() == 6:
             monday = now + timedelta(days=1)
         else:
@@ -3255,12 +3490,13 @@ class manage_schedule(LoginRequiredMixin, View):
         saturday = monday + timedelta(days=5)
         sunday = monday + timedelta(days=6)
         schedule_dates = {'Monday': {}, 'Tuesday': {}, 'Wednesday': {
-                                }, 'Thursday': {}, 'Friday': {}, 'Saturday': {}}
+        }, 'Thursday': {}, 'Friday': {}, 'Saturday': {}}
         assigned_encounters = {'Monday': {'morning': {}, 'afternoon': {}}, 'Tuesday': {'morning': {}, 'afternoon': {}}, 'Wednesday': {
-                                'morning': {}, 'afternoon': {}}, 'Thursday': {'morning': {}, 'afternoon': {}}, 'Friday': {'morning': {}, 'afternoon': {}}, 'Saturday': {'morning': {}, 'afternoon': {}}}        
+            'morning': {}, 'afternoon': {}}, 'Thursday': {'morning': {}, 'afternoon': {}}, 'Friday': {'morning': {}, 'afternoon': {}}, 'Saturday': {'morning': {}, 'afternoon': {}}}
         if request.GET.get('department_schedule'):
-            try: 
-                department = ClinicalDepartment.objects.get(department_name=request.GET['department_schedule'])
+            try:
+                department = ClinicalDepartment.objects.get(
+                    department_name=request.GET['department_schedule'])
                 schedule_dates['Monday']['morning'] = Schedule.objects.filter(
                     schedule_date=monday, session='morning', practitioner_identifier__department=request.GET['department_schedule'])
                 schedule_dates['Monday']['afternoon'] = Schedule.objects.filter(
@@ -3285,7 +3521,7 @@ class manage_schedule(LoginRequiredMixin, View):
                     schedule_date=saturday, session='morning', practitioner_identifier__department=request.GET['department_schedule'])
                 schedule_dates['Saturday']['afternoon'] = Schedule.objects.filter(
                     schedule_date=saturday, session='afternoon', practitioner_identifier__department=request.GET['department_schedule'])
-               
+
                 for practitioner in schedule_dates['Monday']['morning']:
                     assigned_encounters['Monday']['morning'][practitioner.practitioner_identifier.identifier] = AssignedEncounter.objects.filter(
                         practitioner_identifier=practitioner.practitioner_identifier.identifier, encounter_date=monday, session='morning')
@@ -3322,14 +3558,15 @@ class manage_schedule(LoginRequiredMixin, View):
                 for practitioner in schedule_dates['Saturday']['afternoon']:
                     assigned_encounters['Saturday']['afternoon'][practitioner.practitioner_identifier.identifier] = AssignedEncounter.objects.filter(
                         practitioner_identifier=practitioner.practitioner_identifier.identifier, encounter_date=saturday, session='afternoon')
-                encounters = EncounterModel.objects.filter(encounter_status="queued", encounter_location = request.GET['department_schedule'])
+                encounters = EncounterModel.objects.filter(
+                    encounter_status="queued", encounter_location=request.GET['department_schedule'])
             except:
                 messages.error(request, "Không tồn tại khoa này")
                 return HttpResponseRedirect('/fhir/manage_schedule/')
         encounters = EncounterModel.objects.filter(encounter_status='queued')
         days_of_week = {'Monday': {'date': monday, 'is_future': monday >= now}, 'Tuesday': {'date': tuesday, 'is_future': tuesday >= now}, 'Wednesday': {'date': wednesday, 'is_future': wednesday >=
                                                                                                                                                          now}, 'Thursday': {'date': thursday, 'is_future': thursday >= now}, 'Friday': {'date': friday, 'is_future': friday >= now}, 'Saturday': {'date': saturday, 'is_future': saturday >= now}}
-        
+
         context = {
             'schedule_dates': schedule_dates,
             'days_of_week': days_of_week,
@@ -3340,7 +3577,6 @@ class manage_schedule(LoginRequiredMixin, View):
         return render(request, 'fhir/manage_schedule.html', context)
 
     def post(self, request):
-        print(request.POST)
         practitioner = PractitionerModel.objects.get(
             identifier=request.POST['practitioner'])
         encounter = EncounterModel.objects.get(
@@ -3367,11 +3603,11 @@ class manage_tests(LoginRequiredMixin, View):
 
     def get(self, request):
         draft_services = ServiceRequestModel.objects.filter(
-            service_category="Laboratory procedure", service_status='draft', service_occurrence=datetime.now().date())
+            service_category="Laboratory procedure", service_status='draft', service_occurrence=timezone.localtime(timezone.now()).date())
         in_progress_services = ServiceRequestModel.objects.filter(
-            service_category="Laboratory procedure", service_status='active', service_occurrence=datetime.now().date())
+            service_category="Laboratory procedure", service_status='active', service_occurrence=timezone.localtime(timezone.now()).date())
         completed_services = ServiceRequestModel.objects.filter(
-            service_category="Laboratory procedure", service_status='completed', service_occurrence=datetime.now().date())
+            service_category="Laboratory procedure", service_status='completed', service_occurrence=timezone.localtime(timezone.now()).date())
         context = {
             'draft_services': draft_services,
             'in_progress_services': in_progress_services,
@@ -3386,7 +3622,7 @@ class manage_tests(LoginRequiredMixin, View):
                 service = ServiceRequestModel.objects.get(
                     service_identifier=request.POST['draft_service_identifier'])
                 service.service_status = 'active'
-                service.service_performed_date = datetime.now().date()
+                service.service_performed_date = timezone.localtime(timezone.now()).date()
                 service.save()
             elif request.POST['service_type'] == 'in_progress':
                 service = ServiceRequestModel.objects.get(
@@ -3396,16 +3632,17 @@ class manage_tests(LoginRequiredMixin, View):
         elif request.POST['submit_type'] == 'reverse':
             if request.POST['service_type'] == 'completed':
                 service = ServiceRequestModel.objects.get(
-                    service_identifier=request.POST['completed_service_identifier'])                
+                    service_identifier=request.POST['completed_service_identifier'])
                 service.service_status = 'active'
                 service.save()
             elif request.POST['service_type'] == 'in_progress':
                 service = ServiceRequestModel.objects.get(
-                    service_identifier=request.POST['in_progress_service_identifier'])                
+                    service_identifier=request.POST['in_progress_service_identifier'])
                 service.service_status = 'draft'
                 service.service_performed_date = None
                 service.service_performer = None
-                observations = ObservationModel.objects.filter(service_identifier=service)
+                observations = ObservationModel.objects.filter(
+                    service_identifier=service)
                 observations.delete()
                 service.save()
         return HttpResponseRedirect(self.request.path_info)
@@ -3422,14 +3659,13 @@ class manage_images(LoginRequiredMixin, View):
         # Checks pass, let http method handlers process the request
         return super().dispatch(request, *args, **kwargs)
 
-    
     def get(self, request):
         draft_services = ServiceRequestModel.objects.filter(
-            service_category="Imaging", service_status='draft', service_occurrence=datetime.now().date())
+            service_category="Imaging", service_status='draft', service_occurrence=timezone.localtime(timezone.now()).date())
         in_progress_services = ServiceRequestModel.objects.filter(
-            service_category="Imaging", service_status='active', service_occurrence=datetime.now().date())
+            service_category="Imaging", service_status='active', service_occurrence=timezone.localtime(timezone.now()).date())
         completed_services = ServiceRequestModel.objects.filter(
-            service_category="Imaging", service_status='completed', service_occurrence=datetime.now().date())
+            service_category="Imaging", service_status='completed', service_occurrence=timezone.localtime(timezone.now()).date())
         context = {
             'draft_services': draft_services,
             'in_progress_services': in_progress_services,
@@ -3437,14 +3673,14 @@ class manage_images(LoginRequiredMixin, View):
         }
         return render(request, 'fhir/manage_images.html', context)
         pass
-    
+
     def post(self, request):
         if request.POST['submit_type'] == 'forward':
             if request.POST['service_type'] == 'draft':
                 service = ServiceRequestModel.objects.get(
                     service_identifier=request.POST['draft_service_identifier'])
                 service.service_status = 'active'
-                service.service_performed_date = datetime.now().date()
+                service.service_performed_date = timezone.localtime(timezone.now()).date()
                 service.save()
             elif request.POST['service_type'] == 'in_progress':
                 service = ServiceRequestModel.objects.get(
@@ -3454,18 +3690,17 @@ class manage_images(LoginRequiredMixin, View):
         elif request.POST['submit_type'] == 'reverse':
             if request.POST['service_type'] == 'completed':
                 service = ServiceRequestModel.objects.get(
-                    service_identifier=request.POST['completed_service_identifier'])                
+                    service_identifier=request.POST['completed_service_identifier'])
                 service.service_status = 'active'
                 service.save()
             elif request.POST['service_type'] == 'in_progress':
                 service = ServiceRequestModel.objects.get(
-                    service_identifier=request.POST['in_progress_service_identifier'])                
+                    service_identifier=request.POST['in_progress_service_identifier'])
                 service.service_status = 'draft'
                 service.service_performed_date = None
                 service.service_performer = None
-                procedure = ProcedureModel.objects.get(service_identifier=service)
+                procedure = ProcedureModel.objects.get(
+                    service_identifier=service)
                 procedure.procedure_status = 'preparation'
                 service.save()
         return HttpResponseRedirect(self.request.path_info)
-
-
