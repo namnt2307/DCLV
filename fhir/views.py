@@ -23,8 +23,9 @@ from django.template.defaulttags import register
 import time
 from django.contrib import messages
 # Create your views here.
+import os
 
-
+fhir_server_new = os.getenv('HAPI_HOST','http://10.0.0.25:8080/fhir')
 fhir_server = "http://10.0.0.25:8080/fhir"
 
 

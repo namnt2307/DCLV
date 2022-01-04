@@ -1,6 +1,5 @@
 ---
 - hosts: "{{host}}"
-  become: 
   tasks:
     - name: pull image
       community.docker.docker_image:

@@ -4,6 +4,7 @@ stages:
 
 variables:
   APP_NAME: dclv
+  ANSIBLE_HOST_KEY_CHECKING: "False"
 
 .dockerize:
   stage: publish
@@ -32,9 +33,6 @@ dockerize:thuduc:
       - benhvienthuduc
 
 .deploy:
-  image:
-    name: namnguyen2307/ansible:docker
-    entrypoint: [""]
   stage: deploy
   tags:
     - "ansible"
@@ -43,8 +41,10 @@ deploy:binhthanh:
   extends:
     - .deploy
   script:
+    - export HAPI_HOST="http://10.20.20.145:8080/fhir"
     - export APP_VER=${CI_PIPELINE_ID}-${CI_COMMIT_SHORT_SHA}
     - export IMAGE_TAG=namnguyen2307/${APP_NAME}:${APP_VER}
+    - ansible-galaxy collection install community.docker
     - ansible-playbook /etc/ansible/playbook/deploy.yml -e "host=binhthanh" -e "IMAGE_TAG=${IMAGE_TAG}"
   only:
     refs:
@@ -54,8 +54,10 @@ deploy:thuduc:
   extends:
     - .deploy
   script:
+    - export HAPI_HOST="http://10.20.20.145:8080/fhir"
     - export APP_VER=${CI_PIPELINE_ID}-${CI_COMMIT_SHORT_SHA}
     - export IMAGE_TAG=namnguyen2307/${APP_NAME}:${APP_VER}
+    - ansible-galaxy collection install community.docker
     - ansible-playbook /etc/ansible/playbook/deploy.yml -e "host=thuduc" -e "IMAGE_TAG=${IMAGE_TAG}"
   only:
     refs:
