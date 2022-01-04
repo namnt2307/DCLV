@@ -14,7 +14,7 @@ COPY . /doan
 # COPY entrypoint.sh /doan/entrypoint.sh
 RUN chmod 777 /doan/entrypoint.sh
 
-# ENTRYPOINT [ "./doan/entrypoint.sh" ]
+ENTRYPOINT [ "/bin/sh","entrypoint.sh" ]
 CMD [ "python3", "manage.py", "runserver","0.0.0.0:8000" ]
 
 

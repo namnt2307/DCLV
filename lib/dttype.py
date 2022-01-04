@@ -1,22 +1,13 @@
 from fhir.models import EncounterModel
-<<<<<<< HEAD
-=======
 import os
->>>>>>> github/minh-1
 import xml.etree.ElementTree as ET
 import requests
 import openpyxl as xl
 from datetime import datetime
-<<<<<<< HEAD
-ns = {'d': "http://hl7.org/fhir"}
-
-fhir_server = "http://10.0.0.25:8080/fhir"
-=======
 
 ns = {'d': "http://hl7.org/fhir"}
 
 fhir_server = os.getenv('FHIR_SERVER',"http://10.0.0.25:8080/fhir")
->>>>>>> github/minh-1
 
 
 def identifier_type(resource, system, value, use="usual", _type=None, period=None, assigner=None):
@@ -42,17 +33,11 @@ def period_type(resource, start=None, end=None):
         ET.SubElement(resource, 'end value=\"{}\"'.format(end))
 
 
-<<<<<<< HEAD
-def reference_type(resource, reference, _type, identifier=None, display=None):
-    ET.SubElement(resource, 'reference value=\"{}\"'.format(reference))
-    ET.SubElement(resource, 'type value=\"{}\"'.format(_type))
-=======
 def reference_type(resource, reference=None, _type=None, identifier=None, display=None):
     if reference:
         ET.SubElement(resource, 'reference value=\"{}\"'.format(reference))
     if _type:
         ET.SubElement(resource, 'type value=\"{}\"'.format(_type))
->>>>>>> github/minh-1
     if identifier:
         _identifier = ET.SubElement(resource, 'identifier')
         identifier_type(_identifier, identifier.get('system'), identifier.get('value'), identifier.get(
@@ -507,22 +492,14 @@ def create_encounter_resource(encounter, patient_id, patient_name, practitioner_
         codeable_concept(service_type, text=encounter['service_type'])
     if encounter.get('priority'):
         priority = ET.SubElement(root, 'priority')
-<<<<<<< HEAD
-        codeable_concept(priority,[
-                         {'system': 'http://terminology.hl7.org/CodeSystem/v3-ActPriority', 'code': encounter['priority'], 'version':'2018-08-12'}], text=encounter['priority'])
-=======
         priority_code = [
                 {'system': 'http://terminology.hl7.org/CodeSystem/v3-ActPriority', 'code': encounter['priority']['code'], 'version':'2018-08-12'}            
         ]
         codeable_concept(priority, priority_code, text=encounter['priority']['display'])
->>>>>>> github/minh-1
     subject = ET.SubElement(root, 'subject')
     reference_type(subject, 'Patient/' + patient_id,
                    'Patient', display=patient_name)
     participant = ET.SubElement(root, 'participant')
-<<<<<<< HEAD
-    reference_type(participant, 'Practitioner/' +
-=======
     participant_type = ET.SubElement(participant, 'type')
     participant_type_codes = [
         {
@@ -532,7 +509,6 @@ def create_encounter_resource(encounter, patient_id, patient_name, practitioner_
     codeable_concept(participant_type, participant_type_codes)
     individual = ET.SubElement(participant, 'individual')
     reference_type(individual, 'Practitioner/' +
->>>>>>> github/minh-1
                    practitioner_id, 'Practitioner', display=practitioner_name)
     if encounter.get('period'):
         period = ET.SubElement(root, 'period')
@@ -545,15 +521,10 @@ def create_encounter_resource(encounter, patient_id, patient_name, practitioner_
     if encounter.get('reason_code'):
         reason = ET.SubElement(root, 'reasonCode')
         codeable_concept(reason, text=encounter['reason_code'])
-<<<<<<< HEAD
-    # if data['Encounter'].get('location'):
-    #     location = ET.SubElement(root, 'location')
-=======
     if encounter.get('location'):
         location = ET.SubElement(root, 'location')
         location_reference = ET.SubElement(location, 'location')
         reference_type(location_reference, display=encounter['location'])
->>>>>>> github/minh-1
     if encounter.get('serviceProvider'):
         serviceProvider = ET.SubElement(root, 'serviceProvider')
     return ET.tostring(root, encoding="us-ascii", method="xml", xml_declaration=None, default_namespace=None, short_empty_elements=True)
@@ -584,11 +555,7 @@ def create_condition_resource(condition, patient_id, patient_name, encounter_id)
     if condition.get('severity'):
         severity = ET.SubElement(root, 'severity')
         codeable_concept(severity, [{'system': 'http://snomed.info/sct',
-<<<<<<< HEAD
-                         'code': condition['severity'], 'version': '4.0.1'}], text=condition['severity'])
-=======
                          'code': condition['severity']['code'], 'version': '4.0.1'}], text=condition['severity']['display'])
->>>>>>> github/minh-1
     if condition.get('code'):
         if condition.get('display_code'):
             code = ET.SubElement(root, 'code')
@@ -615,11 +582,7 @@ def create_condition_resource(condition, patient_id, patient_name, encounter_id)
         abatement.set('value', condition['abatement'])
     if condition.get('asserter'):
         asserter = ET.SubElement(root, 'asserter')
-<<<<<<< HEAD
-        reference_type(asserter, condition['type'] + "/" + condition['asserter']['id'], condition['asserter']['type'], display=condition['asserter']['name'])
-=======
         reference_type(asserter, condition['asserter']['type'] + "/" + condition['asserter']['id'], condition['asserter']['type'], display=condition['asserter']['name'])
->>>>>>> github/minh-1
     if condition.get('note'):
         note = ET.SubElement(root, 'note')
         annotation_type(note, text=condition['note'])
@@ -667,12 +630,9 @@ def create_service_resource(service, patient_id, patient_name, encounter_id):
     if service.get('performer'):
         performer = ET.SubElement(root, 'performer')
         reference_type(performer, 'Practitioner/' + service['performer']['id'], 'Practitioner', display=service['performer']['name'])
-<<<<<<< HEAD
-=======
     if service.get('reason_code'):
         reason_code = ET.SubElement(root, 'reasonCode')
         codeable_concept(reason_code, text=service['reason_code'])
->>>>>>> github/minh-1
     if service.get('note'):
         note = ET.SubElement(root, 'note')
         annotation_type(note, text=service['note'])
@@ -768,20 +728,12 @@ def create_procedure_resource(procedure, patient_id, patient_name, encounter_id,
                        procedure['asserter']['id'], 'Practitioner', display=procedure['asserter']['name'])
     if procedure.get('performer'):
         performer = ET.SubElement(root, 'performer')
-<<<<<<< HEAD
-        reference_type(performer, 'Practitioner/' +
-                       procedure['performer']['id'], 'Practitioner', display=procedure['performer']['name'])
-    if procedure.get('reason_code'):
-        reasonCode = ET.SubElement(root, 'reasonCode')
-        codeable_concept(reasonCode, text=procedure['reasonCode'])
-=======
         actor = ET.SubElement(performer, 'actor')
         reference_type(actor, 'Practitioner/' +
                        procedure['performer']['id'], 'Practitioner', display=procedure['performer']['name'])
     if procedure.get('reason_code'):
         reasonCode = ET.SubElement(root, 'reasonCode')
         codeable_concept(reasonCode, text=procedure['reason_code'])
->>>>>>> github/minh-1
     if procedure.get('outcome'):
         outcome = ET.SubElement(root, 'outcome')
         codes = [
@@ -863,10 +815,7 @@ def create_medication_resource(medication, patient_id, patient_name, encounter_i
 
 
 def create_diagnostic_report_resource(diagnostic_report, patient_id, patient_name, encounter_id, service_id):
-<<<<<<< HEAD
-=======
     print(diagnostic_report)
->>>>>>> github/minh-1
     root = ET.Element('DiagnosticReport')
     tree = ET.ElementTree(root)
     root.set('xmlns', 'http://hl7.org/fhir')
@@ -899,11 +848,7 @@ def create_diagnostic_report_resource(diagnostic_report, patient_id, patient_nam
     if diagnostic_report.get('performer'):
         performer = ET.SubElement(root, 'performer')
         reference_type(performer, 'Practitioner/' +
-<<<<<<< HEAD
-                       diagnostic_report['performer']['id'], 'Practitioner', diagnostic_report['performer']['name'])
-=======
                        diagnostic_report['performer']['id'], 'Practitioner', display = diagnostic_report['performer']['name'])
->>>>>>> github/minh-1
     if diagnostic_report.get('conclusion'):
         conclusion = ET.SubElement(root, 'conclusion')
         conclusion.set('value', diagnostic_report['conclusion'])
@@ -923,15 +868,9 @@ def create_allergy_resource(allergy, patient_id, patient_name, encounter_id):
     if allergy.get('clinical_status'):
         clinical_status = ET.SubElement(root, 'clinicalStatus')
         codes = [
-<<<<<<< HEAD
-            {'system': 'http://terminology.hl7.org/CodeSystem/allergyintolerance-clinical', 'code': allergy['clinical_status'], 'version': '4.0.1'}
-        ]
-        codeable_concept(clinical_status, codes, text=allergy['clinical_status'])
-=======
             {'system': 'http://terminology.hl7.org/CodeSystem/allergyintolerance-clinical', 'code': allergy['clinical_status']['code'], 'version': '4.0.1'}
         ]
         codeable_concept(clinical_status, codes, text=allergy['clinical_status']['display'])
->>>>>>> github/minh-1
     if allergy.get('verification_status'):
         verification_status = ET.SubElement(root, 'verificationStatus')
         codes = [
@@ -1000,14 +939,6 @@ def query_patient(patient_identifier, query_type):
             patient['id'] = id_resource.attrib['value']
         if query_type == 'data' or query_type == 'all':
             name = patient_resource.find('d:name', ns)
-<<<<<<< HEAD
-            if name:
-                patient['name'] = name.find(
-                    'd:family', ns).attrib['value'] + ' ' + name.find('d:given', ns).attrib['value']
-            telecom = patient_resource.find('d:telecom', ns)
-            if telecom:
-                patient['telecom'] = telecom.find('d:value', ns).attrib['value']
-=======
             if name != None:
                 patient['name'] = ''
                 family_name = name.find('d:family', ns)
@@ -1022,7 +953,6 @@ def query_patient(patient_identifier, query_type):
                 value = telecom.find('d:value', ns)
                 if value != None:
                     patient['telecom'] = value.attrib['value']
->>>>>>> github/minh-1
             gender = patient_resource.find('d:gender', ns)
             if gender != None:
                 if gender.attrib['value'] == 'male':
@@ -1032,12 +962,8 @@ def query_patient(patient_identifier, query_type):
             birthdate = patient_resource.find('d:birthDate', ns)
             if birthdate != None:
                 patient['birthdate'] = birthdate.attrib['value']
-<<<<<<< HEAD
-            for address in patient_resource.findall('d:address', ns):
-=======
             addresses = patient_resource.findall('d:address', ns)
             for address in addresses:
->>>>>>> github/minh-1
                 addr_type = address.find('d:use', ns).attrib['value']
                 if addr_type == 'home':
                     patient['home_address'] = address.find('d:line', ns).attrib['value'] + ', ' + address.find(
@@ -1047,21 +973,6 @@ def query_patient(patient_identifier, query_type):
                         'd:district', ns).attrib['value'] + ', ' + address.find('d:city', ns).attrib['value']
             patient['identifier'] = patient_identifier
             contact = patient_resource.find('d:contact', ns)
-<<<<<<< HEAD
-            if contact:
-                relationship = contact.find('d:relationship', ns)
-                if relationship:
-                    patient['contact_relationship'] = relationship.find('d:text', ns).attrib['value']
-                name = contact.find('d:name', ns)
-                if name:
-                    patient['contact_name'] = name.find(
-                        'd:family', ns).attrib['value'] + ' ' + name.find('d:given', ns).attrib['value']
-                telecom = contact.find('d:telecom', ns)
-                if telecom:
-                    patient['contact_telecom'] = telecom.find('d:value', ns).attrib['value']
-                address = contact.find('d:address', ns)
-                if address:
-=======
             if contact != None:
                 relationship = contact.find('d:relationship', ns)
                 if relationship != None:
@@ -1075,7 +986,6 @@ def query_patient(patient_identifier, query_type):
                     patient['contact_telecom'] = telecom.find('d:value', ns).attrib['value']
                 address = contact.find('d:address', ns)
                 if address != None:
->>>>>>> github/minh-1
                     patient['contact_address'] = address.find('d:line', ns).attrib['value'] + ', ' + address.find(
                         'd:district', ns).attrib['value'] + ', ' + address.find('d:city', ns).attrib['value']
                 gender = contact.find('d:gender', ns)
@@ -1114,24 +1024,6 @@ def query_encounter(encounter_identifier, query_type):
             if status != None:
                 encounter['encounter_status'] = status.attrib['value']
             _class = encounter_resource.find('d:class', ns)
-<<<<<<< HEAD
-            if _class:
-                encounter['encounter_class'] = _class.find(
-                    'd:code', ns).attrib['value']
-            _type = encounter_resource.find('d:type', ns)
-            if _type:
-                encounter['encounter_type'] = _type.find(
-                    'd:text', ns).attrib['value']
-            service_type = encounter_resource.find('d:serviceType', ns)
-            if service_type:
-                encounter['encounter_service'] = service_type.find(
-                    'd:text', ns).attrib['value']
-            # priority = encounter_resource.find('d:priority', ns)
-            # if priority:
-            #     encounter['encounter_priority'] = priority.find('d:text', ns).attrib['value']
-            period = encounter_resource.find('d:period', ns)
-            if period:
-=======
             if _class != None:
                 encounter['encounter_class'] = _class.find(
                     'd:code', ns).attrib['value']
@@ -1152,7 +1044,6 @@ def query_encounter(encounter_identifier, query_type):
                 encounter['encounter_participant'] = individual.find('d:display', ns).attrib['value']
             period = encounter_resource.find('d:period', ns)
             if period != None:
->>>>>>> github/minh-1
                 encounter['encounter_start'] = period.find(
                     'd:start', ns).attrib['value']
                 end_date = None
@@ -1160,17 +1051,10 @@ def query_encounter(encounter_identifier, query_type):
                     end_date = period.find('d:end', ns).attrib['value']
                     encounter['encounter_end'] = getdatetime(end_date)
             length = encounter_resource.find('d:length', ns)
-<<<<<<< HEAD
-            if length:
-                encounter['encounter_length'] = length.find('d:value', ns).attrib['value']
-            reason_code = encounter_resource.find('d:reasonCode', ns)
-            if reason_code:
-=======
             if length != None:
                 encounter['encounter_length'] = length.find('d:value', ns).attrib['value']
             reason_code = encounter_resource.find('d:reasonCode', ns)
             if reason_code != None:
->>>>>>> github/minh-1
                 encounter['encounter_reason'] = reason_code.find(
                     'd:text', ns).attrib['value']
     
@@ -1201,19 +1085,11 @@ def query_service(service_identifier, query_type):
             if intent != None:
                 service['service_intent'] = intent.attrib['value']
             category = service_resource.find('d:category', ns)
-<<<<<<< HEAD
-            if category:
-                service['service_category'] = category.find(
-                    'd:text', ns).attrib['value']
-            code = service_resource.find('d:code', ns)
-            if code:
-=======
             if category != None:
                 service['service_category'] = category.find(
                     'd:text', ns).attrib['value']
             code = service_resource.find('d:code', ns)
             if code != None:
->>>>>>> github/minh-1
                 service['service_code'] = code.find('d:text', ns).attrib['value']
             occurrence = service_resource.find('d:occurrenceDateTime', ns)
             if occurrence != None:
@@ -1221,10 +1097,6 @@ def query_service(service_identifier, query_type):
             authored_on = service_resource.find('d:authoredOn', ns)
             if authored_on != None:
                 service['service_authored'] = get_date(authored_on.attrib['value'])
-<<<<<<< HEAD
-            note = service_resource.find('d:note', ns)
-            if note:
-=======
             requester = service_resource.find('d:requester', ns)
             if requester != None:
                 display = requester.find('d:display', ns)
@@ -1242,7 +1114,6 @@ def query_service(service_identifier, query_type):
                     service['service_reason_code'] = text.attrib['value']
             note = service_resource.find('d:note', ns)
             if note != None:
->>>>>>> github/minh-1
                 service['service_note'] = note.find('d:text', ns).attrib['value']
     return service
 
@@ -1271,19 +1142,6 @@ def query_condition(condition_identifier, query_type):
                 condition['condition_clinical_status'] = clinical_status.find(
                     'd:text', ns).attrib['value']
             verification_status = condition_resource.find('d:verificationStatus', ns)
-<<<<<<< HEAD
-            if verification_status:
-                condition['condition_verification_status'] = verification_status.find('d:text', ns).attrib['value']
-            category = condition_resource.find('d:category', ns)
-            if category:
-                condition['condition_category'] = category.find('d:text', ns).attrib['value']
-            severity = condition_resource.find('d:severity', ns)
-            if severity:
-                condition['condition_severity'] = severity.find(
-                    'd:text', ns).attrib['value']
-            code = condition_resource.find('d:code', ns)
-            if code:
-=======
             if verification_status != None:
                 condition['condition_verification_status'] = verification_status.find('d:text', ns).attrib['value']
             category = condition_resource.find('d:category', ns)
@@ -1295,7 +1153,6 @@ def query_condition(condition_identifier, query_type):
                     'd:text', ns).attrib['value']
             code = condition_resource.find('d:code', ns)
             if code != None:
->>>>>>> github/minh-1
                 condition['condition_code'] = code.find(
                     'd:text', ns).attrib['value']
             onset = condition_resource.find('d:onsetDateTime', ns)
@@ -1305,11 +1162,7 @@ def query_condition(condition_identifier, query_type):
             if abatement != None:
                 condition['condition_abatement'] = abatement.attrib['value']
             note = condition_resource.find('d:note', ns)
-<<<<<<< HEAD
-            if note:
-=======
             if note != None:
->>>>>>> github/minh-1
                 condition['condition_note'] = note.find(
                     'd:text', ns).attrib['value']
             
@@ -1338,19 +1191,11 @@ def query_observation(observation_identifier, query_type):
             if status != None:
                 observation['observation_status'] = status.attrib['value']
             category = observation_resource.find('d:category', ns)
-<<<<<<< HEAD
-            if category:
-                observation['observation_category'] = category.find(
-                    'd:text', ns).attrib['value']
-            code = observation_resource.find('d:code', ns)
-            if code:
-=======
             if category != None:
                 observation['observation_category'] = category.find(
                     'd:text', ns).attrib['value']
             code = observation_resource.find('d:code', ns)
             if code != None:
->>>>>>> github/minh-1
                 observation['observation_code'] = code.find(
                     'd:text', ns).attrib['value']
             effective = observation_resource.find('d:effectiveDateTime', ns)
@@ -1358,22 +1203,14 @@ def query_observation(observation_identifier, query_type):
                 observation['observation_effective'] = getdatetime(
                     effective.attrib['value'])
             value_quantity = observation_resource.find('d:valueQuantity', ns)
-<<<<<<< HEAD
-            if value_quantity:
-=======
             if value_quantity != None:
->>>>>>> github/minh-1
                 observation['observation_value_quantity'] = value_quantity.find(
                     'd:value', ns).attrib['value']
                 unit = value_quantity.find('d:unit', ns)
                 if unit != None:
                     observation['observation_value_unit'] = unit.attrib['value']
             reference_range = observation_resource.find('d:referenceRange', ns)
-<<<<<<< HEAD
-            if reference_range:
-=======
             if reference_range != None:
->>>>>>> github/minh-1
                 observation['observation_reference_range'] = reference_range.find('d:text', ns).attrib['value']
     return observation
 
@@ -1400,47 +1237,17 @@ def query_procedure(procedure_identifier, query_type):
             if status != None:
                 procedure['procedure_status'] = status.attrib['value']
             category = procedure_resource.find('d:category', ns)
-<<<<<<< HEAD
-            if category:
-                procedure['procedure_category'] = category.find(
-                    'd:text', ns).attrib['value']
-            code = procedure_resource.find('d:code', ns)
-            if code:
-=======
             if category != None:
                 procedure['procedure_category'] = category.find(
                     'd:text', ns).attrib['value']
             code = procedure_resource.find('d:code', ns)
             if code != None:
->>>>>>> github/minh-1
                 procedure['procedure_code'] = code.find(
                     'd:text', ns).attrib['value']
             performed_datetime = procedure_resource.find('d:performedDateTime', ns)
             if performed_datetime != None:
                 procedure['procedure_performed_datetime'] = getdatetime(
                     performed_datetime.attrib['value'])
-<<<<<<< HEAD
-            reason_code = procedure_resource.find('d:reasonCode', ns)
-            if reason_code:
-                procedure['procedure_reason_code'] = reason_code.find(
-                    'd:text', ns).attrib['value']
-            outcome = procedure_resource.find('d:outcome', ns)
-            if outcome:
-                procedure['procedure_outcome'] = outcome.find(
-                    'd:text', ns).attrib['value']
-            complication = procedure_resource.find('d:complication', ns)
-            if complication:
-                procedure['procedure_complication'] = complication.find(
-                    'd:text', ns).attrib['value']
-            follow_up = procedure_resource.find('d:followUp', ns)
-            if follow_up:
-                procedure['procedure_follow_up'] = follow_up.find(
-                    'd:text', ns).attrib['value']
-            note = procedure_resource.find('d:note', ns)
-            if note:
-                procedure['procedure_note'] = note.find(
-                    'd:text', ns).attrib['value']
-=======
             performer = procedure_resource.find('d:performer', ns)
             if performer != None:
                 actor = performer.find('d:actor', ns)
@@ -1473,7 +1280,6 @@ def query_procedure(procedure_identifier, query_type):
                 if text != None:
                     procedure['procedure_note'] = note.find(
                         'd:text', ns).attrib['value']
->>>>>>> github/minh-1
     return procedure
 
 
@@ -1497,11 +1303,7 @@ def query_medication(medication_identifier, query_type):
             medication_statement['medication_identifier'] = medication_identifier
             medication = medication_resource.find(
                 'd:medicationCodeableConcept', ns)
-<<<<<<< HEAD
-            if medication:
-=======
             if medication != None:
->>>>>>> github/minh-1
                 medication_statement['medication_medication'] = medication.find(
                     'd:text', ns).attrib['value']
             effective = medication_resource.find('d:effectiveDateTime', ns)
@@ -1511,25 +1313,6 @@ def query_medication(medication_identifier, query_type):
             if date_asserted != None:
                 medication_statement['medication_date_asserted'] = get_date(date_asserted.attrib['value'])
             reason_code = medication_resource.find('d:reasonCode', ns)
-<<<<<<< HEAD
-            if reason_code:
-                medication_statement['medication_reason_code'] = reason_code.find(
-                    'd:text', ns).attrib['value']
-            dosage = medication_resource.find('d:dosage', ns)
-            if dosage:
-                additional_instruction = dosage.find('d:additionalInstruction', ns)
-                if additional_instruction:
-                    medication_statement['dosage_additional_instruction'] = additional_instruction.find(
-                        'd:text', ns).attrib['value']
-                patient_instruction = dosage.find('d:patientInstruction', ns)
-                if patient_instruction:
-                    medication_statement['dosage_patient_instruction'] = patient_instruction.find(
-                        'd:text', ns).attrib['value']
-                timing = dosage.find('d:timing', ns)
-                if timing:
-                    repeat = timing.find('d:repeat', ns)
-                    if repeat:
-=======
             if reason_code != None:
                 medication_statement['medication_reason_code'] = reason_code.find(
                     'd:text', ns).attrib['value']
@@ -1547,7 +1330,6 @@ def query_medication(medication_identifier, query_type):
                 if timing != None:
                     repeat = timing.find('d:repeat', ns)
                     if repeat != None:
->>>>>>> github/minh-1
                         duration = repeat.find('d:duration', ns)
                         if duration != None:
                             duration_value = duration.attrib['value']
@@ -1579,19 +1361,11 @@ def query_medication(medication_identifier, query_type):
                         if offset != None:
                             medication_statement['dosage_offset'] = offset.attrib['value']
                 route = dosage.find('d:route', ns)
-<<<<<<< HEAD
-                if route:
-                    medication_statement['dosage_route'] = route.find(
-                        'd:text', ns).attrib['value']
-                dose_and_rate = dosage.find('d:doseAndRate', ns)
-                if dose_and_rate:
-=======
                 if route != None:
                     medication_statement['dosage_route'] = route.find(
                         'd:text', ns).attrib['value']
                 dose_and_rate = dosage.find('d:doseAndRate', ns)
                 if dose_and_rate != None:
->>>>>>> github/minh-1
                     dose_quantity = dose_and_rate.find('d:doseQuantity', ns)
                     quantity = dose_quantity.find('d:value', ns).attrib['value']
                     unit = dose_quantity.find('d:unit', ns).attrib['value']
@@ -1604,10 +1378,6 @@ def query_practitioner(practitioner_identifier, query_type):
     get_practitioner = requests.get(fhir_server + '/Practitioner?identifier=urn:trinhcongminh|' +
                                     practitioner_identifier, headers={'Content-type': 'application/xml'})
     # print(get_practitioner.content.decode('utf-8'))
-<<<<<<< HEAD
-=======
-
->>>>>>> github/minh-1
     if get_practitioner.status_code == 200 and 'entry' in get_practitioner.content.decode('utf-8'):
         get_root = ET.fromstring(get_practitioner.content.decode('utf-8'))
         entry = get_root.find('d:entry', ns)
@@ -1618,28 +1388,17 @@ def query_practitioner(practitioner_identifier, query_type):
             practitioner['version'] = meta.find('d:versionId', ns).attrib['value']
             practitioner['last_updated'] = meta.find('d:lastUpdated', ns).attrib['value']
         if query_type == 'id' or query_type == 'all':
-<<<<<<< HEAD
-=======
             print('have id')
->>>>>>> github/minh-1
             practitioner['id'] = practitioner_resource.find(
                 'd:id', ns).attrib['value']
         if query_type == 'data' or query_type == 'all':
             practitioner['identifier'] = practitioner_identifier
             practitioner_name = practitioner_resource.find('d:name', ns)
-<<<<<<< HEAD
-            if practitioner_name:
-                practitioner['name'] = practitioner_name.find(
-                    'd:family', ns).attrib['value'] + ' ' + practitioner_name.find('d:given', ns).attrib['value']
-            practitioner_telecom = practitioner_resource.find('d:telecom', ns)
-            if practitioner_telecom:
-=======
             if practitioner_name != None:
                 practitioner['name'] = practitioner_name.find(
                     'd:family', ns).attrib['value'] + ' ' + practitioner_name.find('d:given', ns).attrib['value']
             practitioner_telecom = practitioner_resource.find('d:telecom', ns)
             if practitioner_telecom != None:
->>>>>>> github/minh-1
                 practitioner['telecom'] = practitioner_telecom.find(
                     'd:value', ns).attrib['value']
             practitioner_gender = practitioner_resource.find('d:gender', ns)
@@ -1653,11 +1412,7 @@ def query_practitioner(practitioner_identifier, query_type):
                 practitioner['birthdate'] = practitioner_birthdate.attrib['value']
             practitioner_qualification = practitioner_resource.find(
                 'd:qualification', ns)
-<<<<<<< HEAD
-            if practitioner_qualification:
-=======
             if practitioner_qualification != None:
->>>>>>> github/minh-1
                 practitioner_qualification_code = practitioner_qualification.find(
                     'd:code', ns)
                 practitioner['qualification'] = practitioner_qualification_code.find(
@@ -1687,34 +1442,21 @@ def query_diagnostic_report(diagnostic_report_identifier, query_type):
             if status != None:
                 diagnostic_report['diagnostic_status'] = status.attrib['value']
             category = diagnostic_report_resource.find('d:category', ns)
-<<<<<<< HEAD
-            if category:
-                diagnostic_report['diagnostic_category'] = category.find(
-                    'd:text', ns).attrib['value']
-
-            code = diagnostic_report_resource.find('d:code', ns)
-            if code:
-=======
             if category != None:
                 diagnostic_report['diagnostic_category'] = category.find(
                     'd:text', ns).attrib['value']
             code = diagnostic_report_resource.find('d:code', ns)
             if code != None:
->>>>>>> github/minh-1
                 diagnostic_report['diagnostic_code'] = code.find('d:text', ns).attrib['value']
             effective = diagnostic_report_resource.find('d:effectiveDateTime', ns)
             if effective != None:
                 diagnostic_report['diagnostic_effective'] = effective.attrib['value']
-<<<<<<< HEAD
-            conclusion = diagnostic_report_resource.find('d:conclusion', ns)
-=======
             performer = diagnostic_report_resource.find('d:performer', ns)
             if performer != None:
                 display = performer.find('d:display', ns)
                 if display != None:
                     diagnostic_report['performer'] = display.attrib['value']
             conclusion = diagnostic_report_resource.find('d:conclusion', ns)                    
->>>>>>> github/minh-1
             if conclusion != None:
                 diagnostic_report['diagnostic_conclusion'] = conclusion.attrib['value']
     return diagnostic_report
@@ -1738,21 +1480,6 @@ def query_allergy(allergy_identifier, query_type):
         if query_type == 'all' or query_type == 'data':
             allergy['allergy_identifier'] = allergy_identifier
             clinical_status = allergy_resource.find('d:clinicalStatus', ns)
-<<<<<<< HEAD
-            if clinical_status:
-                allergy['allergy_clinical_status'] = clinical_status.find('d:text', ns).attrib['value']
-            verification_status = allergy_resource.find('d:verificationStatus', ns)
-            if verification_status:
-                allergy['allergy_verification_status'] = verification_status.find('d:text', ns).attrib['value']
-            category = allergy_resource.find('d:category', ns)
-            if category:
-                allergy['allergy_category'] = category.find('d:text', ns).attrib['value']
-            criticality = allergy_resource.find('d:criticality', ns)
-            if criticality:
-                allergy['allergy_criticality'] = criticality.find('d:text', ns).attrib['value']
-            code = allergy_resource.find('d:code', ns)
-            if code:
-=======
             if clinical_status != None:
                 allergy['allergy_clinical_status'] = clinical_status.find('d:text', ns).attrib['value']
             verification_status = allergy_resource.find('d:verificationStatus', ns)
@@ -1766,7 +1493,6 @@ def query_allergy(allergy_identifier, query_type):
                 allergy['get_allergy_criticality_display'] = criticality.find('d:text', ns).attrib['value']
             code = allergy_resource.find('d:code', ns)
             if code != None:
->>>>>>> github/minh-1
                 allergy['allergy_code'] = code.find('d:text', ns).attrib['value']
             onset = allergy_resource.find('d:onsetDateTime', ns)
             if onset != None:
@@ -1775,18 +1501,6 @@ def query_allergy(allergy_identifier, query_type):
             if last_occurrence != None:
                 allergy['allergy_last_occurrence'] = last_occurrence.attrib['value']
             reaction = allergy_resource.find('d:reaction', ns)
-<<<<<<< HEAD
-            if reaction:
-                substance = reaction.find('d:substance', ns)
-                if substance:
-                    allergy['allergy_reaction_substance'] = substance.find('d:text', ns).attrib['value']
-                manifestation = reaction.find('d:manifestation', ns)
-                if manifestation:
-                    allergy['allergy_reaction_manifestation'] = manifestation.find('d:text', ns).attrib['value']
-                severity = allergy_resource.find('d:severity', ns)
-                if severity:
-                    allergy['allergy_reaction_severity'] = severity.find('d:severity', ns).attrib['value']
-=======
             if reaction != None:
                 substance = reaction.find('d:substance', ns)
                 if substance != None:
@@ -1797,7 +1511,6 @@ def query_allergy(allergy_identifier, query_type):
                 severity = allergy_resource.find('d:severity', ns)
                 if severity != None:
                     allergy['get_allergy_reaction_severity_display'] = severity.find('d:severity', ns).attrib['value']
->>>>>>> github/minh-1
     return allergy
 
 
@@ -1822,17 +1535,6 @@ def query_encounter_history(encounter_id, version, query_type):
             if status != None:
                 encounter['encounter_status'] = status.attrib['value']
             _class = encounter_resource.find('d:class', ns)
-<<<<<<< HEAD
-            if _class:
-                encounter['encounter_class'] = _class.find(
-                    'd:code', ns).attrib['value']
-            _type = encounter_resource.find('d:type', ns)
-            if _type:
-                encounter['encounter_type'] = _type.find(
-                    'd:text', ns).attrib['value']
-            service_type = encounter_resource.find('d:serviceType', ns)
-            if service_type:
-=======
             if _class != None:
                 encounter['encounter_class'] = _class.find(
                     'd:code', ns).attrib['value']
@@ -1842,18 +1544,13 @@ def query_encounter_history(encounter_id, version, query_type):
                     'd:text', ns).attrib['value']
             service_type = encounter_resource.find('d:serviceType', ns)
             if service_type != None:
->>>>>>> github/minh-1
                 encounter['encounter_service'] = service_type.find(
                     'd:text', ns).attrib['value']
             # priority = encounter_resource.find('d:priority', ns)
             # if priority:
             #     encounter['encounter_priority'] = priority.find('d:text', ns).attrib['value']
             period = encounter_resource.find('d:period', ns)
-<<<<<<< HEAD
-            if period:
-=======
             if period != None:
->>>>>>> github/minh-1
                 start_date = period.find(
                     'd:start', ns).attrib['value']
                 encounter['encounter_start'] = getdatetime(start_date)
@@ -1862,17 +1559,10 @@ def query_encounter_history(encounter_id, version, query_type):
                     end_date = period.find('d:end', ns).attrib['value']
                     encounter['encounter_end'] = getdatetime(end_date)
             length = encounter_resource.find('d:length', ns)
-<<<<<<< HEAD
-            if length:
-                encounter['encounter_length'] = length.find('d:value', ns).attrib['value']
-            reason_code = encounter_resource.find('d:reasonCode', ns)
-            if reason_code:
-=======
             if length != None:
                 encounter['encounter_length'] = length.find('d:value', ns).attrib['value']
             reason_code = encounter_resource.find('d:reasonCode', ns)
             if reason_code != None:
->>>>>>> github/minh-1
                 encounter['encounter_reason'] = reason_code.find(
                     'd:text', ns).attrib['value']
     return encounter
@@ -1902,19 +1592,11 @@ def query_service_history(service_id, version, query_type):
             if intent != None:
                 service['service_intent'] = intent.attrib['value']
             category = service_resource.find('d:category', ns)
-<<<<<<< HEAD
-            if category:
-                service['service_category'] = category.find(
-                    'd:text', ns).attrib['value']
-            code = service_resource.find('d:code', ns)
-            if code:
-=======
             if category != None:
                 service['service_category'] = category.find(
                     'd:text', ns).attrib['value']
             code = service_resource.find('d:code', ns)
             if code != None:
->>>>>>> github/minh-1
                 service['service_code'] = code.find('d:text', ns).attrib['value']
             occurrence = service_resource.find('d:occurrenceDateTime', ns)
             if occurrence != None:
@@ -1923,11 +1605,7 @@ def query_service_history(service_id, version, query_type):
             if authored_on != None:
                 service['service_authored'] = get_date(authored_on.attrib['value'])
             note = service_resource.find('d:note', ns)
-<<<<<<< HEAD
-            if note:
-=======
             if note != None:
->>>>>>> github/minh-1
                 service['service_note'] = note.find('d:text', ns).attrib['value']
     return service
 
@@ -1954,19 +1632,6 @@ def query_condition_history(condition_id, version, query_type):
                 condition['condition_clinical_status'] = clinical_status.find(
                     'd:text', ns).attrib['value']
             verification_status = condition_resource.find('d:verificationStatus', ns)
-<<<<<<< HEAD
-            if verification_status:
-                condition['condition_verification_status'] = verification_status.find('d:text', ns).attrib['value']
-            category = condition_resource.find('d:category', ns)
-            if category:
-                condition['condition_category'] = category.find('d:text', ns).attrib['value']
-            severity = condition_resource.find('d:severity', ns)
-            if severity:
-                condition['condition_severity'] = severity.find(
-                    'd:text', ns).attrib['value']
-            code = condition_resource.find('d:code', ns)
-            if code:
-=======
             if verification_status != None:
                 condition['condition_verification_status'] = verification_status.find('d:text', ns).attrib['value']
             category = condition_resource.find('d:category', ns)
@@ -1978,7 +1643,6 @@ def query_condition_history(condition_id, version, query_type):
                     'd:text', ns).attrib['value']
             code = condition_resource.find('d:code', ns)
             if code != None:
->>>>>>> github/minh-1
                 condition['condition_code'] = code.find(
                     'd:text', ns).attrib['value']
             onset = condition_resource.find('d:onsetDateTime', ns)
@@ -1988,11 +1652,7 @@ def query_condition_history(condition_id, version, query_type):
             if abatement != None:
                 condition['condition_abatement'] = abatement.attrib['value']
             note = condition_resource.find('d:note', ns)
-<<<<<<< HEAD
-            if note:
-=======
             if note != None:
->>>>>>> github/minh-1
                 condition['condition_note'] = note.find(
                     'd:text', ns).attrib['value']
             
@@ -2020,19 +1680,11 @@ def query_observation_history(observation_id, version, query_type):
             if status != None:
                 observation['observation_status'] = status.attrib['value']
             category = observation_resource.find('d:category', ns)
-<<<<<<< HEAD
-            if category:
-                observation['observation_category'] = category.find(
-                    'd:text', ns).attrib['value']
-            code = observation_resource.find('d:code', ns)
-            if code:
-=======
             if category != None:
                 observation['observation_category'] = category.find(
                     'd:text', ns).attrib['value']
             code = observation_resource.find('d:code', ns)
             if code != None:
->>>>>>> github/minh-1
                 observation['observation_code'] = code.find(
                     'd:text', ns).attrib['value']
             effective = observation_resource.find('d:effectiveDateTime', ns)
@@ -2040,22 +1692,14 @@ def query_observation_history(observation_id, version, query_type):
                 observation['observation_effective'] = getdatetime(
                     effective.attrib['value'])
             value_quantity = observation_resource.find('d:valueQuantity', ns)
-<<<<<<< HEAD
-            if value_quantity:
-=======
             if value_quantity != None:
->>>>>>> github/minh-1
                 observation['observation_value_quantity'] = value_quantity.find(
                     'd:value', ns).attrib['value']
                 unit = value_quantity.find('d:unit', ns)
                 if unit != None:
                     observation['observation_value_unit'] = unit.attrib['value']
             reference_range = observation_resource.find('d:referenceRange', ns)
-<<<<<<< HEAD
-            if reference_range:
-=======
             if reference_range != None:
->>>>>>> github/minh-1
                 observation['observation_reference_range'] = reference_range.find('d:text', ns).attrib['value']
    
     return observation
@@ -2082,19 +1726,11 @@ def query_procedure_history(procedure_id, version, query_type):
             if status != None:
                 procedure['procedure_status'] = status.attrib['value']
             category = procedure_resource.find('d:category', ns)
-<<<<<<< HEAD
-            if category:
-                procedure['procedure_category'] = category.find(
-                    'd:text', ns).attrib['value']
-            code = procedure_resource.find('d:code', ns)
-            if code:
-=======
             if category != None:
                 procedure['procedure_category'] = category.find(
                     'd:text', ns).attrib['value']
             code = procedure_resource.find('d:code', ns)
             if code != None:
->>>>>>> github/minh-1
                 procedure['procedure_code'] = code.find(
                     'd:text', ns).attrib['value']
             performed_datetime = procedure_resource.find('d:performedDateTime', ns)
@@ -2102,25 +1738,6 @@ def query_procedure_history(procedure_id, version, query_type):
                 procedure['procedure_performed_datetime'] = getdatetime(
                     performed_datetime.attrib['value'])
             reason_code = procedure_resource.find('d:reasonCode', ns)
-<<<<<<< HEAD
-            if reason_code:
-                procedure['procedure_reason_code'] = reason_code.find(
-                    'd:text', ns).attrib['value']
-            outcome = procedure_resource.find('d:outcome', ns)
-            if outcome:
-                procedure['procedure_outcome'] = outcome.find(
-                    'd:text', ns).attrib['value']
-            complication = procedure_resource.find('d:complication', ns)
-            if complication:
-                procedure['procedure_complication'] = complication.find(
-                    'd:text', ns).attrib['value']
-            follow_up = procedure_resource.find('d:followUp', ns)
-            if follow_up:
-                procedure['procedure_follow_up'] = follow_up.find(
-                    'd:text', ns).attrib['value']
-            note = procedure_resource.find('d:note', ns)
-            if note:
-=======
             if reason_code != None:
                 procedure['procedure_reason_code'] = reason_code.find(
                     'd:text', ns).attrib['value']
@@ -2138,7 +1755,6 @@ def query_procedure_history(procedure_id, version, query_type):
                     'd:text', ns).attrib['value']
             note = procedure_resource.find('d:note', ns)
             if note != None:
->>>>>>> github/minh-1
                 procedure['procedure_note'] = note.find(
                     'd:text', ns).attrib['value']
     return procedure
@@ -2173,11 +1789,7 @@ def query_medication_history(medication_id, version, query_type):
             if date_asserted != None:
                 medication_statement['medication_date_asserted'] = get_date(date_asserted.attrib['value'])
             reason_code = medication_resource.find('d:reasonCode', ns)
-<<<<<<< HEAD
-            if reason_code:
-=======
             if reason_code != None:
->>>>>>> github/minh-1
                 medication_statement['medication_reason_code'] = reason_code.find(
                     'd:text', ns).attrib['value']
             dosage = medication_resource.find('d:dosage', ns)
@@ -2382,17 +1994,6 @@ def get_encounter(encounter_resource, query_type):
         if status != None:
             encounter['encounter_status'] = status.attrib['value']
         _class = encounter_resource.find('d:class', ns)
-<<<<<<< HEAD
-        if _class:
-            encounter['encounter_class'] = _class.find(
-                'd:code', ns).attrib['value']
-        _type = encounter_resource.find('d:type', ns)
-        if _type:
-            encounter['encounter_type'] = _type.find(
-                'd:text', ns).attrib['value']
-        service_type = encounter_resource.find('d:serviceType', ns)
-        if service_type:
-=======
         if _class != None:
             encounter['encounter_class'] = _class.find(
                 'd:code', ns).attrib['value']
@@ -2402,18 +2003,13 @@ def get_encounter(encounter_resource, query_type):
                 'd:text', ns).attrib['value']
         service_type = encounter_resource.find('d:serviceType', ns)
         if service_type != None:
->>>>>>> github/minh-1
             encounter['encounter_service'] = service_type.find(
                 'd:text', ns).attrib['value']
         # priority = encounter_resource.find('d:priority', ns)
         # if priority:
         #     encounter['encounter_priority'] = priority.find('d:text', ns).attrib['value']
         period = encounter_resource.find('d:period', ns)
-<<<<<<< HEAD
-        if period:
-=======
         if period != None:
->>>>>>> github/minh-1
             encounter['encounter_start'] = period.find(
                 'd:start', ns).attrib['value']
             end_date = None
@@ -2421,17 +2017,10 @@ def get_encounter(encounter_resource, query_type):
                 end_date = period.find('d:end', ns).attrib['value']
                 encounter['encounter_end'] = getdatetime(end_date)
         length = encounter_resource.find('d:length', ns)
-<<<<<<< HEAD
-        if length:
-            encounter['encounter_length'] = length.find('d:value', ns).attrib['value']
-        reason_code = encounter_resource.find('d:reasonCode', ns)
-        if reason_code:
-=======
         if length != None:
             encounter['encounter_length'] = length.find('d:value', ns).attrib['value']
         reason_code = encounter_resource.find('d:reasonCode', ns)
         if reason_code != None:
->>>>>>> github/minh-1
             encounter['encounter_reason'] = reason_code.find(
                 'd:text', ns).attrib['value']
     return encounter
@@ -2454,19 +2043,11 @@ def get_service(service_resource, query_type):
         if intent != None:
             service['service_intent'] = intent.attrib['value']
         category = service_resource.find('d:category', ns)
-<<<<<<< HEAD
-        if category:
-            service['service_category'] = category.find(
-                'd:text', ns).attrib['value']
-        code = service_resource.find('d:code', ns)
-        if code:
-=======
         if category != None:
             service['service_category'] = category.find(
                 'd:text', ns).attrib['value']
         code = service_resource.find('d:code', ns)
         if code != None:
->>>>>>> github/minh-1
             service['service_code'] = code.find('d:text', ns).attrib['value']
         occurrence = service_resource.find('d:occurrenceDateTime', ns)
         if occurrence != None:
