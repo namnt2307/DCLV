@@ -6,7 +6,6 @@
 }
 html, body {
     min-height: 100%;
-    font-family: Arial;
     line-height: 1.5;
 }
 p {
@@ -41,6 +40,8 @@ p {
 }
 .header .right-header a{
     color: white !important;
+    font-size: 20px;
+    padding-right: 12px;
 }
 
 .header h3 {
@@ -101,18 +102,12 @@ h1 {
 
 .flex_data_container {
     display: flex;
+    padding-left: 10px;
+    padding-right: 10px;
+    align-items: center;
 }
-.title {
-    width: 150px;
-    font-weight: bold;
-    /* padding-left: 100px; */
-}
-.value input{
-    width: 300px;
-}
-.value select{
-    width: 300px;
-}
+
+
 input{
     height: 25px;
 }
@@ -127,7 +122,7 @@ select{
     list-style: none;
     display: flex;
     height: 52px;
-    width: 900px;
+    width: 80%;
     margin-left: 100px;
     margin-bottom: 0px;
 }
@@ -159,6 +154,12 @@ select{
 }
 .top-menu li  a:hover {
     color: white;
+}
+.top-menu .menu .home-button{
+    width: 150px;
+}
+.top-menu .menu .function{
+    flex: 1;
 }
 .dropdown{
     width: 100%;
@@ -210,4 +211,71 @@ table th,td {
     border: 1px solid;
     text-align: center;
     font-size: 18px;
+}
+.display-box {
+    background-color: rgb(255, 255, 255);
+    color: black;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    border-radius: 25px;
+    width: 80%;
+    padding-left: 50px;
+    padding-right: 50px;
+    padding-bottom: 30px;
+    margin: 20px auto 10px;
+    position: relative;
+
+}
+.display-box .display-data {
+    padding-top: 30px;
+    
+}
+.practitioner-data {
+    display: flex;
+}
+h1 {
+    border-bottom: 2px solid rgb(0, 0, 0);
+    width: fit-content;
+}
+.practitioner {
+    display: flex;
+    align-items: center;
+    height: 45px;
+    min-width: 800px;    
+}
+
+.title {
+    min-width: 150px;
+    font-weight: bold;
+    /* padding-left: 100px; */
+}
+.value{
+    flex:1;
+}
+.practitioner-image {
+    padding-top: 30px;
+    padding-left: 50px;
+}
+img {
+    width: 150px;
+    height: 170px;
+    margin-right:12px;
+}
+.btn {
+    padding: 12px 20px;
+    border: none;
+    background-color: #8ebf42;
+    color: #fff;
+    cursor: pointer;
+    width: 100%;
+    margin-bottom: 15px;
+    opacity: 0.8;
+    text-align: center;
+    min-width: 80px;
+    max-width: 150px;
+}
+.cancel {
+    background-color: #cc0000;
+}
+.edit {
+    background-color: #808080;
 }

@@ -5,6 +5,7 @@ from django.conf.urls.static import static
 
 app_name = 'login'
 urlpatterns = [
+    path('', views.redirect_page),
     path('login/',views.login_app.as_view(),name="index"),
     path('register/',views.register_app.as_view(),name="register"),
     path('logout/', views.logout_request,name="logout"),

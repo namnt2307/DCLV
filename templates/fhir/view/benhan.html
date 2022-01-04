@@ -4,17 +4,27 @@
 <link rel="stylesheet" href="{% static 'css/fhir/benhan.css' %}">
     <div class="right-body__head">
         <div class="right-body__head-left">
-            <p>Sở Y tế</p>
-            <p>Bệnh viện</p>
-            <p>Khoa Giường</p>
+            <div class="flex_container">
+                <p class="title">Sở Y tế:</p><p class="value"></p>
+            </div>
+            <div class="flex_container">
+                <p class="title">Bệnh viện:</p><p class="value"></p>
+            </div>
+            <div class="flex_container">
+                <p class="title">Khoa Giường:</p><p class="value"></p>
+            </div>
             
         </div>
         <div class="right-body__head-center">
             <h1>{{encounter.encounter_type|upper}}</h1>
         </div>
         <div class="right-body__head-right">
-            <p>Số lưu trữ</p>
-            <p>Mã YT</p>
+            <div class="flex_container">
+                <p class="title">Số lưu trữ:</p><p class="value"></p>
+            </div>
+            <div class="flex_container">
+                <p class="title">Mã YT:</p><p class="value"></p>
+            </div>
         </div>
     </div>
     <div class="right-body__body">
@@ -22,19 +32,40 @@
             <h2>I. HÀNH CHÍNH</h2>
             <div class="right-body__body-section__flexcontainer">
                 <div class="right-body__body-section__flexitem">
-                    <p>1. Họ và tên: <span>{{patient.name}}</span></p>
-                    <p>3. Giới tính: <span>{{patient.gender}}</span></p>
-                    <p>5. Dân tộc</p>
+                    <div class="flex_container">
+                        <p class="title">1. Họ và tên: </p><p class="value"> {{patient.name}}</p>
+                    </div>
+                    <div class="flex_container">
+                        <p class="title">3. Giới tính: </p><p class="value"> {{patient.gender}}</p>
+                    </div>
+                    <div class="flex_container">
+                        <p class="title">5. Dân tộc: </p><p class="value"></p>
+                    </div>
                 </div>
                 <div class="right-body__body-section__flexitem">        
-                    <p>2. Sinh ngày: <span>{{patient.birthdate|date:'d-m-Y'}}</span></p>          
-                    <p>4. Nghề nghiệp</p>            
-                    <p>6. Ngoại kiều</p>
+                    <div class="flex_container">
+                        <p class="title">2. Sinh ngày: </p><p class="value"> {{patient.birthdate|date:'d-m-Y'}}</p>         
+                    </div>
+                    <div class="flex_container">
+                        <p class="title">4. Nghề nghiệp: </p><p class="value"></p>
+                    </div>     
+                    <div class="flex_container">
+                        <p class="title">6. Ngoại kiều: </p><p class="value"></p>
+                    </div>
                 </div>
             </div>
-            <p>7. Địa chỉ: {{patient.home_address}}</p>
-            <p>8. Nơi làm việc: {{patient.work_address}}</p>
-            <p>9. Họ tên, địa chỉ người nhà khi cần báo tin: {{relationship|get_item:patient.contact_relationship}} - {{patient.contact_name}} - {{patient.contact_address}}. Điện thoại số: {{patient.contact_telecom}}</p>
+            <div class="flex_container">
+                <p class="title">7. Địa chỉ: </p><p class="value"> {{patient.home_address}}</p>
+            </div>
+            <div class="flex_container">
+                <p class="title">8. Nơi làm việc: </p> <p class="value"> {{patient.work_address}}</p>
+            </div>
+            <div class="flex_container">
+                <p class="title">9. Họ tên, địa chỉ người nhà khi cần báo tin: </p><span class="value"> {{patient.get_contact_relationship_display}} - {{patient.contact_name}} - {{patient.contact_address}}.</span>
+            </div>
+            <div class="flex_container">
+                <p class="title">Điện thoại số: </p><p class="value"> {{patient.contact_telecom}}</p>
+            </div>
         </div>
         <div class="right-body__body-section history-container">
             {% if encounter_history %}
@@ -59,23 +90,41 @@
             <h2>II. QUẢN LÝ NGƯỜI BỆNH</h2>
             <div class="right-body__body-section__item-content right-body__body-section__item-content--flex">
                 <div class="right-body__body-section__item-content--flex__item right-body__body-section__item-content--flex__item--with-border">
-                    <p>12. Vào viện: {{encounter.encounter_start|date:'H:i:s'}} ngày {{encounter.encounter_start|date:'d-m-Y'}} </p>
-                    <p>13. Trực tiếp vào</p>
+                    <div class="flex_container">
+                        <p class="title">12. Vào viện:</p><p class="value"> {{encounter.encounter_start|date:'H:i:s'}} ngày {{encounter.encounter_start|date:'d-m-Y'}}</p>
+                    </div>
+                    <div class="flex_container">
+                        <p class="title">13. Trực tiếp vào:</p><p class="value"></p>
+                    </div>
                 </div>
                 <div class="right-body__body-section__item-content--flex__item right-body__body-section__item-content--flex__item--with-border">
-                    <p>14. Nơi giới thiệu</p>
-                    <p>- Vào viện do bệnh này lần thứ</p>
+                    <div class="flex_container">
+                        <p class="title">14. Nơi giới thiệu:</p><p class="value"></p>
+                    </div>
+                    <div class="flex_container">
+                        <p class="title">- Vào viện do bệnh này lần thứ:</p><p class="value"></p>
+                    </div>
                 </div>
             </div>
             <div class="right-body__body-section__item-content right-body__body-section__item-content--flex">
                 <div class="right-body__body-section__item-content--flex__item right-body__body-section__item-content--flex__item--with-border">
-                    <p>15. Vào khoa</p>
-                    <p>16. Chuyển khoa</p>
+                    <div class="flex_container">
+                        <p class="title">15. Vào khoa:</p><p class="value"> {{encounter.encounter_location}}</p>
+                    </div>
+                    <div class="flex_container">
+                        <p class="title">16. Chuyển khoa:</p><p class="value"></p>
+                    </div>
                 </div>
                 <div class="right-body__body-section__item-content--flex__item right-body__body-section__item-content--flex__item--with-border">
-                    <p>17. Chuyển viện</p>
-                    <p>18. Ra viện: {{encounter.encounter_end|date:'H:i:s'}} ngày {{encounter.encounter_end|date:'d-m-Y'}} </p>
-                    <p>19. Tổng số ngày điều trị: {{encounter.encounter_length}} ngày</p>
+                    <div class="flex_container">
+                        <p class="title">17. Chuyển viện:</p><p class="value"></p>
+                    </div>
+                    <div class="flex_container">
+                        <p class="title">18. Ra viện:</p><p class="value"> {{encounter.encounter_end|date:'H:i:s'}} ngày {{encounter.encounter_end|date:'d-m-Y'}} </p>
+                    </div>
+                    <div class="flex_container">
+                        <p class="title">19. Tổng số ngày điều trị:</p><p class="value"> {{encounter.encounter_length}} ngày</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -83,20 +132,28 @@
             <h2>III. CHẨN ĐOÁN</h1>
                 <div class="right-body__body-section__item-content right-body__body-section__item-content--flex">
                     <div class="right-body__body-section__item-content--flex__item right-body__body-section__item-content--flex__item--with-border">
-                        <p>20. Nơi chuyển đến</p>
-                        <p>21. KKB, Cấp cứu</p>
-                        <p>22. Khi vào khoa điều trị</p>
+                        <div class="flex_container">
+                            <p class="title">20. Nơi chuyển đến:</p><p class="value"></p>
+                        </div>
+                        <div class="flex_container">
+                            <p class="title">21. KKB, Cấp cứu:</p> <p class="value"></p>
+                        </div>
+                        <div class="flex_container">
+                            <p class="title">22. Khi vào khoa điều trị</p><p class="value"></p>
+                        </div>
                     </div>
                     <div class="right-body__body-section__item-content--flex__item right-body__body-section__item-content--flex__item--with-border">
-                        <p>23. Ra viện</p>
-                        <p>+ Bệnh chính</p>
-                        {% for condition in discharge_conditions %}
-                            <p>- {{condition.condition_code}}: {{condition_severity|get_item:condition.condition_severity|lower}}</p>
-                        {% endfor %}
-                        <p>+ Bệnh kèm theo</p>
-                        {% for condition in comorbidity_conditions %}
-                            <p>- {{condition.condition_code}}: {{condition_severity|get_item:condition.condition_severity|lower}}</p>
-                        {% endfor %}                        
+                        <div class="flex_container">
+                            <p class="title">23. Ra viện</p>
+                        </div>
+                        <div class="flex_container">
+                            <p class="title">+ Bệnh chính:</p>                                
+                            <p class="value">{% for condition in discharge_conditions %} {{condition.condition_code}} {%if condition_displays|get_item:condition.condition_identifier != None %}{{condition_displays|get_item:condition.condition_identifier}}{%endif%}: {{condition.get_condition_severity_display|lower}}; {% endfor %}</p>                                                           
+                        </div>
+                        <div class="flex_container">
+                            <p class="title">+ Bệnh kèm theo</p>                                
+                            <p class="value">{% for condition in comorbidity_conditions %} {{condition.condition_code}} {%if condition_displays|get_item:condition.condition_identifier != None %}{{condition_displays|get_item:condition.condition_identifier}}{%endif%}: {{condition.get_condition_severity_display|lower}}{% endfor %}</p>                                
+                        </div>        
                     </div>
                 </div>
         </div>
@@ -104,13 +161,23 @@
             <h2>IV. TÌNH TRẠNG RA VIỆN</h1>
                 <div class="right-body__body-section__item-content right-body__body-section__item-content--flex">
                     <div class="right-body__body-section__item-content--flex__item right-body__body-section__item-content--flex__item--with-border">
-                        <p>24. Kết quả điều trị</p>
-                        <p>25. Giải phẫu bệnh</p>
+                        <div class="flex_container">
+                            <p class="title">24. Kết quả điều trị:</p><p class="value"></p>
+                        </div>
+                        <div class="flex_container">
+                            <p class="title">25. Giải phẫu bệnh:</p><p class="value"></p>
+                        </div>
                     </div>
                     <div class="right-body__body-section__item-content--flex__item--2 right-body__body-section__item-content--flex__item--with-border">
-                        <p>26. Tình hình tử vong</p>
-                        <p>27. Nguyên nhân chính tử vong</p>
-                        <p>28. Khám nghiệm tử thi</p>
+                        <div class="flex_container">
+                            <p class="title">26. Tình hình tử vong:</p><p class="value"></p>
+                        </div>
+                        <div class="flex_container">
+                            <p class="title">27. Nguyên nhân chính tử vong:</p><p class="value"></p>
+                        </div>
+                        <div class="flex_container">
+                            <p class="title">28. Khám nghiệm tử thi:</p><p class="value"></p>
+                        </div>
                     </div>
                 </div>
         </div>
@@ -124,7 +191,7 @@
                     <h4>1. Quá trình bệnh lý</h4>
                         <div class='right-body__body-section__item-content history-container'>
                             {% for condition in admission_conditions.patient %}
-                                <p>- {{condition.condition_code}}: {{condition_severity|get_item:condition.condition_severity|lower}}</p>
+                                <p class="text-line">- {{condition.condition_code}}: {{condition.get_condition_severity_display|lower}}</p>
                                 {% if conditions_history|get_item:condition.condition_identifier %}
                                     <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
                                         <div class="history-header">
@@ -141,13 +208,17 @@
                                     </div>
                                     <button type="button" onclick="displayToggle('{{condition.condition_identifier}}')">xem lịch sử</button>
                                 {% endif %}                                
-                            {% endfor %}                                
+                            {% endfor %} 
+                            {% if admission_conditions.patient|length == 0 %}
+                                <p class="text-line"></p>
+                                <p class="text-line"></p>
+                            {% endif %}
                         </div>
                     <h4>2. Tiền sử bệnh</h4>
                         <h3>+ Bản thân</h3>
                             <div class='right-body__body-section__item-content history-container history-container'>
                                 {% for condition in resolved_conditions %}
-                                    <p>- {{condition.condition_code}}: {{condition_severity|get_item:condition.condition_severity|lower}}</p>
+                                    <p class="text-line">- {{condition.condition_code}}: {{condition.get_condition_severity_display|lower}}</p>
                                     {% if conditions_history|get_item:condition.condition_identifier %}
                                     <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
                                         <div class="history-header">
@@ -163,13 +234,17 @@
                                         </div>
                                     </div>
                                     <button type="button" onclick="displayToggle('{{condition.condition_identifier}}')">xem lịch sử</button>
-                                {% endif %}                                    
+                                {% endif %}  
                                 {% endfor %}                                    
+                                {% if resolved_conditions|length == 0 %}                                  
+                                    <p class="text-line"></p>
+                                    <p class="text-line"></p>
+                                {% endif %}                                
                             </div>
                         <h3>+ Dị ứng</h3>
                             <div class='right-body__body-section__item-content history-container'>
                                 {% for allergy in allergies %}
-                                    <p>- Dị ứng {{allergy_severity|get_item:allergy.allergy_reaction_severity|lower}} với {% if allergy.allergy_reaction_substance %}thành phần {{allergy.allergy_reaction_substance}} của {% endif %}{{allergy.allergy_code}}. Mức độ nguy hiểm: {{allergy_criticality|get_item:allergy.allergy_criticality|lower}}{% if allergies_history|get_item:allergy.allergy_identifier %}<button type="button" onclick="displayToggle('{{allergy.allergy_identifier}}')">Xem lịch sử</button>{% endif %}</p>
+                                    <p class="text-line">- Dị ứng {{allergy.get_allergy_reaction_severity_display|lower}} với {% if allergy.allergy_reaction_substance %}thành phần {{allergy.allergy_reaction_substance}} của {% endif %}{{allergy.allergy_code}}. Mức độ nguy hiểm: {{allergy.get_allergy_criticality_display|lower}}{% if allergies_history|get_item:allergy.allergy_identifier %}<button type="button" onclick="displayToggle('{{allergy.allergy_identifier}}')">Xem lịch sử</button>{% endif %}</p>
                                     <div class="history" id="{{allergy.allergy_identifier}}" style="display: none;">
                                         <div class="history-header">
                                             <h2>LỊCH SỬ CHỈNH SỬA</h2>
@@ -183,18 +258,26 @@
                                         </div>
                                     </div>
                                 {% endfor %}
+                                {% if allergies|length == 0 %}
+                                    <p class="text-line"></p>
+                                    <p class="text-line"></p>
+                                {% endif %}
                             </div>
                         <h3>+ Gia đình</h3>
-                            <div class='right-body__body-section__item-content'></div>
+                            <div class='right-body__body-section__item-content'>
+                                <p class="text-line"></p>
+                                <p class="text-line"></p>
+                            </div>
             </div>
             <div class="right-body__body-section__part-3">
                 <h3>Khám bệnh</h3>
                 <div class='right-body__body-section__item'>
                     <h4>1. Toàn thân</h4>
                     <div class="right-body__body-section__item-content right-body__body-section__item-content--flex right-body__body-section__item-content--flex--align-center">
-                        <div class="right-body__body-section__item-content--flex__item right-body__body-section__item-content--flex__item--with-border history-container">
+                        <div class="right-body__body-section__item-content--flex__item right-body__body-section__item-content--flex__item--with-border history-container" style="min-height: 220px; max-height:220px; overflow-y: scroll">
                             {% for condition in admission_conditions.doctor.toanthan %}
-                                <p>- {{condition.condition_code}}: {{condition_severity|get_item:condition.condition_severity|lower}}</p>
+                                <p class="text-line">- {{condition.condition_code}}: {{condition.get_condition_severity_display|lower}}</p>
+                    
                                 {% if conditions_history|get_item:condition.condition_identifier %}
                                     <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
                                         <div class="history-header">
@@ -207,18 +290,39 @@
                                             <p>Tên triệu chứng: {{condition_history.condition_code}}</p>
                                             <p>Mức độ: {{condition_severity|get_item:condition_history.condition_severity|lower}}</p>
                                             {% endfor %}
+                                    
                                         </div>
                                     </div>
                                     <button type="button" onclick="displayToggle('{{condition.condition_identifier}}')">xem lịch sử</button>
                                 {% endif %}                                
-                            {% endfor %}                            
+                            {% endfor %}    
+                            {% for condition in other_conditions %}
+                                <p class="text-line">- {{condition.condition_code}}: {{condition.get_condition_severity_display|lower}}</p>
+                            {% endfor %}
+                            {% with admission_conditions.doctor.toanthan|length as condition_length %}
+                            {% if 5|subtract:condition_length > 0 %}       
+                                {% for i in 5|subtract:condition_length|make_range %}         
+                                    <p class="text-line"></p>
+                                {% endfor %}
+                            {% endif %}
+                            {% endwith %}
                         </div>
-                        <div class="right-body__body-section__item-content--flex__item--with-border">                                   
-                            <p>Mạch: {{data.Observation.mach.observation_value_quantity}} lần/ph</p>                                                        
-                            <p>Nhiệt độ: {{data.Observation.nhietdo.observation_value_quantity}} độ C</p>                            
-                            <p>Huyết áp: {{data.Observation.tamthu.observation_value_quantity}}/{{data.Observation.tamtruong.observation_value_quantity}} mmHg</p>             
-                            <p>Nhịp thở: {{data.Observation.nhiptho.observation_value_quantity}} lần/ph</p>
-                            <p>Cân nặng: {{data.Observation.cannang.observation_value_quantity}} kg</p>
+                        <div class="right-body__body-section__item-content--flex__item--with-border" style="min-height: 220px;">  
+                            <div class="flex_container">
+                                <p class="title">Mạch: </p><p class="value"> {{data.Observation.mach.observation_value_quantity}} lần/ph</p>                                                        
+                            </div>                         
+                            <div class="flex_container">
+                                <p class="title">Nhiệt độ:</p><p class="value"> {{data.Observation.nhietdo.observation_value_quantity}} độ C</p>                            
+                            </div>        
+                            <div class="flex_container">
+                                <p class="title">Huyết áp:</p><p class="value"> {{data.Observation.tamthu.observation_value_quantity}}/{{data.Observation.tamtruong.observation_value_quantity}} mmHg</p>             
+                            </div>
+                            <div class="flex_container">
+                                <p class="title">Nhịp thở:</p><p class="value"> {{data.Observation.nhiptho.observation_value_quantity}} lần/ph</p>
+                            </div>
+                            <div class="flex_container">
+                                <p class="title">Cân nặng:</p><p class="value"> {{data.Observation.cannang.observation_value_quantity}} kg</p>
+                            </div>
                         </div>
                     </div>
                 </div class='right-body__body-section__item'>
@@ -226,7 +330,7 @@
                         <h5>+ Tuần hoàn</h5>
                             <div class='right-body__body-section__item-content history-container'>
                                 {% for condition in admission_conditions.doctor.tuanhoan %}
-                                    <p>- {{condition.condition_code}}: {{condition_severity|get_item:condition.condition_severity|lower}} </p>
+                                    <p class="text-line">- {{condition.condition_code}}: {{condition.get_condition_severity_display|lower}} </p>
                                     {% if conditions_history|get_item:condition.condition_identifier %}
                                         <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
                                             <div class="history-header">
@@ -244,12 +348,16 @@
                                         <button type="button" onclick="displayToggle('{{condition.condition_identifier}}')">xem lịch sử</button>
                                     {% endif %}
                                 {% endfor %}
+                                {% if admission_conditions.doctor.tuanhoan|length == 0 %}
+                                    <p class="text-line"></p>
+                                    <p class="text-line"></p>
+                                {% endif %}
                             </div>
                                      
                         <h5>+ Hô hấp</h5>
                             <div class='right-body__body-section__item-content history-container'>
                                 {% for condition in admission_conditions.doctor.hohap %}
-                                    <p>- {{condition.condition_code}}: {{condition_severity|get_item:condition.condition_severity|lower}} </p>      
+                                    <p class="text-line">- {{condition.condition_code}}: {{condition.get_condition_severity_display|lower}} </p>      
                                     {% if conditions_history|get_item:condition.condition_identifier %}
                                         <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
                                             <div class="history-header">
@@ -267,13 +375,17 @@
                                         <button type="button" onclick="displayToggle('{{condition.condition_identifier}}')">xem lịch sử</button>
                                     {% endif %}                                                                  
                                 {% endfor %}
+                                {% if admission_conditions.doctor.hohap|length == 0 %}
+                                    <p class="text-line"></p>
+                                    <p class="text-line"></p>
+                                {% endif %}
                             </div>
                          
                     
                         <h5>+ Tiêu hóa</h5>
                             <div class='right-body__body-section__item-content history-container'>
                                 {% for condition in admission_conditions.doctor.tieuhoa %}
-                                    <p>- {{condition.condition_code}}: {{condition_severity|get_item:condition.condition_severity|lower}} </p>
+                                    <p class="text-line">- {{condition.condition_code}}: {{condition.get_condition_severity_display|lower}} </p>
                                     {% if conditions_history|get_item:condition.condition_identifier %}
                                         <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
                                             <div class="history-header">
@@ -290,14 +402,18 @@
                                         </div>
                                         <button type="button" onclick="displayToggle('{{condition.condition_identifier}}')">xem lịch sử</button>
                                     {% endif %}                                    
-                                {% endfor %}                                
+                                {% endfor %}      
+                                {% if admission_conditions.doctor.tieuhoa|length == 0 %}
+                                    <p class="text-line"></p>
+                                    <p class="text-line"></p>
+                                {% endif %}                                                          
                             </div>
                     
                     
                         <h5>+ Thận - Tiết niệu - Sinh dục</h5>
                             <div class='right-body__body-section__item-content history-container'>
                                 {% for condition in admission_conditions.doctor.tts %}
-                                    <p>- {{condition.condition_code}}: {{condition_severity|get_item:condition.condition_severity|lower}} </p>
+                                    <p class="text-line">- {{condition.condition_code}}: {{condition.get_condition_severity_display|lower}} </p>
                                     {% if conditions_history|get_item:condition.condition_identifier %}
                                         <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
                                             <div class="history-header">
@@ -314,14 +430,18 @@
                                         </div>
                                         <button type="button" onclick="displayToggle('{{condition.condition_identifier}}')">xem lịch sử</button>
                                     {% endif %}                                    
-                                {% endfor %}                                
+                                {% endfor %}   
+                                {% if admission_conditions.doctor.tts|length == 0 %}
+                                    <p class="text-line"></p>
+                                    <p class="text-line"></p>
+                                {% endif %}                                                               
                             </div>
                     
                     
                         <h5>+ Thần kinh</h5>
                             <div class='right-body__body-section__item-content history-container'>
                                 {% for condition in admission_conditions.doctor.thankinh %}
-                                    <p>- {{condition.condition_code}}: {{condition_severity|get_item:condition.condition_severity|lower}} </p>
+                                    <p class="text-line">- {{condition.condition_code}}: {{condition.get_condition_severity_display|lower}} </p>
                                     {% if conditions_history|get_item:condition.condition_identifier %}
                                         <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
                                             <div class="history-header">
@@ -338,14 +458,18 @@
                                         </div>
                                         <button type="button" onclick="displayToggle('{{condition.condition_identifier}}')">xem lịch sử</button>
                                     {% endif %}                                    
-                                {% endfor %}                                
+                                {% endfor %}  
+                                {% if admission_conditions.doctor.thankinh|length == 0 %}
+                                    <p class="text-line"></p>
+                                    <p class="text-line"></p>
+                                {% endif %}                                                                
                             </div>
                     
                     
                         <h5>+ Cơ - Xương - Khớp</h5>
                             <div class='right-body__body-section__item-content history-container'>
                                 {% for condition in admission_conditions.doctor.cxk %}
-                                    <p>- {{condition.condition_code}}: {{condition_severity|get_item:condition.condition_severity|lower}} </p>
+                                    <p class="text-line">- {{condition.condition_code}}: {{condition.get_condition_severity_display|lower}} </p>
                                     {% if conditions_history|get_item:condition.condition_identifier %}
                                         <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
                                             <div class="history-header">
@@ -363,13 +487,17 @@
                                         <button type="button" onclick="displayToggle('{{condition.condition_identifier}}')">xem lịch sử</button>
                                     {% endif %}                                    
                                 {% endfor %}                                
+                                {% if admission_conditions.doctor.cxk|length == 0 %}
+                                    <p class="text-line"></p>
+                                    <p class="text-line"></p>
+                                {% endif %}                                       
                             </div>
                    
                     
                         <h5>+ Tai - Mũi - Họng</h5>
                             <div class='right-body__body-section__item-content history-container'>
                                 {% for condition in admission_conditions.doctor.tmh %}
-                                    <p>- {{condition.condition_code}}: {{condition_severity|get_item:condition.condition_severity|lower}} </p>
+                                    <p class="text-line">- {{condition.condition_code}}: {{condition.get_condition_severity_display|lower}} </p>
                                     {% if conditions_history|get_item:condition.condition_identifier %}
                                         <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
                                             <div class="history-header">
@@ -386,14 +514,18 @@
                                         </div>
                                         <button type="button" onclick="displayToggle('{{condition.condition_identifier}}')">xem lịch sử</button>
                                     {% endif %}                                    
-                                {% endfor %}                                
+                                {% endfor %}  
+                                {% if admission_conditions.doctor.tmh|length == 0 %}
+                                    <p class="text-line"></p>
+                                    <p class="text-line"></p>
+                                {% endif %}                                                              
                             </div>
                     
                     
                         <h5>+ Răng - Hàm - Mặt</h5>
                             <div class='right-body__body-section__item-content history-container'>
                                 {% for condition in admission_conditions.doctor.rhm %}
-                                    <p>- {{condition.condition_code}}: {{condition_severity|get_item:condition.condition_severity|lower}} </p>
+                                    <p class="text-line">- {{condition.condition_code}}: {{condition.get_condition_severity_display|lower}} </p>
                                     {% if conditions_history|get_item:condition.condition_identifier %}
                                         <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
                                             <div class="history-header">
@@ -410,14 +542,18 @@
                                         </div>
                                         <button type="button" onclick="displayToggle('{{condition.condition_identifier}}')">xem lịch sử</button>
                                     {% endif %}                                    
-                                {% endfor %}                                
+                                {% endfor %}    
+                                {% if admission_conditions.doctor.rhm|length == 0 %}
+                                    <p class="text-line"></p>
+                                    <p class="text-line"></p>
+                                {% endif %}                                                             
                             </div>
                     
                     
                         <h5>+ Mắt</h5>
                             <div class='right-body__body-section__item-content history-container'>
                                 {% for condition in admission_conditions.doctor.mat %}
-                                    <p>- {{condition.condition_code}}: {{condition_severity|get_item:condition.condition_severity|lower}} </p>
+                                    <p class="text-line">- {{condition.condition_code}}: {{condition.get_condition_severity_display|lower}} </p>
                                     {% if conditions_history|get_item:condition.condition_identifier %}
                                         <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
                                             <div class="history-header">
@@ -434,14 +570,18 @@
                                         </div>
                                         <button type="button" onclick="displayToggle('{{condition.condition_identifier}}')">xem lịch sử</button>
                                     {% endif %}                                    
-                                {% endfor %}                                
+                                {% endfor %} 
+                                {% if admission_conditions.doctor.mat|length == 0 %}
+                                    <p class="text-line"></p>
+                                    <p class="text-line"></p>
+                                {% endif %}                                                                
                             </div>
                     
                     
                         <h5>+ Nội tiết, dinh dưỡng và các bệnh lý khác</h5>
                             <div class='right-body__body-section__item-content history-container'>
                                 {% for condition in admission_conditions.doctor.noitiet %}
-                                    <p>- {{condition.condition_code}}: {{condition_severity|get_item:condition.condition_severity|lower}} </p>
+                                    <p class="text-line">- {{condition.condition_code}}: {{condition.get_condition_severity_display|lower}} </p>
                                     {% if conditions_history|get_item:condition.condition_identifier %}
                                         <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
                                             <div class="history-header">
@@ -458,20 +598,35 @@
                                         </div>
                                         <button type="button" onclick="displayToggle('{{condition.condition_identifier}}')">xem lịch sử</button>
                                     {% endif %}                                    
-                                {% endfor %}                                
+                                {% endfor %}  
+                                {% if admission_conditions.doctor.noitiet|length == 0 %}
+                                    <p class="text-line"></p>
+                                    <p class="text-line"></p>
+                                {% endif %}                                                                 
                             </div>
                     
                     <h4>3. Các xét nghiệm cận lâm sàng cần làm</h4>
-                    <div class='right-body__body-section__item-content'></div>
+                    <div class='right-body__body-section__item-content'>
+                        {% for diagnostic_report in diagnostic_reports %}
+                            <p class="text-line"> {{diagnostic_report.diagnostic_code}};</p>
+                        {% endfor %} 
+                        {% if diagnostic_reports|length == 0 %}
+                            <p class="text-line"></p>
+                            <p class="text-line"></p>
+                        {% endif %}
+                    </div>
                     <h4>4. Tóm tắt bệnh án</h4>
-                    <div class='right-body__body-section__item-content'></div>
+                    <div class='right-body__body-section__item-content'>
+                        <p class="text-line"></p>
+                        <p class="text-line"></p>
+                    </div>
             </div>
             <div>
                 <h3>Chẩn đoán khi vào khoa điều trị</h3>
                         <h5>+ Bệnh chính</h5>
                         <div class='right-body__body-section__item-content history-container'>
                             {% for condition in discharge_conditions %}
-                                <p>- {{condition.condition_code}}: {{condition_severity|get_item:condition.condition_severity|lower}} </p>
+                                <p class="text-line">- {{condition.condition_code}} {%if condition_displays|get_item:condition.condition_identifier != None %}{{condition_displays|get_item:condition.condition_identifier}}{%endif%}: {{condition.get_condition_severity_display|lower}} </p>
                                 {% if conditions_history|get_item:condition.condition_identifier %}
                                     <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
                                         <div class="history-header">
@@ -488,12 +643,16 @@
                                     </div>
                                     <button type="button" onclick="displayToggle('{{condition.condition_identifier}}')">xem lịch sử</button>
                                 {% endif %}                                    
-                            {% endfor %}   
+                            {% endfor %} 
+                            {% if discharge_conditions|length == 0 %}  
+                                <p class="text-line"></p>
+                                <p class="text-line"></p>
+                            {% endif %}
                         </div>
                         <h5>+ Bệnh kèm theo</h5>
                         <div class='right-body__body-section__item-content history-container'>
                             {% for condition in comorbidity_conditions %}
-                                <p>- {{condition.condition_code}}: {{condition_severity|get_item:condition.condition_severity|lower}} </p>
+                                <p class="text-line">- {{condition.condition_code}} {%if condition_displays|get_item:condition.condition_identifier != None %}{{condition_displays|get_item:condition.condition_identifier}}{%endif%}: {{condition.get_condition_severity_display|lower}} </p>
                                 {% if conditions_history|get_item:condition.condition_identifier %}
                                     <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
                                         <div class="history-header">
@@ -511,22 +670,40 @@
                                     <button type="button" onclick="displayToggle('{{condition.condition_identifier}}')">xem lịch sử</button>
                                 {% endif %}                                    
                             {% endfor %}  
+                            {% if comorbidity_conditions|length == 0 %}
+                                <p class="text-line"></p>
+                                <p class="text-line"></p>
+                            {% endif %}
                         </div>
                         <h5>+ Phân biệt</h5>
-                        <div class='right-body__body-section__item-content'></div>
+                        <div class='right-body__body-section__item-content'>
+                            <p class="text-line"></p>
+                            <p class="text-line"></p>
+                            <p class="text-line"></p>
+                        </div>
             </div>
             <div>
                 <h3>Tiên lượng</h3>
-                <div class='right-body__body-section__item-content'></div>
+                <div class='right-body__body-section__item-content'>
+                    <p class="text-line"></p>
+                    <p class="text-line"></p>
+                    <p class="text-line"></p>
+                </div>
             </div>
             <div>
                 <h3>Hướng điều trị</h3>
-                <div class='right-body__body-section__item-content'></div>
+                <div class='right-body__body-section__item-content'>
+                    <p class="text-line"></p>
+                    <p class="text-line"></p>
+                    <p class="text-line"></p>
+                </div>
             </div>
             <div class="signature">
                 <div class='signature__content'>
                     <p class='signature__content-date'>Ngày {{encounter.encounter_end|date:'d'}} tháng {{encounter.encounter_end|date:'m'}} năm {{encounter.encounter_end|date:'Y'}}</p>
-                    <h3 class='signature__content-person'>Bác sỹ làm bệnh án</h3>        
+                    <h3 class='signature__content-person'>Bác sĩ làm bệnh án</h3>
+                    <p class="text-line"></p>
+                    <p>{{encounter.encounter_participant}}</p>
                 </div>
             </div>
             </table>
@@ -534,21 +711,29 @@
         <div class="right-body__body-section">
             <h2>B. TỔNG KẾT BỆNH ÁN</h2>
                 <h3>1. Quá trình và diễn biến lâm sàng</h3>
-                <div class='right-body__body-section__item-content'></div>
+                <div class='right-body__body-section__item-content'>
+                    <p class="text-line"></p>
+                    <p class="text-line"></p>
+                    <p class="text-line"></p>
+                </div>
                 <h3>2. Tóm tắt kết quả xét nghiệm cận lâm sàng có giá trị chẩn đoán</h3>
                 <div class='right-body__body-section__item-content'>
                     {% for diagnostic_report in diagnostic_reports %}
-                        <p>- {{diagnostic_report.diagnostic_code}}: {{diagnostic_report.diagnostic_conclusion}} </p>
+                        <p class="text-line">- {{diagnostic_report.diagnostic_code}}: {{diagnostic_report.diagnostic_conclusion}} </p>
                     {% endfor %}
                 </div>
                 <h3>3. Phương pháp điều trị</h3>
-                <div class='right-body__body-section__item-content'></div>
+                <div class='right-body__body-section__item-content'>
+                    <p class="text-line"></p>
+                    <p class="text-line"></p>
+                    <p class="text-line"></p>
+                </div>
                 <h3>4. Tình trạng người bệnh ra viện</h3>
                 <div class='right-body__body-section__item-content'>
                     <h4>+ Bệnh chính</h4>
                     <div class="history-container">
                         {% for condition in discharge_conditions %}
-                            <p>- {{ condition.condition_code }}: {{condition_severity|get_item:condition.condition_severity|lower}}</p>
+                            <p class="text-line">- {{ condition.condition_code }} {%if condition_displays|get_item:condition.condition_identifier != None %}{{condition_displays|get_item:condition.condition_identifier}}{%endif%}: {{condition.get_condition_severity_display|lower}}</p>
                             {% if conditions_history|get_item:condition.condition_identifier %}
                                 <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
                                     <div class="history-header">
@@ -570,7 +755,7 @@
                     <h4>+ Bệnh kèm theo</h4>
                     <div class="history-container">                        
                         {% for condition in comorbidity_conditions %}
-                            <p>- {{condition.condition_code}}: {{condition_severity|get_item:condition.condition_severity|lower}}</p>
+                            <p class="text-line">- {{condition.condition_code}}: {{condition.get_condition_severity_display|lower}}</p>
                             {% if conditions_history|get_item:condition.condition_identifier %}
                                 <div class="history" id="{{condition.condition_identifier}}" style="display: none;">
                                     <div class="history-header">
@@ -588,10 +773,18 @@
                                 <button type="button" onclick="displayToggle('{{condition.condition_identifier}}')">xem lịch sử</button>
                             {% endif %}                          
                         {% endfor %}
+                        {% if comorbidity_conditions|length %}
+                            <p class="text-line"></p>
+                            <p class="text-line"></p>
+                        {% endif %}
                     </div>
                 </div>
                 <h3>5. Hướng điều trị và các chế độ tiếp theo</h3>
-                <div class='right-body__body-section__item-content'></div>
+                <div class='right-body__body-section__item-content'>
+                    <p class="text-line"></p>
+                    <p class="text-line"></p>
+                    <p class="text-line"></p>
+                </div>
             <div class="right-body__body-section__item-content right-body__body-section__item-content--flex">
                 <table class="right-body__body-section__item-content--flex__item">
                     <tr>
@@ -632,8 +825,10 @@
                         <h3>Bác sĩ điều trị</h3>
                         
                     </div>
-                    <div class="right-body__body-section__item-content--flex__item" style="text-align: left; margin-top: 50px;">
-                        <h3>Họ tên: {{encounter.encounter_participant}}</h3>
+                    <div class="right-body__body-section__item-content--flex__item" style="text-align: center; margin-top: 50px;">
+                        <div class="flex_container">
+                            <h3 class="title">Họ và tên:</h3><h3 class="value"> {{encounter.encounter_participant}}</h3>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -1,11 +1,4 @@
 {%extends 'fhir/base.html'%}
-{%block url1%}'{%url 'fhir:hanhchinh'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%block url2%}'{%url 'fhir:dangky'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%block url3%}'{%url 'fhir:hoibenh'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%block url5%}'{%url 'fhir:xetnghiem'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%block url4%}'{%url 'fhir:toanthan'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%comment%}{%block url8%}'{%url 'fhir:thuthuat'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}{%endcomment%}{%block url7%}'{%url 'fhir:thuoc'  data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
-{%block url6%}'{%url 'fhir:hinhanh'  data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
 {%block function%}
     {%if data%}
     <h1>THÔNG TIN BỆNH NHÂN</h1>

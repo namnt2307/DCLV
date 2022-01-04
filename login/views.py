@@ -6,8 +6,15 @@ from django.contrib.auth import get_user_model
 from .forms import UserCreationForm
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required
 # Create your views here.
 
+@login_required(login_url='/login/')
+def redirect_page(request):
+    if request.user.role == 'admin':
+        return HttpResponseRedirect('/administration/')
+    else:
+        return HttpResponseRedirect('/fhir/')
 
 class login_app(View):
     def get(self, request):

@@ -648,16 +648,55 @@
             </div>  
         </div>
         {% endcomment %}
-        <form action="" method="post">
+       
             {% csrf_token %}
             <div class="waiting-list">
                 <h2>DANH SÁCH CHỜ</h2>
+                
                 {% if encounters %}
-                    {% for encounter in encounters %}
-                        <input type="radio" name="encounter" id="{{encounter.encounter_identifier}}" value="{{encounter.encounter_identifier}}" required> 
-                        <label for="{{encounter.encounter_identifier}}">{{encounter.patient.name}} - {{encounter.patient.identifier}} - {{encounter.encounter_identifier}}</label>
-                    {% endfor %}
+                    <ul>
+                        {% for encounter in encounters %}
+                        <li>{{encounter.patient.name}} - {{encounter.patient.identifier}}</li>
+                        {% endfor %}
+                    </ul>
+                    <div class="form-container" id="form-container" style="display: none;">
+                        <form action="" method="post">
+                        {% csrf_token %}
+                        <div class="form-header">
+                            <i class="fas fa-grip-lines"></i>
+                            <i onclick="closeForm('form-container')" class="fas fa-times"></i>
+                        </div>                        
+                        <div class="form-body">
+                            <p id="confirmation-text">Chọn bệnh nhân muốn chỉ định</p>
+                            {% for encounter in encounters %}
+                            <input type="radio" name="encounter" id="{{encounter.encounter_identifier}}" value="{{encounter.encounter_identifier}}" required> 
+                            <label for="{{encounter.encounter_identifier}}">{{encounter.patient.name}} - {{encounter.patient.identifier}}</label>
+                            <br>
+                            {% endfor %}
+                            <input type="hidden" name="practitioner" id="practitioner_input" value="">
+                            <input type="hidden" name="schedule_date" id="schedule_date_input" value="">
+                            <input type="hidden" name="session" id="session_input">
+                            <div style="text-align: center;">
+                                <button type="submit" class="btn">Xác nhận</button>
+                            </div>
+                        </div>
+                        </form>
+                    </div>
+                {% else %}
+                    <p><b>Không có bệnh nhân chờ</b></p>
                 {% endif %}
+            </div>
+            <div>
+                <form action="" method="get">
+                    <label for="id_department_schedule">Chọn Khoa</label>
+                    <input list="department_list" name="department_schedule" id="id_department_schedule">
+                    <datalist id="department_list">
+                        {% for department in departments %}
+                            <option value="{{department}}">{{department}}</option>
+                        {% endfor %}
+                    </datalist>
+                    <button type="submit" class="btn">Lọc</button>
+                </form>
             </div>
             <div class="container">
                 <div class="container-header">
@@ -668,30 +707,30 @@
                                 <table class="column-header-container">
                                     <tbody>
                                         <tr class="header-data">
-                                            <td style="width:50px;"></td>
+                                            <td style="width:55px;"></td>
                                             <td>
                                                 <p>Thứ Hai</p>
-                                                <p>{{days_of_week.Monday|date:'d-m-Y'}}</p>
+                                                <p>{{days_of_week.Monday.date|date:'d-m-Y'}}</p>
                                             </td>
                                             <td>
                                                 <p>Thứ Ba</p>
-                                                <p>{{days_of_week.Tuesday|date:'d-m-Y'}}</p>
+                                                <p>{{days_of_week.Tuesday.date|date:'d-m-Y'}}</p>
                                             </td>
                                             <td>
                                                 <p>Thứ Tư</p>
-                                                <p>{{days_of_week.Wednesday|date:'d-m-Y'}}</p>
+                                                <p>{{days_of_week.Wednesday.date|date:'d-m-Y'}}</p>
                                             </td>
                                             <td>
                                                 <p>Thứ Năm</p>
-                                                <p>{{days_of_week.Thursday|date:'d-m-Y'}}</p>
+                                                <p>{{days_of_week.Thursday.date|date:'d-m-Y'}}</p>
                                             </td>
                                             <td>
                                                 <p>Thứ Sáu</p>
-                                                <p>{{days_of_week.Friday|date:'d-m-Y'}}</p>
+                                                <p>{{days_of_week.Friday.date|date:'d-m-Y'}}</p>
                                             </td>
                                             <td>
                                                 <p>Thứ Bảy</p>
-                                                <p>{{days_of_week.Saturday|date:'d-m-Y'}}</p>
+                                                <p>{{days_of_week.Saturday.date|date:'d-m-Y'}}</p>
                                             </td>
                                             <td style="width: 17px;"></td>
                                         </tr>
@@ -720,140 +759,269 @@
                                     <td class="table-data">
                                         <table class="data-container">
                                             <tr>
-                                                <td {% if schedule_dates.Monday.morning %}class="available-time"{% else %}class="not-available-time"{% endif %}>
+                                                <td {% if days_of_week.Monday.is_future %}{% if schedule_dates.Monday.morning %}class="available-time"{% else %}class="not-available-time"{% endif %} {% endif %}>
                                                     {% if schedule_dates.Monday.morning %}
                                                         {% for date in schedule_dates.Monday.morning %}
                                                         <div id="container">
-                                                            <i id="icon" class="fa fa-arrow-right"></i>
-                                                            <h4 style="display: inline;">{{date.practitioner_name}} {{date.practitioner_identifier}} {{date.start_time|time:'H:i'}} - {{date.end_time|time:'H:i'}}</h4>                                                            
-                                                            <input type="hidden" name="practitioner" value="{{date.practitioner_identifier}}">
-                                                            <input type="hidden" name="schedule_date" value="{{days_of_week.Monday|date:'Y-m-d'}}">
-                                                            <input type="hidden" name="session" value="morning">
-                                                            <button type="submit">Chỉ định</button>
+                                                            
+                                                            <p><i id="icon-{{date.practitioner_identifier.identifier}}-mon-morn" class="fa fa-arrow-right" onclick="rotateArrow('icon-{{date.practitioner_identifier.identifier}}-mon-morn', 'data-{{date.practitioner_identifier.identifier}}-mon-morn')"></i> {{date.practitioner_name}} - {{date.practitioner_identifier.identifier}}</p>
+                                                            <div id="data-{{date.practitioner_identifier.identifier}}-mon-morn" style="display: none; ">
+                                                                <ul>
+                                                                {% for encounter in assigned_encounters.Monday.morning|get_item:date.practitioner_identifier.identifier %}
+                                                                <li>{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</li> 
+                                                                {% endfor %}
+                                                                </ul>
+                                                            </div>
+                                                            {% if days_of_week.Monday.is_future %}
+                                                            {% with days_of_week.Monday.date|date:'Y-m-d' as date_to_submit %}
+                                                            <button onclick="appendData('{{date.practitioner_identifier.identifier}}', '{{date_to_submit}}', 'morning')" class="btn">Chỉ định</button>
+                                                            {% endwith %}
+                                                            {% endif %}
                                                         </div>
                                                         {% endfor %}                                              
                                                     {% endif %}
                                                 </td>
-                                                <td {% if schedule_dates.Tuesday.morning %}class="available-time"{% else %}class="not-available-time" onclick="changeDisplay('form-container', '1', 'morning')"{% endif %}>
+                                                <td {% if days_of_week.Tuesday.is_future %}{% if schedule_dates.Tuesday.morning %}class="available-time"{% else %}class="not-available-time"{% endif %}{% endif %}>
                                                     {% if schedule_dates.Tuesday.morning %}
                                                         {% for date in schedule_dates.Tuesday.morning %}
-                                                            <h4>{{date.practitioner_name}} {{date.practitioner_identifier}}: {{date.start_time|time:'H:i'}} - {{date.end_time|time:'H:i'}}</h4>
-                                                            <input type="hidden" name="practitioner" value="{{date.practitioner_identifier}}">
-                                                            <input type="hidden" name="schedule_date" value="{{days_of_week.Tuesday|date:'Y-m-d'}}">
-                                                            <input type="hidden" name="session" value="morning">
-                                                            <button type="submit">Chỉ định</button>
+                                                        <div class="container">
+                                                            
+                                                            <p><i id="icon-{{date.practitioner_identifier.identifier}}-tues-mon" class="fa fa-arrow-right" onclick="rotateArrow('icon-{{date.practitioner_identifier.identifier}}-tues-mon', 'data-{{date.practitioner_identifier.identifier}}-tues-mon')"></i> {{date.practitioner_name}} - {{date.practitioner_identifier.identifier}}</p>
+                                                            <div id="data-{{date.practitioner_identifier.identifier}}-tues-mon" style="display: none;">
+                                                                <ul>
+                                                                {% for encounter in assigned_encounters.Tuesday.morning|get_item:date.practitioner_identifier.identifier %}
+                                                                <li>{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</li> 
+                                                                {% endfor %}
+                                                                </ul>
+                                                            </div>
+                                                            {% if days_of_week.Tuesday.is_future %}
+                                                            {% with days_of_week.Tuesday.date|date:'Y-m-d' as date_to_submit %}
+                                                            <button onclick="appendData('{{date.practitioner_identifier.identifier}}', '{{date_to_submit}}', 'morning')" class="btn">Chỉ định</button>
+                                                            {% endwith %}
+                                                            {% endif %}
+                                                        </div>
                                                         {% endfor %}                                              
                                                     {% endif %}                                            
                                                 </td>
-                                                <td {% if schedule_dates.Wednesday.morning %}class="available-time"{% else %}class="not-available-time" onclick="changeDisplay('form-container', '2', 'morning')"{% endif %}>
+                                                <td {% if days_of_week.Wednesday.is_future %}{% if schedule_dates.Wednesday.morning %}class="available-time"{% else %}class="not-available-time"{% endif %}{% endif %}>
                                                     {% if schedule_dates.Wednesday.morning %}
                                                         {% for date in schedule_dates.Wednesday.morning %}
-                                                            <h4>{{date.practitioner_name}} {{date.practitioner_identifier}}: {{date.start_time|time:'H:i'}} - {{date.end_time|time:'H:i'}}</h4>
-                                                            <input type="hidden" name="practitioner" value="{{date.practitioner_identifier}}">
-                                                            <input type="hidden" name="schedule_date" value="{{days_of_week.Wednesday|date:'Y-m-d'}}">
-                                                            <input type="hidden" name="session" value="morning">
-                                                            <button type="submit">Chỉ định</button>
+                                                        <div class="container">
+                                                            
+                                                            <p><i id="icon-{{date.practitioner_identifier.identifier}}-wed-morn" class="fa fa-arrow-right" onclick="rotateArrow('icon-{{date.practitioner_identifier.identifier}}-wed-morn', 'data-{{date.practitioner_identifier.identifier}}-wed-morn')"></i> {{date.practitioner_name}} - {{date.practitioner_identifier.identifier}}</p>
+                                                            <div id="data-{{date.practitioner_identifier.identifier}}-wed-morn" style="display: none;">
+                                                                <ul>
+                                                                {% for encounter in assigned_encounters.Wednesday.morning|get_item:date.practitioner_identifier.identifier %}
+                                                                <li>{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</li> 
+                                                                {% endfor %}
+                                                                </ul>
+                                                            </div>
+                                                            {% if days_of_week.Wednesday.is_future %}
+                                                            {% with days_of_week.Wednesday.date|date:'Y-m-d' as date_to_submit %}
+                                                            <button onclick="appendData('{{date.practitioner_identifier.identifier}}', '{{date_to_submit}}', 'morning')" class="btn">Chỉ định</button>
+                                                            {% endwith %}
+                                                            {% endif %}
+                                                        </div>
                                                         {% endfor %}                                              
                                                     {% endif %}                                               
                                                 </td>
-                                                <td {% if schedule_dates.Thursday.morning %}class="available-time"{% else %}class="not-available-time" onclick="changeDisplay('form-container', '3', 'morning')"{% endif %}>
+                                                <td {% if days_of_week.Thursday.is_future %}{% if schedule_dates.Thursday.morning %}class="available-time"{% else %}class="not-available-time"{% endif %}{% endif %}>
                                                     {% if schedule_dates.Thursday.morning %}
                                                         {% for date in schedule_dates.Thursday.morning %}
-                                                            <h4>{{date.practitioner_name}} {{date.practitioner_identifier}}: {{date.start_time|time:'H:i'}} - {{date.end_time|time:'H:i'}}</h4>
-                                                            <input type="hidden" name="practitioner" value="{{date.practitioner_identifier}}">
-                                                            <input type="hidden" name="schedule_date" value="{{days_of_week.Thursday|date:'Y-m-d'}}">
-                                                            <input type="hidden" name="session" value="morning">
-                                                            <button type="submit">Chỉ định</button>
+                                                        <div class="container">
+                                                            
+                                                            <p><i id="icon-{{date.practitioner_identifier.identifier}}-thurs-morn" class="fa fa-arrow-right" onclick="rotateArrow('icon-{{date.practitioner_identifier.identifier}}-thurs-morn', 'data-{{date.practitioner_identifier.identifier}}-thurs-morn')"></i> {{date.practitioner_name}} - {{date.practitioner_identifier.identifier}}</p>
+                                                            <div id="data-{{date.practitioner_identifier.identifier}}-thurs-morn" style="display: none;">
+                                                                <ul>
+                                                                {% for encounter in assigned_encounters.Thursday.morning|get_item:date.practitioner_identifier.identifier %}
+                                                                <li>{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</li> 
+                                                                {% endfor %}
+                                                                </ul>
+                                                            </div>
+                                                            {% if days_of_week.Thursday.is_future %}
+                                                            {% with days_of_week.Thursday.date|date:'Y-m-d' as date_to_submit %}
+                                                            <button onclick="appendData('{{date.practitioner_identifier.identifier}}', '{{date_to_submit}}', 'morning')" class="btn">Chỉ định</button>
+                                                            {% endwith %}
+                                                            {% endif %}
+                                                        </div>
                                                         {% endfor %}                                              
                                                     {% endif %}                                              
                                                 </td>
-                                                <td {% if schedule_dates.Friday.morning %}class="available-time"{% else %}class="not-available-time" onclick="changeDisplay('form-container', '4', 'morning')"{% endif %}>
+                                                <td {% if days_of_week.Friday.is_future %}{% if schedule_dates.Friday.morning %}class="available-time"{% else %}class="not-available-time"{% endif %}{% endif %}>
                                                     {% if schedule_dates.Friday.morning %}
                                                         {% for date in schedule_dates.Friday.morning %}
-                                                            <h4>{{date.practitioner_name}} {{date.practitioner_identifier}}: {{date.start_time|time:'H:i'}} - {{date.end_time|time:'H:i'}}</h4>
-                                                            <input type="hidden" name="practitioner" value="{{date.practitioner_identifier}}">
-                                                            <input type="hidden" name="schedule_date" value="{{days_of_week.Friday|date:'Y-m-d'}}">
-                                                            <input type="hidden" name="session" value="morning">
-                                                            <button type="submit">Chỉ định</button>
+                                                        <div class="container">
+                                                            
+                                                            <p><i id="icon-{{date.practitioner_identifier.identifier}}-fri-morn" class="fa fa-arrow-right" onclick="rotateArrow('icon-{{date.practitioner_identifier.identifier}}-fri-morn', 'data-{{date.practitioner_identifier.identifier}}-fri-morn')"></i> {{date.practitioner_name}} - {{date.practitioner_identifier.identifier}}</p>
+                                                            <div id="data-{{date.practitioner_identifier.identifier}}-fri-morn" style="display: none;">
+                                                                <ul>
+                                                                {% for encounter in assigned_encounters.Friday.morning|get_item:date.practitioner_identifier.identifier %}
+                                                                <li>{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</li> 
+                                                                {% endfor %}
+                                                                </ul>
+                                                            </div>
+                                                            {% if days_of_week.Friday.is_future %}
+                                                            {% with days_of_week.Friday.date|date:'Y-m-d' as date_to_submit %}
+                                                            <button onclick="appendData('{{date.practitioner_identifier.identifier}}', '{{date_to_submit}}', 'morning')" class="btn">Chỉ định</button>
+                                                            {% endwith %}
+                                                            {% endif %}
+                                                        </div>
                                                         {% endfor %}                                              
                                                     {% endif %}                                              
                                                 </td>
-                                                <td {% if schedule_dates.Saturday.morning %}class="available-time"{% else %}class="not-available-time" onclick="changeDisplay('form-container', '5', 'morning')"{% endif %}>
+                                                <td {% if days_of_week.Saturday.is_future %}{% if schedule_dates.Saturday.morning %}class="available-time"{% else %}class="not-available-time"{% endif %}{% endif %}>
                                                     {% if schedule_dates.Saturday.morning %}
                                                         {% for date in schedule_dates.Saturday.morning %}
-                                                            <h4>{{date.practitioner_name}} {{date.practitioner_identifier}}: {{date.start_time|time:'H:i'}} - {{date.end_time|time:'H:i'}}</h4>
-                                                            <input type="hidden" name="practitioner" value="{{date.practitioner_identifier}}">
-                                                            <input type="hidden" name="schedule_date" value="{{days_of_week.Saturday|date:'Y-m-d'}}">
-                                                            <input type="hidden" name="session" value="morning">
-                                                            <button type="submit">Chỉ định</button>
+                                                        <div class="container">
+                                                            
+                                                            <p><i id="icon-{{date.practitioner_identifier.identifier}}-sat-morn" class="fa fa-arrow-right" onclick="rotateArrow('icon-{{date.practitioner_identifier.identifier}}-sat-morn', 'data-{{date.practitioner_identifier.identifier}}-sat-morn')"></i> {{date.practitioner_name}} - {{date.practitioner_identifier.identifier}}</p>
+                                                            <div id="data-{{date.practitioner_identifier.identifier}}-sat-morn" style="display: none;">
+                                                                <ul>
+                                                                {% for encounter in assigned_encounters.Saturday.morning|get_item:date.practitioner_identifier.identifier %}
+                                                                <li>{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</li> 
+                                                                {% endfor %}
+                                                                </ul>
+                                                            </div>
+                                                            {% if days_of_week.Saturday.is_future %}
+                                                            {% with days_of_week.Saturday.date|date:'Y-m-d' as date_to_submit %}
+                                                            <button onclick="appendData('{{date.practitioner_identifier.identifier}}', '{{date_to_submit}}', 'morning')" class="btn">Chỉ định</button>
+                                                            {% endwith %}
+                                                            {% endif %}
+                                                        </div>
                                                         {% endfor %}                                              
                                                     {% endif %}                                              
                                                 </td>
                                             </tr>
                                             <tr>
-                                                <td {% if schedule_dates.Monday.afternoon %}class="available-time"{% else %}class="not-available-time" onclick="changeDisplay('form-container', '0', 'afternoon')"{% endif %}>
+                                                <td {% if days_of_week.Monday.is_future %}{% if schedule_dates.Monday.afternoon %}class="available-time"{% else %}class="not-available-time"{% endif %}{% endif %}>
                                                     {% if schedule_dates.Monday.afternoon %}
                                                         {% for date in schedule_dates.Monday.afternoon %}
-                                                            <h4>{{date.practitioner_name}} {{date.practitioner_identifier}}: {{date.start_time|time:'H:i'}} - {{date.end_time|time:'H:i'}}</h4>
-                                                            <input type="hidden" name="practitioner" value="{{date.practitioner_identifier}}">
-                                                            <input type="hidden" name="schedule_date" value="{{days_of_week.Monday|date:'Y-m-d'}}">
-                                                            <input type="hidden" name="session" value="afternoon">
-                                                            <button type="submit">Chỉ định</button>
+                                                        <div class="container">
+                                                            
+                                                            <p><i id="icon-{{date.practitioner_identifier.identifier}}-mon-noon" class="fa fa-arrow-right" onclick="rotateArrow('icon-{{date.practitioner_identifier.identifier}}-mon-noon', 'data-{{date.practitioner_identifier.identifier}}-mon-noon')"></i> {{date.practitioner_name}} - {{date.practitioner_identifier.identifier}}</p>
+                                                            <div id="data-{{date.practitioner_identifier.identifier}}-mon-noon" style="display: none;">
+                                                                <ul>
+                                                                {% for encounter in assigned_encounters.Monday.afternoon|get_item:date.practitioner_identifier.identifier %}
+                                                                <li>{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</li> 
+                                                                {% endfor %}
+                                                                </ul>
+                                                            </div>
+                                                            {% if days_of_week.Monday.is_future %}
+                                                            {% with days_of_week.Monday.date|date:'Y-m-d' as date_to_submit %}
+                                                            <button onclick="appendData('{{date.practitioner_identifier.identifier}}', '{{date_to_submit}}', 'afternoon')" class="btn">Chỉ định</button>
+                                                            {% endwith %}
+                                                            {% endif %}
+                                                        </div>
                                                         {% endfor %}                                              
                                                     {% endif %}                                              
                                                 </td>
-                                                <td {% if schedule_dates.Tuesday.afternoon %}class="available-time"{% else %}class="not-available-time" onclick="changeDisplay('form-container', '1', 'afternoon')"{% endif %}>
+                                                <td {% if days_of_week.Tuesday.is_future %}{% if schedule_dates.Tuesday.afternoon %}class="available-time"{% else %}class="not-available-time"{% endif %}{% endif %}>
                                                     {% if schedule_dates.Tuesday.afternoon %}
                                                         {% for date in schedule_dates.Tuesday.afternoon %}
-                                                            <h4>{{date.practitioner_name}} {{date.practitioner_identifier}}: {{date.start_time|time:'H:i'}} - {{date.end_time|time:'H:i'}}</h4>
-                                                            <input type="hidden" name="practitioner" value="{{date.practitioner_identifier}}">
-                                                            <input type="hidden" name="schedule_date" value="{{days_of_week.Tuesday|date:'Y-m-d'}}">
-                                                            <input type="hidden" name="session" value="afternoon">
-                                                            <button type="submit">Chỉ định</button>
+                                                        <div class="container">
+                                                            
+                                                            <p><i id="icon-{{date.practitioner_identifier.identifier}}-tues-noon" class="fa fa-arrow-right" onclick="rotateArrow('icon-{{date.practitioner_identifier.identifier}}-tues-noon', 'data-{{date.practitioner_identifier.identifier}}-tues-noon')"></i> {{date.practitioner_name}} - {{date.practitioner_identifier.identifier}}</p>
+                                                            <div id="data-{{date.practitioner_identifier.identifier}}-tues-noon" style="display: none;">
+                                                                <ul>
+                                                                {% for encounter in assigned_encounters.Tuesday.afternoon|get_item:date.practitioner_identifier.identifier %}
+                                                                <li>{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</li> 
+                                                                {% endfor %}
+                                                                </ul>
+                                                            </div>
+                                                            {% if days_of_week.Tuesday.is_future %}
+                                                            {% with days_of_week.Tuesday.date|date:'Y-m-d' as date_to_submit %}
+                                                            <button onclick="appendData('{{date.practitioner_identifier.identifier}}', '{{date_to_submit}}', 'afternoon')" class="btn">Chỉ định</button>
+                                                            {% endwith %}
+                                                            {% endif %}
+                                                        </div>
                                                         {% endfor %}                                              
                                                     {% endif %}                                                                                           
                                                 </td>
-                                                <td {% if schedule_dates.Wednesday.afternoon %}class="available-time"{% else %}class="not-available-time" onclick="changeDisplay('form-container', '2', 'afternoon')"{% endif %}>
+                                                <td {% if days_of_week.Wednesday.is_future %}{% if schedule_dates.Wednesday.afternoon %}class="available-time"{% else %}class="not-available-time"{% endif %}{% endif %}>
                                                     {% if schedule_dates.Wednesday.afternoon %}
                                                         {% for date in schedule_dates.Wednesday.afternoon %}
-                                                            <h4>{{date.practitioner_name}} {{date.practitioner_identifier}}: {{date.start_time|time:'H:i'}} - {{date.end_time|time:'H:i'}}</h4>
-                                                            <input type="hidden" name="practitioner" value="{{date.practitioner_identifier}}">
-                                                            <input type="hidden" name="schedule_date" value="{{days_of_week.Wednesday|date:'Y-m-d'}}">
-                                                            <input type="hidden" name="session" value="afternoon">
-                                                            <button type="submit">Chỉ định</button>
+                                                        <div class="container">
+                                                            
+                                                            <p><i id="icon-{{date.practitioner_identifier.identifier}}-wed-noon" class="fa fa-arrow-right" onclick="rotateArrow('icon-{{date.practitioner_identifier.identifier}}-wed-noon', 'data-{{date.practitioner_identifier.identifier}}-wed-noon')"></i> {{date.practitioner_name}} - {{date.practitioner_identifier.identifier}}</p>
+                                                            <div id="data-{{date.practitioner_identifier.identifier}}-wed-noon" style="display: none;">
+                                                                <ul>
+                                                                {% for encounter in assigned_encounters.Wednesday.afternoon|get_item:date.practitioner_identifier.identifier %}
+                                                                <li>{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</li> 
+                                                                {% endfor %}
+                                                                </ul>
+                                                            </div>
+                                                            {% if days_of_week.Wednesday.is_future %}
+                                                            {% with days_of_week.Wednesday.date|date:'Y-m-d' as date_to_submit %}
+                                                            <button onclick="appendData('{{date.practitioner_identifier.identifier}}', '{{date_to_submit}}', 'afternoon')" class="btn">Chỉ định</button>
+                                                            {% endwith %}
+                                                            {% endif %}
+                                                        </div>
                                                         {% endfor %}                                              
                                                     {% endif %}                                                                                          
                                                 </td>
-                                                <td {% if schedule_dates.Thursday.afternoon %}class="available-time"{% else %}class="not-available-time" onclick="changeDisplay('form-container', '3', 'afternoon')"{% endif %}>
+                                                <td {% if days_of_week.Thursday.is_future %}{% if schedule_dates.Thursday.afternoon %}class="available-time"{% else %}class="not-available-time"{% endif %}{% endif %}>
                                                     {% if schedule_dates.Thursday.afternoon %}
                                                         {% for date in schedule_dates.Thursday.afternoon %}
-                                                            <h4>{{date.practitioner_name}} {{date.practitioner_identifier}}: {{date.start_time|time:'H:i'}} - {{date.end_time|time:'H:i'}}</h4>
-                                                            <input type="hidden" name="practitioner" value="{{date.practitioner_identifier}}">
-                                                            <input type="hidden" name="schedule_date" value="{{days_of_week.Thursday|date:'Y-m-d'}}">
-                                                            <input type="hidden" name="session" value="afternoon">
-                                                            <button type="submit">Chỉ định</button>
+                                                        <div class="container">
+                                                            
+                                                            <p><i id="icon-{{date.practitioner_identifier.identifier}}-thurs-noon" class="fa fa-arrow-right" onclick="rotateArrow('icon-{{date.practitioner_identifier.identifier}}-thurs-noon', 'data-{{date.practitioner_identifier.identifier}}-thurs-noon')"></i> {{date.practitioner_name}} - {{date.practitioner_identifier.identifier}}</p>
+                                                            <div id="data-{{date.practitioner_identifier.identifier}}-thurs-noon" style="display: none;">
+                                                                <ul>
+                                                                {% for encounter in assigned_encounters.Thursday.afternoon|get_item:date.practitioner_identifier.identifier %}
+                                                                <li>{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</li> 
+                                                                {% endfor %}
+                                                                </ul>
+                                                            </div>
+                                                            {% if days_of_week.Thursday.is_future %}
+                                                            {% with days_of_week.Thursday.date|date:'Y-m-d' as date_to_submit %}
+                                                            <button onclick="appendData('{{date.practitioner_identifier.identifier}}', '{{date_to_submit}}', 'afternoon')" class="btn">Chỉ định</button>
+                                                            {% endwith %}
+                                                            {% endif %}
+                                                        </div>
                                                         {% endfor %}                                              
                                                     {% endif %}                                                                                          
                                                 </td>
-                                                <td {% if schedule_dates.Friday.afternoon %}class="available-time"{% else %}class="not-available-time" onclick="changeDisplay('form-container', '4', 'afternoon')"{% endif %}>
+                                                <td {% if days_of_week.Friday.is_future %}{% if schedule_dates.Friday.afternoon %}class="available-time"{% else %}class="not-available-time"{% endif %}{% endif %}>
                                                     {% if schedule_dates.Friday.afternoon %}
                                                         {% for date in schedule_dates.Friday.afternoon %}
-                                                            <h4>{{date.practitioner_name}} {{date.practitioner_identifier}}: {{date.start_time|time:'H:i'}} - {{date.end_time|time:'H:i'}}</h4>
-                                                            <input type="hidden" name="practitioner" value="{{date.practitioner_identifier}}">
-                                                            <input type="hidden" name="schedule_date" value="{{days_of_week.Friday|date:'Y-m-d'}}">
-                                                            <input type="hidden" name="session" value="afternoon">
-                                                            <button type="submit">Chỉ định</button>
+                                                        <div class="container">
+                                                            
+                                                            <p><i id="icon-{{date.practitioner_identifier.identifier}}-fri-noon" class="fa fa-arrow-right" onclick="rotateArrow('icon-{{date.practitioner_identifier.identifier}}-fri-noon', 'data-{{date.practitioner_identifier.identifier}}-fri-noon')"></i> {{date.practitioner_name}} - {{date.practitioner_identifier.identifier}}</p>
+                                                            <div id="data-{{date.practitioner_identifier.identifier}}-fri-noon" style="display: none;">
+                                                                <ul>
+                                                                {% for encounter in assigned_encounters.Friday.afternoon|get_item:date.practitioner_identifier.identifier %}
+                                                                <li>{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</li> 
+                                                                {% endfor %}
+                                                                </ul>
+                                                            </div>
+                                                            {% if days_of_week.Friday.is_future %}
+                                                            {% with days_of_week.Friday.date|date:'Y-m-d' as date_to_submit %}
+                                                            <button onclick="appendData('{{date.practitioner_identifier.identifier}}', '{{date_to_submit}}', 'afternoon')" class="btn">Chỉ định</button>
+                                                            {% endwith %}
+                                                            {% endif %}
+                                                        </div>
                                                         {% endfor %}                                              
                                                     {% endif %}                                                                                           
                                                 </td>
-                                                <td {% if schedule_dates.Saturday.afternoon %}class="available-time"{% else %}class="not-available-time" onclick="changeDisplay('form-container', '5', 'afternoon')"{% endif %}>
+                                                <td {% if days_of_week.Saturday.is_future %}{% if schedule_dates.Saturday.afternoon %}class="available-time"{% else %}class="not-available-time"{% endif %}{% endif %}>
                                                     {% if schedule_dates.Saturday.afternoon %}
                                                         {% for date in schedule_dates.Saturday.afternoon %}
-                                                            <h4>{{date.practitioner_name}} {{date.practitioner_identifier}}: {{date.start_time|time:'H:i'}} - {{date.end_time|time:'H:i'}}</h4>
-                                                            <input type="hidden" name="practitioner" value="{{date.practitioner_identifier}}">
-                                                            <input type="hidden" name="schedule_date" value="{{days_of_week.Saturday|date:'Y-m-d'}}">
-                                                            <input type="hidden" name="session" value="afternoon">
-                                                            <button type="submit">Chỉ định</button>
+                                                        <div class="container">
+                                                            
+                                                            <p><i id="icon-{{date.practitioner_identifier.identifier}}-sat-noon" class="fa fa-arrow-right" onclick="rotateArrow('icon-{{date.practitioner_identifier.identifier}}-sat-noon', 'data-{{date.practitioner_identifier.identifier}}-sat-noon')"></i> {{date.practitioner_name}} - {{date.practitioner_identifier.identifier}}</p>
+                                                            <div id="data-{{date.practitioner_identifier.identifier}}-sat-noon" style="display: none;">
+                                                                <ul>
+                                                                {% for encounter in assigned_encounters.Saturday.afternoon|get_item:date.practitioner_identifier.identifier %}
+                                                                <li>{{encounter.assigned_encounter.patient.name}} - {{encounter.assigned_encounter.patient.identifier}}</li> 
+                                                                {% endfor %}
+                                                                </ul>
+                                                            </div>
+                                                            {% if days_of_week.Saturday.is_future %}
+                                                            {% with days_of_week.Saturday.date|date:'Y-m-d' as date_to_submit %}
+                                                            <button onclick="appendData('{{date.practitioner_identifier.identifier}}', '{{date_to_submit}}', 'afternoon')" class="btn">Chỉ định</button>
+                                                            {% endwith %}
+                                                            {% endif %}
+                                                        </div>
                                                         {% endfor %}                                              
                                                     {% endif %}                                                                                          
                                                 </td>
@@ -865,41 +1033,7 @@
                     </table>
                 </div>  
             </div>     
-        </form>   
-    </div>
-    <div class="form-container" id="form-container" style="display: none;">
-        <form id="form" action="" method="post">
-            {% csrf_token %}
-            <div class="form-header">
-                <i class="fas fa-grip-lines"></i>
-                <i onclick="changeDisplay('form-container')" class="fas fa-times"></i>
-            </div>
-            <div class="form-body">
-                <label for="day_of_work">Ngày làm việc:</label>
-                <select name="day_of_work" id="day_of_work">
-                    <option value="0">Thứ Hai</option>
-                    <option value="1">Thứ Ba</option>
-                    <option value="2">Thứ Tư</option>
-                    <option value="3">Thứ Năm</option>
-                    <option value="4">Thứ Sáu</option>
-                    <option value="5">Thứ Bảy</option>
-                </select>
-                <br>
-                <label for="session">Buổi:</label>
-                <select name="session" id="session">
-                    <option value="morning">Sáng</option>
-                    <option value="afternoon">Chiều</option>
-                </select>
-                <br>
-                <label for="">Thời gian:</label>
-                <label for="start_time">Từ</label>
-                <input type="time" name="start_time" id="start_time" min="7:00" max="12:00" value="07:00">
-                <label for="end_time">Đến</label>
-                <input type="time" name="end_time" id="end_time" min="7:00" max="12:00" value="12:00" onchange="timeCheck()">
-                <br>
-                <button class="btn" style="margin: 2px 130px 0px ;">Thêm</button>
-            </div>
-        </form>
+     
     </div>
 
     <script>
@@ -972,14 +1106,41 @@
         var icon = document.getElementById('icon');
         var open = false;
         
-        div.addEventListener('click', function(){
-          if(open){
-            icon.className = 'fa fa-arrow-right';  
-          } else{
-            icon.className = 'fa fa-arrow-right open';
-          }
-          
-          open = !open;
-        });
+        function rotateArrow(arrowId, dataId){
+            arrow = document.getElementById(arrowId);
+            data = document.getElementById(dataId);
+            console.log(data.style.display);
+            if(arrow.className.includes('open')){
+                arrow.className = 'fa fa-arrow-right';  
+                data.style.display = 'none';
+            } else{
+                arrow.className = 'fa fa-arrow-right open';
+                data.style.display = 'block';
+            }
+            
+        }
+
+
+        function appendData(practitioner, scheduleDate, session){
+            practitionerInput = document.getElementById('practitioner_input');
+            scheduleDateInput = document.getElementById('schedule_date_input');
+            sessionInput = document.getElementById('session_input');
+            formToSubmit = document.getElementById('form-container');
+            console.log(practitioner)
+            if (formToSubmit.style.display == "none"){
+                confirmationText = document.getElementById('confirmation-text');
+                practitionerInput.value = practitioner;
+                scheduleDateInput.value = scheduleDate;
+                sessionInput.value = session;
+                formToSubmit.style.display = "flex";
+            }
+            else {
+                formToSubmit.style.display = "none";
+            }
+        }
+        function closeForm(formId){
+            form = document.getElementById(formId);
+            form.style.display = "none";
+        }
     </script>
 {% endblock %}

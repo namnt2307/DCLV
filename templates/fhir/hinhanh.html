@@ -1,11 +1,4 @@
 {%extends 'fhir/base.html'%}
-{%block url1%}'{%url 'fhir:hanhchinh'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%block url2%}'{%url 'fhir:dangky'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%block url3%}'{%url 'fhir:hoibenh'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%block url5%}'{%url 'fhir:xetnghiem'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%block url4%}'{%url 'fhir:toanthan'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}
-{%comment%}{%block url8%}'{%url 'fhir:thuthuat'  data.Patient.identifier data.Encounter.identifier%}'{%endblock%}{%endcomment%}{%block url7%}'{%url 'fhir:thuoc'  data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
-{%block url6%}'{%url 'fhir:hinhanh'  data.Patient.identifier data.Encounter.identifier %}'{%endblock%}
 {%block leftbar%}
 {%endblock%}
 {%block function%}
@@ -21,25 +14,26 @@
         <th class="cell-data-10">Bác sĩ yêu cầu</th>
         <th class="cell-data-10">Ghi chú</th>
         <th class="cell-data-10">Kết quả hình ảnh</th>
-        <th class="cell-data-10">Chẩn đoán</th>
+        <th class="cell-data-10">Kết quả</th>
         {% if services %}
         <th></th>
         {% endif %}
     </thead>
-    <tbody>
+    
     {% if services %}
+    <tbody>
         {% for service in services %}
         <tr>
-            <td class="cell-data-10"><a href="{%url 'fhir:chitiethinhanh'  data.Patient.identifier data.Encounter.identifier service.service_identifier%}">{{service.service_identifier}}</a></td>
+            <td class="cell-data-10">{{service.service_identifier}}</a></td>
             <td class="cell-data-10">{{service.service_code}}</td>
             <td class="cell-data-10">{{service.get_service_status_display}}</td>
             <td class="cell-data-10">{{service.service_occurrence|date:"d-m-Y"}}</td>
             <td class="cell-data-10">{{service.service_authored|date:"d-m-Y"}}</td>
             <td class="cell-data-10">{{service.service_requester}}</td>
-            <td class="cell-data-10">{{service.service_note}}</td>
+            <td class="cell-data-10">{{service.service_note|default_if_none:"Không"}}</td>
             <td></td>
-            {%comment%}<td><a href="{%url 'fhir:ketquahinhanh'  data.Patient.identifier data.Encounter.identifier service.service_identifier %}"></a></td>{%endcomment%}
-            <td class="cell-data-10"><a href="{%url 'fhir:chandoan'  data.Patient.identifier data.Encounter.identifier service.service_identifier %}">Chẩn đoán</a></td>
+            {%comment%}<td><a href="{%url 'fhir:ketquahinhanh'  data.Patient.identifier data.Encounter.encounter_identifier service.service_identifier %}"></a></td>{%endcomment%}
+            <td class="cell-data-10"><a href="{%url 'fhir:chitiethinhanh'  data.Patient.identifier data.Encounter.encounter_identifier service.service_identifier%}">Kết quả</a></td>
             <td>
                 <form action="{% url 'fhir:delete' %}" method="POST">
                     {%csrf_token%}
@@ -52,42 +46,100 @@
             </td>
         </tr>
         {% endfor %}
+    </tbody>
     {% endif %}
-</tbody>
+
     <div>
         <div class="formPopup" id="serviceForm">
             <div class="formContainer">
                 <form action="" method="POST">
+                    <h1>THÔNG TIN ĐĂNG KÝ CHẨN ĐOÁN</h1>
+                    <br>
                     {%csrf_token%}
                     <div class="flex_container">
-                        <label class="title">Tên thủ thuật:</label>
-                       {{service_form.service_code|add_class:"value"}}
+                        <label for="id_image_category" class="title">Phân loại chẩn đoán:</label>
+                        <select name="image_category" id="id_image_category" onchange="setList()" class="value">
+                            <option value="">-------------</option>
+                            {% for category in image_categories %}
+                                <option value="{{category}}">{{category}}</option>
+                            {% endfor %}
+                        </select>
                     </div>
-                    <br>
+                    
                     <div class="flex_container">
-                        <label class="title">Ngày dự kiến thực hiện:</label>
-                        {{service_form.service_occurrence|add_class:"value"}}
+                        <label class="title" for="id_service_code">Tên chẩn đoán:</label>
+                        <input list="" id="id_service_code" name="service_code" class="value">
+                        {% for category in image_categories %}
+                            <datalist id="{{category}}">
+                                {% for image in images|get_item:category %}
+                                    <option value="{{image.image_name}}">{{image.image_name}}</option>
+                                {% endfor %}
+                            </datalist>
+                        {% endfor %}
                     </div>
-                    <br>
                     <div class="flex_container">
-                        <label class="title">Ghi chú thêm:</label>
+                        <label class="title">Lý do thực hiện:</label>
+                        {{service_form.service_reason_code|add_class:"value"}}
+                    </div>                    
+                    {% now "Y-m-d" as today_date %}
+                    {%with 'min:'|add:today_date as min_date%}
+                    <div class="flex_container">
+                        <label class="title" for="id_service_occurrence">Ngày dự kiến thực hiện:</label>
+                        {{service_form.service_occurrence|add_class:"value"|attr:min_date}}
+                    </div>
+                    {% endwith %}
+                    
+                    <div class="flex_container">
+                        <label class="title" for="id_service_note">Ghi chú thêm:</label>
                         {{service_form.service_note|add_class:"value"}}
                     </div>
-                    <br>
-                    <button type="submit" class="btn">Thêm</button>
-                    <button type="button" class="btn cancel" onclick="closeForm('serviceForm')">Xóa</button>
+                    
+                    <div style="text-align: center;">
+                        <button type="submit" class="btn">Thêm</button>
+                        <button type="button" class="btn cancel" onclick="closeForm('serviceForm')">Hủy</button>
+                    </div>
                 </form>
             </div>
         </div>
     </div>
     {% if services %}
     <tr>
-        <td colspan="10"><button class="float-left submit-button btn" onclick="openForm('serviceForm')">Thêm xét nghiệm</button></td>
+        <td colspan="10"><button class="float-left submit-button btn" onclick="openForm('serviceForm')">Thêm chẩn đoán</button></td>
     </tr>
     {%else%}
     <tr>
-        <td colspan="9"><button class="float-left submit-button btn" onclick="openForm('serviceForm')">Thêm xét nghiệm</button></td>
+        <td colspan="9"><button class="float-left submit-button btn" onclick="openForm('serviceForm')">Thêm chẩn đoán</button></td>
     </tr>
     {%endif%}
 </table>
+<script>
+    function setList(){
+        imageCategory = document.getElementById('id_image_category')
+        codeInput = document.getElementById('id_service_code')
+        codeInput.setAttribute('list', imageCategory.value)
+    }
+    // Find all inputs on the DOM which are bound to a datalist via their list attribute.
+    var inputs = document.querySelectorAll('input[list]');
+    for (var i = 0; i < inputs.length; i++) {
+    // When the value of the input changes…
+    inputs[i].addEventListener('change', function() {
+        var optionFound = false,
+        datalist = this.list;
+        // Determine whether an option exists with the current value of the input.
+        for (var j = 0; j < datalist.options.length; j++) {
+            if (this.value == datalist.options[j].value) {
+                optionFound = true;
+                break;
+            }
+        }
+        // use the setCustomValidity function of the Validation API
+        // to provide an user feedback if the value does not exist in the datalist
+        if (optionFound) {
+        this.setCustomValidity('');
+        } else {
+        this.setCustomValidity('Please select a valid value.');
+        }
+    });
+    }
+</script>
 {%endblock%}

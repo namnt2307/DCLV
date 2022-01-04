@@ -5,20 +5,13 @@
 <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
 <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
 <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
-{% if messages %}
-    {% for message in messages %}
-        <script>
-            alert('{{message}}');
-        </script>
-    {% endfor %}
-{% endif %}
 <div class="searchpage">
   
 
   <div  class="search">
     <form action="{% url 'fhir:search'  %}" method="get">
       <div class="search_type_container">
-        <label for="">Tìm kiếm theo</label>
+        <label for="">Tìm kiếm hồ sơ</label>
           <div>
           <input type="radio" name="search_type" id="identifier_type" value="identifier_type" required>
           <label for="identifier_type">Mã y tế</label>
@@ -30,10 +23,9 @@
         </div>
       </div>
       <div class="search-bar">
-        <label for="search_value">Tìm kiếm hồ sơ</label>
-        <input type="text" class="form-control input-sm" maxlength="64" placeholder="Search" name="search_value"
+        <input type="text" class="form-control input-sm" maxlength="64" placeholder="Nhập giá trị tìm kiếm" name="search_value"
         id="identifier" />
-      <button type="submit" class="btn btn-primary btn-sm">Search</button>
+      <button type="submit" class="btn btn-primary btn-sm">Tìm kiếm</button>
     </div>
     </form>
   </div>

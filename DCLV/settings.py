@@ -80,8 +80,12 @@ WSGI_APPLICATION = "DCLV.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": "fhir",
+        "USER": "admin",
+        "PASSWORD": "admin",
+        "HOST": "10.20.20.145",
+        "PORT": "3306",
     }
 }
 
@@ -111,7 +115,7 @@ LOGIN_REDIRECT_URL = "/fhir"
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "Asia/Ho_Chi_Minh"
+TIME_ZONE = "Asia/Bangkok"
 
 USE_I18N = True
 
