@@ -7,7 +7,7 @@ EXPOSE 8000
 WORKDIR /doan
 
 COPY requirements.txt /doan
-RUN apk update && apk add --no-cache build-base gcc alpine-sdk default-libmysqlclient-dev \
+RUN apk update && apk add --no-cache musl-dev build-base gcc alpine-sdk default-libmysqlclient-dev \
     && pip3 install -r requirements.txt && rm -rf /var/cache/apk/* 
 
 COPY . /doan
