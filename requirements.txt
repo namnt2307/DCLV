@@ -7,3 +7,4 @@ requests
 setuptools
 wheel
 mysqlclient
+tzdata
