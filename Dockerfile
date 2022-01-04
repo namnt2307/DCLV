@@ -13,9 +13,9 @@ RUN apk update && apk add --no-cache musl-dev build-base gcc alpine-sdk mariadb-
 ENV FHIR_SERVER="http://35.219.75.55:8080/fhir"
 COPY . /doan
 # COPY entrypoint.sh /doan/entrypoint.sh
-RUN chmod 777 /doan/entrypoint.sh
+# RUN chmod 777 /doan/entrypoint.sh
 
-ENTRYPOINT [ "/bin/sh","entrypoint.sh" ]
+# ENTRYPOINT [ "/bin/sh","entrypoint.sh" ]
 CMD [ "python3", "manage.py", "runserver","0.0.0.0:8000" ]
 
 

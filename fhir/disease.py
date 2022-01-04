@@ -45,6 +45,7 @@ for i in range(4, max_row + 1):
         print(e)
 
 # Get comorbidity diseases:
+wb = xl.load_workbook("fhir/ICD-10.xlsx", data_only=True)
 sh = wb["A1"]
 max_row = sh.max_row
 diseases = {}
