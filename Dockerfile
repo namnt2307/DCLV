@@ -11,7 +11,7 @@ RUN apk update && apk add --no-cache musl-dev build-base gcc alpine-sdk mariadb-
     && pip3 install -r requirements.txt && rm -rf /var/cache/apk/* 
 
 COPY . /doan
-COPY entrypoint /doan/entrypoint.sh
+COPY entrypoint.sh /doan/entrypoint.sh
 RUN chmod 777 /doan/entrypoint.sh
 
 ENTRYPOINT [ "/doan/entrypoint.sh" ]
