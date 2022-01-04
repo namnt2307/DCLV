@@ -11,8 +11,9 @@ RUN apk update && apk add --no-cache apk add build-base gcc alpine-sdk default-l
     && pip3 install -r requirements.txt && rm -rf /var/cache/apk/* 
 
 COPY . /doan
+RUN chmod 777 /doan/entrypoint.sh
 
-
+ENTRYPOINT [ "./doan/entrypoint.sh" ]
 CMD [ "python3", "manage.py", "runserver","0.0.0.0:8000" ]
 
 
