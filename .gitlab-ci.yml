@@ -58,7 +58,7 @@ deploy:thuduc:
     - export APP_VER=${CI_PIPELINE_ID}-${CI_COMMIT_SHORT_SHA}
     - export IMAGE_TAG=namnguyen2307/${APP_NAME}:${APP_VER}
     - ansible-galaxy collection install community.docker
-    - ansible-playbook /etc/ansible/playbook/deploy.yml -e "FHIR_SERVER=http://35.219.75.55:8080/fhir" "host=thuduc" -e "IMAGE_TAG=${IMAGE_TAG}"
+    - ansible-playbook /etc/ansible/playbook/deploy.yml -e "FHIR_SERVER=http://35.219.75.55:8080/fhir" -e "host=thuduc" -e "IMAGE_TAG=${IMAGE_TAG}"
   only:
     refs:
       - benhvienthuduc
