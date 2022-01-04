@@ -4,9 +4,9 @@ import re
 from fhir.models import DischargeDisease, ComorbidityDisease, Medicine, Test, Image
 
 
-#Get discharge diseases:
-wb = xl.load_workbook('fhir/ICD-10.xlsx', data_only=True)
-sh = wb['ICD10']
+# Get discharge diseases:
+wb = xl.load_workbook("fhir/ICD-10.xlsx", data_only=True)
+sh = wb["ICD10"]
 max_row = sh.max_row
 for i in range(4, max_row + 1):
     name_cell = sh.cell(row=i, column=20)
@@ -15,14 +15,16 @@ for i in range(4, max_row + 1):
     code = code_cell.value
     if len(code) == 4:
         code = list(code)
-        code.insert(-1, '.')
-        code = ''.join(code)
+        code.insert(-1, ".")
+        code = "".join(code)
         print(code)
-        DischargeDisease.objects.create(disease_code=code, disease_name=name, disease_search = name + ' ' + code)
+        DischargeDisease.objects.create(
+            disease_code=code, disease_name=name, disease_search=name + " " + code
+        )
 
-#Get medicines:
-wb = xl.load_workbook('fhir/Medicine.xlsx', data_only=True)
-sh = wb['Medicine']
+# Get medicines:
+wb = xl.load_workbook("fhir/Medicine.xlsx", data_only=True)
+sh = wb["Medicine"]
 max_row = sh.max_row
 for i in range(4, max_row + 1):
     medicine_name_cell = sh.cell(row=i, column=2)
@@ -33,13 +35,17 @@ for i in range(4, max_row + 1):
     medicine_price = medicine_unit_price_cell.value
     modified_string = re.sub(r"\([^()]*\)", "", medicine_name)
     try:
-        print('oke')
-        Medicine.objects.create(medicine_name=modified_string.strip(), medicine_unit=medicine_unit, medicine_price_on_unit=medicine_price)
+        print("oke")
+        Medicine.objects.create(
+            medicine_name=modified_string.strip(),
+            medicine_unit=medicine_unit,
+            medicine_price_on_unit=medicine_price,
+        )
     except Exception as e:
         print(e)
-    
-#Get comorbidity diseases:
-sh = wb['A1']
+
+# Get comorbidity diseases:
+sh = wb["A1"]
 max_row = sh.max_row
 diseases = {}
 for i in range(4, max_row + 1):
@@ -50,41 +56,46 @@ for i in range(4, max_row + 1):
         code_cell = sh.cell(row=i, column=3)
         name = name_cell.value
         code = code_cell.value
-        if diseases.get(main_code.value):        
-            diseases[main_code.value].append({'name': name, 'code': code})
+        if diseases.get(main_code.value):
+            diseases[main_code.value].append({"name": name, "code": code})
         else:
             diseases[main_code.value] = []
-            diseases[main_code.value].append({'name': name, 'code': code})
+            diseases[main_code.value].append({"name": name, "code": code})
 for key, value in diseases.items():
     try:
         main_disease = DischargeDisease.objects.get(disease_code=key)
         for disease in value:
-            ComorbidityDisease.objects.create(discharge_diseases=main_disease, disease_code=disease['code'], disease_name=disease['name'], disease_search=disease['name'] + ' ' + disease['code'])
+            ComorbidityDisease.objects.create(
+                discharge_diseases=main_disease,
+                disease_code=disease["code"],
+                disease_name=disease["name"],
+                disease_search=disease["name"] + " " + disease["code"],
+            )
     except:
         pass
 
 
-print('finished')
+print("finished")
 
-#Get tests
+# Get tests
 
-wb = xl.load_workbook('fhir/XETNGHIEM.xlsx', data_only=True)
-sh = wb['Sheet1']
+wb = xl.load_workbook("fhir/XETNGHIEM.xlsx", data_only=True)
+sh = wb["Sheet1"]
 max_row = sh.max_row
 for i in range(1, max_row + 1):
     test_name_cell = sh.cell(row=i, column=2)
     test_name = test_name_cell.value
     if test_name == None:
-        category = sh.cell(row=i, column=1).value        
+        category = sh.cell(row=i, column=1).value
     try:
         Test.objects.create(test_name=test_name, test_category=category)
     except Exception as e:
         print(e)
-        
-        
-#Get images
-wb = xl.load_workbook('fhir/CHANDOANHINHANH.xlsx', data_only=True)
-sh = wb['Sheet1']
+
+
+# Get images
+wb = xl.load_workbook("fhir/CHANDOANHINHANH.xlsx", data_only=True)
+sh = wb["Sheet1"]
 max_row = sh.max_row
 for i in range(1, max_row + 1):
     image_name_cell = sh.cell(row=i, column=2)
