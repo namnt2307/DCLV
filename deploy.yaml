@@ -6,14 +6,16 @@
         name: "{{IMAGE_TAG}}"
         source: pull
     - name: stop old container
-      community.docker.docker_container: 
+      community.docker.docker_container:
         name: dclv
         state: absent
     - name: run new container
       community.docker.docker_container:
         name: dclv
         image: "{{IMAGE_TAG}}"
-        network_mode: host   
+        network_mode: host
+        env:
+          FHIR_SERVER: "{{FHIR_SERVER}}"
     - name: remove old images
       community.docker.docker_prune:
         images: yes

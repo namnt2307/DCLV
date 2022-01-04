@@ -54,11 +54,11 @@ deploy:thuduc:
   extends:
     - .deploy
   script:
-    - export HAPI_HOST="http://10.20.20.145:8080/fhir"
+    - export FHIR_SERVER="http://FHIR_SERVER:8080/fhir"
     - export APP_VER=${CI_PIPELINE_ID}-${CI_COMMIT_SHORT_SHA}
     - export IMAGE_TAG=namnguyen2307/${APP_NAME}:${APP_VER}
     - ansible-galaxy collection install community.docker
-    - ansible-playbook /etc/ansible/playbook/deploy.yml -e "host=thuduc" -e "IMAGE_TAG=${IMAGE_TAG}"
+    - ansible-playbook /etc/ansible/playbook/deploy.yml -e "FHIR_SERVER=http://35.219.75.55:8080/fhir" "host=thuduc" -e "IMAGE_TAG=${IMAGE_TAG}"
   only:
     refs:
       - benhvienthuduc
