@@ -10,8 +10,7 @@ class myUser(AbstractUser):
         ('surgeon', 'Bác sĩ phẫu thuật'),
         ('medical assistant', 'Trợ lý y tế'),
         ('medical laboratory technician', 'Kỹ thuật viên phòng thí nghiệm y tế'),
-        ('X-ray technician', 'Kỹ thuật viên X-quang'),
-        ('ultrasound technician', 'Kỹ thuật viên siêu âm'),
+        ('diagnostic imaging technician', 'Kỹ thuật viên chẩn đoán hình ảnh'),
         ('nurse', 'Y tá')
     )
     # name = models.CharField(default='',max_length=100)

@@ -6,3 +6,4 @@ django-widget-tweaks
 requests
 setuptools
 wheel
+mysqlclient

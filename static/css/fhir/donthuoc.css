@@ -24,7 +24,7 @@ h1{
 }
 
 table{
-    width: 80%;
+    width: 90%;
     margin: 10px auto;
 }
 
@@ -35,4 +35,14 @@ table th,td {
     padding: 5px;
     border: 1px solid;
     text-align: center;
+}
+
+.flex_container{
+    display: flex;
+}
+
+.flex_container .value{
+    border-bottom: dotted black 2px;
+    flex: 1;
+    white-space: pre-wrap;
 }

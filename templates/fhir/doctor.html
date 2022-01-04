@@ -6,32 +6,35 @@
 <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css" integrity="sha384-AYmEC3Yw5cVb3ZcuHtOA93w35dYTsvhLPVnYs9eStHfGJvOvKxVfELGroGkvsg+p" crossorigin="anonymous"/>
 <div class="top-menu">
     <ul class="menu">
-        <li>
+        <li class="home-button">
             <div class="dropdown">
                 <a href="{% url 'fhir:user_detail'%}"><i class="fa fa-home"
                         aria-hidden="true"></i></a>
             </div>
         </li>
-        <li>
+        <li class="function">
             <div class="dropdown">
-                <a href="{% url 'fhir:register' %}"> Quản lí hồ sơ </a>
-                <div class="dropdown-content">
-                    <a href="{% url 'fhir:register' %}">Tạo hồ sơ</a>
-                    <a href="{% url 'fhir:upload' %}">Chuyển đổi excel</a>
-                    <a href="{% url 'fhir:search' %}">Tìm kiếm hồ sơ</a>
-                </div>
+                <a href="{% url 'fhir:manage' %}">Quản lí hồ sơ</a>
                 <!-- #328be4; -->
             </div>
         </li>
-        <li>
+        <li class="function">
             <div class="dropdown">
-                <a {%if request.user.role == "medical assistant" %}href="{% url 'fhir:manage_schedule' %}"{% else %}href="{% url 'fhir:schedule' %}" {% endif %}> Quản lí lịch khám </a>
-                <div class="dropdown-content">
-                    <a href="">TEXT</a>
-                    <a href="">TEXT2</a>
-                </div>
+                <a {%if request.user.role == 'medical assistant' %} href="{% url 'fhir:manage_schedule' %}" {%else%} href="{% url 'fhir:schedule' request.user.username %}" {% endif %}> Quản lí lịch khám </a>
+                <!-- #328be4; -->
             </div>
         </li>
+    
+          <li class="function">
+              <div class="dropdown">
+                <a href="{% url 'fhir:manage_images' %}">Lịch chẩn đoán hình ảnh</a>
+              </div>
+          </li>
+          <li class="function">
+            <div class="dropdown">
+                <a href="{% url 'fhir:manage_tests' %}">Lịch xét nghiệm</a>
+            </div>
+        </li> 
     </ul>
 </div>
 <div class="content">

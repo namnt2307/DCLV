@@ -111,7 +111,7 @@ LOGIN_REDIRECT_URL = "/fhir"
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "Asia/Ho_Chi_Minh"
+TIME_ZONE = "Asia/Bangkok"
 
 USE_I18N = True
 

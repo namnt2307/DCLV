@@ -11,48 +11,87 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     {% load static %}    
     <link rel="stylesheet" href="{% static 'css/administration/administration.css' %}">
-    <title>Trang Quản lý</title>
+    <title>Trang Quản Lý</title>
 </head>
 <body>
+    {% if messages %}
+        {% for message in messages %}
+            <script>
+                alert('{{message}}');
+            </script>
+        {% endfor %}
+    {% endif %}    
+    
     <div class="header">
         <div class="left-header">
             <img src="{% static 'img/logo.png'%}" alt="logo-bach-khoa">
             <h3>TRANG QUẢN LÝ</h3>
         </div>
         <div class="right-header">
+            {% if request.user.role != 'admin' %}
+            <a href="{% url 'administration:staff_info' request.user.username">{{request.user.username}}</a>
+            {% endif %}
             <a href="{% url 'login:change_password' %}">Đổi mật khẩu</a>
             <a href="{% url 'login:logout' %}">Đăng xuất</a>
         </div>
     </div>
+    {% if request.user.role == 'admin' %}
     <div class="top-menu">
         <ul class="menu">
-            <li>
+            <li class="home-button">
                 <div class="dropdown">
                     <a href="{% url 'administration:administration'%}"><i class="fa fa-home"
                             aria-hidden="true"></i></a>
                 </div>
             </li>
-            <li>
+            <li class="function">
                 <div class="dropdown">
-                    <a href="{% url 'fhir:register' %}"> Quản lý nhân sự </a>
-                    <div class="dropdown-content">
-                        <a href="{% url 'administration:staff' %}">Xem danh sách</a>
-                        <a href="{% url 'administration:add_staff' %}">Thêm nhân viên</a>
-                    </div>
+                    <a href="{% url 'administration:staff' %}">Quản lý nhân sự</a>
                     <!-- #328be4; -->
                 </div>
             </li>
-            <li>
+            <li class="function">
                 <div class="dropdown">
-                    <a href="{% url 'fhir:upload' %}"> Quản lí lịch khám </a>
-                    <div class="dropdown-content">
-                        <a href="">TEXT</a>
-                        <a href="">TEXT2</a>
-                    </div>
+                    <a href="{% url 'administration:department' %}">Quản lý phòng ban</a>
                 </div>
             </li>
         </ul>
     </div>
+    {% else %}
+    <div class="top-menu">
+        <ul class="menu">
+            <li class="home-button">
+                <div class="dropdown">
+                    <a href="{% url 'fhir:user_detail'  %}"><i class="fa fa-home"
+                            aria-hidden="true"></i></a>
+                </div>
+            </li>
+            <li class="function">
+                <div class="dropdown">
+                    <a href="{% url 'fhir:manage'  %}"> Quản lí hồ sơ </a>
+                    <!-- #328be4; -->
+                </div>
+            </li>
+            <li class="function">
+              <div class="dropdown">
+                <a {%if request.user.role == 'medical assistant' %} href="{% url 'fhir:manage_schedule' %}" {%else%} href="{% url 'fhir:schedule' request.user.username %}" {% endif %}> Quản lí lịch khám </a>
+                  <!-- #328be4; -->
+              </div>
+          </li>
+      
+            <li class="function">
+                <div class="dropdown">
+                  <a href="{% url 'fhir:manage_images' %}">Lịch chẩn đoán hình ảnh</a>
+                </div>
+            </li>
+            <li class="function">
+              <div class="dropdown">
+                  <a href="{% url 'fhir:manage_tests' %}">Lịch xét nghiệm</a>
+              </div>
+          </li>      
+        </ul>
+      </div>
+      {% endif %}
     <div class="content">
         {%block content%}
         {% endblock%}
