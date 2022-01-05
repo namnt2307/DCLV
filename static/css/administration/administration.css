@@ -92,13 +92,14 @@ p {
     min-width: 40%;
     margin: 20px auto 10px;
     padding: 12px 12px 12px 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 /* .create-data {
     padding-left: 50px;
 } */
-h1 {
-    text-decoration: underline;
-}
+
 
 .flex_data_container {
     display: flex;
@@ -249,7 +250,7 @@ h1 {
     /* padding-left: 100px; */
 }
 .value{
-    flex:1;
+    width: 300px;
 }
 .practitioner-image {
     padding-top: 30px;

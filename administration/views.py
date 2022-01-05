@@ -9,9 +9,10 @@ from .models import PractitionerModel, ClinicalDepartment
 from lib import dttype as dt
 from django.contrib import messages
 import requests
+import os
 from django.template.defaulttags import register
 # Create your views here.
-fhir_server = "http://10.0.0.25:8080/fhir"
+fhir_server = os.getenv('FHIR_SERVER', "http://34.101.85.15:8080/fhir")
 
 @register.filter
 def subtract(value, arg):

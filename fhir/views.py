@@ -29,7 +29,7 @@ import urllib.request
 # Create your views here.
 
 
-fhir_server = os.getenv('FHIR_SERVER', "http://10.0.0.25:8080/fhir")
+fhir_server = os.getenv('FHIR_SERVER', "http://34.101.85.15:8080/fhir")
 
 
 @register.filter
@@ -303,7 +303,7 @@ class display_detail(LoginRequiredMixin, View):
         data['Patient'] = instance
         try:
             encounters = EncounterModel.objects.filter(
-                patient=patient_identifier)
+                patient=patient_identifier, encounter_storage='hapi')
             for encounter in encounters:
                 get_encounter = requests.get(fhir_server + "/Encounter?identifier=urn:trinhcongminh|" +
                                              encounter.encounter_identifier, headers={'Content-type': 'application/xml'})
@@ -351,6 +351,7 @@ class display_detail(LoginRequiredMixin, View):
             'department_categories': department_categories,
             'departments': departments
         }
+        print(context)
         return render(request, 'fhir/doctor/display.html', context)
 
     def post(self, request, patient_identifier):
@@ -766,6 +767,7 @@ class encounter(LoginRequiredMixin, View):
 
     def post(self, request, patient_identifier):
         data = {'Patient': {}, 'Encounter': {}}
+        print(request.POST)
         instance = PatientModel.objects.get(
             identifier=patient_identifier)
         encounters = EncounterModel.objects.filter(
@@ -781,6 +783,7 @@ class encounter(LoginRequiredMixin, View):
         if form.is_valid():
             encounter = form.save(commit=False)
             encounter.encounter_identifier = new_encounter_identifier
+            encounter.encounter_storage = 'local'
             encounter.patient = instance
             form.save()
         else:
@@ -1131,7 +1134,7 @@ class khambenh(LoginRequiredMixin, View):
                     observation_identifier = encounter_identifier + \
                         '_' + \
                         datetime.strftime(timezone.localtime(timezone.now()), "%d%m%Y%H%M%S%f")
-                    encounter_identifier=encounter_instance
+                    observation['encounter_identifier']=encounter_instance
                     observation['observation_identifier']=observation_identifier
                     observation['observation_status']='final'
                     observation['observation_code']='nhiệt độ'
@@ -1156,8 +1159,8 @@ class khambenh(LoginRequiredMixin, View):
                     observation_identifier = encounter_identifier + \
                         '_' + \
                         datetime.strftime(timezone.localtime(timezone.now()), "%d%m%Y%H%M%S%f")
-                    encounter_identifier=encounter_instance
-                    observation_identifier=observation_identifier
+                    observation['encounter_identifier']=encounter_instance
+                    observation['observation_identifier']=observation_identifier
                     observation['observation_status']='final'
                     observation['observation_code']='huyết áp tâm thu'
                     observation['observation_category']='vital-signs'
@@ -1182,7 +1185,7 @@ class khambenh(LoginRequiredMixin, View):
                     observation_identifier = encounter_identifier + \
                         '_' + \
                         datetime.strftime(timezone.localtime(timezone.now()), "%d%m%Y%H%M%S%f")
-                    encounter_identifier=encounter_instance
+                    observation['encounter_identifier']=encounter_instance
                     observation['observation_identifier']=observation_identifier
                     observation['observation_status']='final'
                     observation['observation_code']='huyết áp tâm trương'
@@ -1207,8 +1210,8 @@ class khambenh(LoginRequiredMixin, View):
                     observation_identifier = encounter_identifier + \
                         '_' + \
                         datetime.strftime(timezone.localtime(timezone.now()), "%d%m%Y%H%M%S%f")
-                    encounter_identifier=encounter_instance
-                    observation_identifier=observation_identifier
+                    observation['encounter_identifier']=encounter_instance
+                    observation['observation_identifier']=observation_identifier
                     observation['observation_status']='final'
                     observation['observation_code']='nhịp thở'
                     observation['observation_category']='vital-signs'
@@ -1232,7 +1235,7 @@ class khambenh(LoginRequiredMixin, View):
                     observation_identifier = encounter_identifier + \
                         '_' + \
                         datetime.strftime(timezone.localtime(timezone.now()), "%d%m%Y%H%M%S%f")
-                    encounter_identifier=encounter_instance
+                    observation['encounter_identifier']=encounter_instance
                     observation['observation_identifier']=observation_identifier
                     observation['observation_status']='final'
                     observation['observation_code']='cân nặng'
@@ -2073,6 +2076,7 @@ class save(LoginRequiredMixin, View):
             else:
                 encounter_instance.encounter_length = str(delta.days)
             encounter_instance.save()
+            print(encounter_instance)
         try:
             connection_test = requests.get(fhir_server + "/Patient")
             if connection_test.status_code != 200:
@@ -2108,7 +2112,7 @@ class save(LoginRequiredMixin, View):
             data['Encounter']['id'] = get_encounter['id']
         encounter_data = dt.create_encounter_resource(
             data['Encounter'], patient['id'], patient['name'], participant_id['id'], participant.name)
-        print(encounter_data)
+        # print(encounter_data)
         test_encounter = requests.post(fhir_server + "/Encounter/$validate", headers={
             'Content-type': 'application/xml'}, data=encounter_data.decode('utf-8'))
         print(test_encounter.content.decode('utf-8'))
@@ -2134,8 +2138,9 @@ class save(LoginRequiredMixin, View):
                 print("có lỗi khi lưu allergy")
         if encounter:
             encounter_instance.encounter_version = encounter['version']
-            encounter_sharing_status = True
+            encounter_instance.encounter_sharing_status = True
             encounter_instance.save()
+            print(encounter_instance)
             condition_instances = ConditionModel.objects.all().filter(
                 encounter_identifier=encounter_identifier)
             for condition_instance in condition_instances:
@@ -2212,7 +2217,7 @@ class save(LoginRequiredMixin, View):
                 else:
                     post_condition = requests.post(fhir_server + "/Condition/", headers={
                         'Content-type': 'application/xml'}, data=condition_data.decode('utf-8'))
-                    print(post_condition.status_code)
+                    # print(post_condition.status_code)
                     if post_condition.status_code == 201:
                         condition_resource = ET.fromstring(
                             post_condition.content.decode('utf-8'))
@@ -2580,7 +2585,7 @@ class save(LoginRequiredMixin, View):
                 if get_medication:
                     put_medication = requests.put(fhir_server + "/MedicationStatement/" + get_medication['id'], headers={
                         'Content-type': 'application/xml'}, data=medication_data.decode('utf-8'))
-                    print(put_medication.status_code)
+                    # print(put_medication.status_code)
                     if put_medication.status_code == 200:
                         medication_resource = ET.fromstring(
                             put_medication.content.decode('utf-8'))
@@ -2592,8 +2597,8 @@ class save(LoginRequiredMixin, View):
                 else:
                     post_medication = requests.post(fhir_server + "/MedicationStatement/", headers={
                         'Content-type': 'application/xml'}, data=medication_data.decode('utf-8'))
-                    print(post_medication.status_code)
-                    print(post_medication.content.decode('utf-8'))
+                    # print(post_medication.status_code)
+                    # print(post_medication.content.decode('utf-8'))
                     if post_medication.status_code == 201:
                         medication_resource = ET.fromstring(
                             post_medication.content.decode('utf-8'))
@@ -2605,6 +2610,7 @@ class save(LoginRequiredMixin, View):
                 medication_instance.save()
             encounter_instance.encounter_sharing_status = True
             encounter_instance.save()
+            print(encounter_instance)
             messages.success(request, "Lưu thành công")
             return HttpResponseRedirect('/fhir/display_detail/' + patient_identifier)
         else:
@@ -2663,11 +2669,17 @@ def delete(request):
         elif resource_type == 'schedule_value':
             practitioner = PractitionerModel.objects.get(
                 identifier=request.user.username)
+            print(request.POST)
             try:
-                value = Schedule.objects.get(practitioner_name=practitioner.name, practitioner_identifier=practitioner.identifier,
+                value = Schedule.objects.get(practitioner_name=practitioner.name, practitioner_identifier=practitioner,
                                              schedule_date=request.POST['delete_date'], session=request.POST['delete_session'])
-                value.delete()
-            except:
+                encounters = AssignedEncounter.objects.filter(practitioner_identifier=practitioner, encounter_date=request.POST['delete_date'], session=request.POST['delete_session']).exclude(assigned_encounter__encounter_status='finished')
+                if encounters.count() == 0:
+                    value.delete()
+                else: 
+                    messages.error(request, "Bạn đang có lịch khám chưa hoàn tất")
+            except Exception as e:
+                print(e)
                 messages.error(request, "Dữ liệu không tồn tại")
         elif resource_type == 'sharing_encounter':
             try:
@@ -3449,27 +3461,69 @@ class schedule(LoginRequiredMixin, View):
             practitioner_name=practitioner.name, practitioner_identifier=practitioner, encounter_date=friday, session='afternoon', assigned_encounter__encounter_status='assigned')
         assigned_encounters['Saturday']['afternoon'] = AssignedEncounter.objects.filter(
             practitioner_name=practitioner.name, practitioner_identifier=practitioner, encounter_date=saturday, session='afternoon', assigned_encounter__encounter_status='assigned')
+        in_progress_encounters = {'Monday': {}, 'Tuesday': {}, 'Wednesday': {
+        }, 'Thursday': {}, 'Friday': {}, 'Saturday': {}}
+        in_progress_encounters['Monday']['morning'] = AssignedEncounter.objects.filter(
+            practitioner_name=practitioner.name, practitioner_identifier=practitioner, encounter_date=monday, session='morning', assigned_encounter__encounter_status='in-progress')
+        in_progress_encounters['Tuesday']['morning'] = AssignedEncounter.objects.filter(
+            practitioner_name=practitioner.name, practitioner_identifier=practitioner, encounter_date=tuesday, session='morning', assigned_encounter__encounter_status='in-progress')
+        in_progress_encounters['Wednesday']['morning'] = AssignedEncounter.objects.filter(
+            practitioner_name=practitioner.name, practitioner_identifier=practitioner, encounter_date=wednesday, session='morning', assigned_encounter__encounter_status='in-progress')
+        in_progress_encounters['Thursday']['morning'] = AssignedEncounter.objects.filter(
+            practitioner_name=practitioner.name, practitioner_identifier=practitioner, encounter_date=thursday, session='morning', assigned_encounter__encounter_status='in-progress')
+        in_progress_encounters['Friday']['morning'] = AssignedEncounter.objects.filter(
+            practitioner_name=practitioner.name, practitioner_identifier=practitioner, encounter_date=friday, session='morning', assigned_encounter__encounter_status='in-progress')
+        in_progress_encounters['Saturday']['morning'] = AssignedEncounter.objects.filter(
+            practitioner_name=practitioner.name, practitioner_identifier=practitioner, encounter_date=saturday, session='morning', assigned_encounter__encounter_status='in-progress')
+        in_progress_encounters['Monday']['afternoon'] = AssignedEncounter.objects.filter(
+            practitioner_name=practitioner.name, practitioner_identifier=practitioner, encounter_date=monday, session='afternoon', assigned_encounter__encounter_status='in-progress')
+        in_progress_encounters['Tuesday']['afternoon'] = AssignedEncounter.objects.filter(
+            practitioner_name=practitioner.name, practitioner_identifier=practitioner, encounter_date=tuesday, session='afternoon', assigned_encounter__encounter_status='in-progress')
+        in_progress_encounters['Wednesday']['afternoon'] = AssignedEncounter.objects.filter(
+            practitioner_name=practitioner.name, practitioner_identifier=practitioner, encounter_date=wednesday, session='afternoon', assigned_encounter__encounter_status='in-progress')
+        in_progress_encounters['Thursday']['afternoon'] = AssignedEncounter.objects.filter(
+            practitioner_name=practitioner.name, practitioner_identifier=practitioner, encounter_date=thursday, session='afternoon', assigned_encounter__encounter_status='in-progress')
+        in_progress_encounters['Friday']['afternoon'] = AssignedEncounter.objects.filter(
+            practitioner_name=practitioner.name, practitioner_identifier=practitioner, encounter_date=friday, session='afternoon', assigned_encounter__encounter_status='in-progress')
+        in_progress_encounters['Saturday']['afternoon'] = AssignedEncounter.objects.filter(
+            practitioner_name=practitioner.name, practitioner_identifier=practitioner, encounter_date=saturday, session='afternoon', assigned_encounter__encounter_status='in-progress')
         context = {
             'schedule_dates': schedule_dates,
             'days_of_week': days_of_week,
-            'assigned_encounters': assigned_encounters
+            'assigned_encounters': assigned_encounters,
+            'in_progress_encounters': in_progress_encounters
         }
         return render(request, 'fhir/schedule.html', context)
 
     def post(self, request, practitioner_identifier):
         practitioner = PractitionerModel.objects.get(
             identifier=practitioner_identifier)
-        date = request.POST['day_of_work']
-        session = request.POST['session']
-        now = timezone.localtime(timezone.now()).date()
-        if now.weekday() == 6:
-            monday = now + timedelta(days=1)
-        else:
-            monday = now - timedelta(days=now.weekday())
-        gap_days = int(date)
-        Schedule.objects.create(practitioner_name=practitioner.name, practitioner_identifier=practitioner,
-                                schedule_date=monday + timedelta(days=gap_days), session=session)
-        return HttpResponseRedirect(self.request.path_info)
+        if request.POST.get('encounter_identifier'):
+            encounter = EncounterModel.objects.get(encounter_identifier=request.POST['encounter_identifier'])
+            encounter.encounter_start = timezone.localtime(timezone.now())
+            encounter.encounter_status = 'in-progress'
+            encounter.save()
+            return HttpResponseRedirect('/fhir/encounter/' + encounter.patient.identifier + '/' + encounter.encounter_identifier + '/hanhchinh')
+        else: 
+            date = request.POST['day_of_work']
+            session = request.POST['session']
+            now = timezone.localtime(timezone.now()).date()
+            if now.weekday() == 6:
+                monday = now + timedelta(days=1)
+            else:
+                monday = now - timedelta(days=now.weekday())
+            gap_days = int(date)
+            if now > monday + timedelta(days=gap_days):
+                messages.error(request, "Không thể đăng ký lịch cho ngày đã qua")
+                return HttpResponseRedirect(self.request.path_info) 
+            try:
+                Schedule.objects.get(practitioner_name=practitioner.name, practitioner_identifier=practitioner,
+                                    schedule_date=monday + timedelta(days=gap_days), session=session)
+                messages.error(request, 'Bạn đã đăng ký lịch cho buổi này rồi')
+            except Schedule.DoesNotExist:
+                Schedule.objects.create(practitioner_name=practitioner.name, practitioner_identifier=practitioner,
+                                        schedule_date=monday + timedelta(days=gap_days), session=session)
+            return HttpResponseRedirect(self.request.path_info) 
 
 
 class manage_schedule(LoginRequiredMixin, View):
@@ -3672,7 +3726,7 @@ class manage_images(LoginRequiredMixin, View):
             'completed_services': completed_services
         }
         return render(request, 'fhir/manage_images.html', context)
-        pass
+        
 
     def post(self, request):
         if request.POST['submit_type'] == 'forward':

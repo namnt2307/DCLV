@@ -86,6 +86,7 @@ html {
     width: 100%;
     min-height: 60vh;
     position: relative;
+    margin-top: 20px;
 }
 .content-item {
     flex: 1;
