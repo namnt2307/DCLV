@@ -22,7 +22,7 @@ import uuid
 import os
 from lib import dttype as dt
 # from fhir.forms import EHRCreationForm
-from administration.models import PractitionerModel, ClinicalDepartment
+from administration.models import PractitionerModel, ClinicalDepartment, Announcement
 from datetime import datetime, timedelta, date
 import time
 import urllib.request
@@ -249,9 +249,12 @@ def createobservations(encounter_instance, service_identifier, service_name):
 
 @login_required(login_url='/login/')
 def user_app(request):
-    User = get_user_model()
+    announcements = Announcement.objects.all()    
+    context = {
+        'announcements': announcements
+    }
     page = 'fhir/doctor.html'
-    return render(request, page)
+    return render(request, page, context)
 
 
 @login_required(login_url='/login/')
