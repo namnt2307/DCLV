@@ -11,6 +11,9 @@ html, body {
 p {
     font-size: 18px;
 }
+li{
+    list-style-position: inside;
+}
 .header {
     display: flex;
     height: 120px;

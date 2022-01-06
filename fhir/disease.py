@@ -2,6 +2,7 @@ from os import error
 import openpyxl as xl
 import re
 from fhir.models import DischargeDisease, ComorbidityDisease, Medicine, Test, Image
+from administration.models import ClinicalDepartment
 
 
 #Get discharge diseases:
@@ -95,5 +96,23 @@ for i in range(1, max_row + 1):
     try:
         print(image_name)
         Image.objects.create(image_name=image_name, image_category=category)
+    except Exception as e:
+        print(e)
+        
+        
+wb = xl.load_workbook('fhir/KHOAKHAMBENH.xlsx', data_only=True)
+sh = wb['Sheet1']
+max_row = sh.max_row
+for i in range(1, max_row + 1):
+    location_name_cell = sh.cell(row=i, column=2)
+    location_name = location_name_cell.value
+    location_type_cell = sh.cell(row=i, column=3)
+    location_type = location_type_cell.value
+    if location_name == None:
+        category = sh.cell(row=i, column=1).value
+        continue
+    try:
+        print(location_name)
+        ClinicalDepartment.objects.create(department_category=category, department_name=location_name, department_type=location_type)
     except Exception as e:
         print(e)

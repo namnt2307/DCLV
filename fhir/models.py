@@ -23,14 +23,13 @@ class PatientModel(models.Model):
         ('S', 'Cơ quan nhà nước'),
         ('U', 'Không xác định')
     )
-    identifier = models.CharField(primary_key=True, max_length=10)
+    identifier = models.CharField(primary_key=True, max_length=100)
     name = models.CharField(default='', max_length=100)
     birthdate = models.DateField(default=timezone.localtime(timezone.now()))
     gender = models.CharField(max_length=3, choices=GENDER_CHOICES, default='')
     work_address = models.CharField(default='', max_length=255)
     home_address = models.CharField(default='', max_length=255)
-    telecom = models.CharField(default='', max_length=10)
-    group_name = models.CharField(default='patient', max_length=20)
+    telecom = models.CharField(default='', max_length=100)
     contact_relationship = models.CharField(max_length=100, null=True, blank=True, default='C', choices=CONTACT_RELATIONSHIP_CHOICES)
     contact_name = models.CharField(max_length=100, blank=True, null=True)
     contact_telecom = models.CharField(max_length=100, blank=True, null=True)
@@ -76,13 +75,13 @@ class EncounterModel(models.Model):
     encounter_length = models.CharField(max_length=100, null=True)
     encounter_status = models.CharField(max_length=20, default='queued')
     encounter_class = models.CharField(
-        default="SS", null=True, max_length=10, choices=CLASS_CHOICES)
+        default="SS", null=True, max_length=100, choices=CLASS_CHOICES)
     encounter_type = models.CharField(
-        default="2", null=True, max_length=30, choices=TYPE_CHOICES)
-    encounter_service = models.CharField(null=True, max_length=20)
+        default="2", null=True, max_length=100, choices=TYPE_CHOICES)
+    encounter_service = models.CharField(null=True, max_length=100)
     encounter_priority = models.CharField(
-        null=True, max_length=10, choices=PRIORITY_CHOICES)
-    encounter_reason = models.CharField(null=True, max_length=10)
+        null=True, max_length=100, choices=PRIORITY_CHOICES)
+    encounter_reason = models.CharField(null=True, max_length=1000)
     encounter_location = models.ForeignKey(ClinicalDepartment, on_delete=SET_NULL, null=True)
     encounter_participant = models.CharField(max_length=100, null=True)
     encounter_participant_identifier = models.ForeignKey(PractitionerModel, null=True, on_delete=SET_NULL)
@@ -108,7 +107,7 @@ class ConditionModel(models.Model):
     encounter_identifier = models.ForeignKey(
         EncounterModel, on_delete=models.CASCADE)
     condition_identifier = models.CharField(max_length=100, primary_key=True)
-    condition_code = models.CharField(max_length=200, default='')
+    condition_code = models.CharField(max_length=2000, default='')
     condition_clinical_status = models.CharField(
         max_length=100, choices=CLINICAL_CHOICES, blank=True)
     condition_verification_status = models.CharField(max_length=100, default='confirmed')
@@ -119,7 +118,7 @@ class ConditionModel(models.Model):
         choices=SEVERITY_CHOICES, max_length=100)
     condition_asserter = models.CharField(max_length=100, null=True)
     condition_asserter_identifier = models.CharField(max_length=100, null=True)
-    condition_note = models.CharField(max_length=100, null=True, blank=True)
+    condition_note = models.CharField(max_length=1000, null=True, blank=True)
     condition_version = models.IntegerField(default=0)
 
 
@@ -139,13 +138,13 @@ class ServiceRequestModel(models.Model):
     service_status = models.CharField(default='draft', max_length=100, choices=SERVICE_STATUS_CHOICES)
     service_intent = models.CharField(max_length=100, default='order')
     service_category = models.CharField(max_length=100)
-    service_code = models.CharField(max_length=100, null=True)
+    service_code = models.CharField(max_length=1000, null=True)
     service_occurrence = models.DateField(max_length=100)
     service_authored = models.DateTimeField(max_length=100)
     service_performed_date = models.DateTimeField(max_length=100, null=True)
     service_requester = models.CharField(max_length=100,null=True)
     service_requester_identifier = models.ForeignKey(PractitionerModel, null=True, on_delete=SET_NULL, related_name='service_requester')
-    service_note = models.CharField(max_length=100, null=True, blank=True)
+    service_note = models.CharField(max_length=1000, null=True, blank=True)
     service_performer = models.CharField(max_length=100, null=True)
     service_performer_identifier = models.ForeignKey(PractitionerModel, null=True, on_delete=SET_NULL, related_name='service_performer')
     service_reason_code = models.CharField(max_length=1000, null=True, blank=True)
@@ -158,14 +157,14 @@ class ObservationModel(models.Model):
     service_identifier = models.ForeignKey(ServiceRequestModel, on_delete=models.CASCADE, null=True)
     observation_identifier = models.CharField(max_length=100, primary_key=True)
     observation_status = models.CharField(default='registered', max_length=10)
-    observation_category = models.CharField(default='', max_length=10)
-    observation_code = models.CharField(default='', max_length=100)
+    observation_category = models.CharField(default='', max_length=100)
+    observation_code = models.CharField(default='', max_length=1000)
     observation_effective = models.DateTimeField(default=timezone.localtime(timezone.now()))
     observation_performer = models.CharField(default='', max_length=100)
     observation_performer_identifier = models.ForeignKey(PractitionerModel, null=True, on_delete=models.SET_NULL)
     observation_value_quantity = models.CharField(
-        default='', max_length=10, null=True)
-    observation_value_unit = models.CharField(default='', max_length=10)
+        default='', max_length=100, null=True)
+    observation_value_unit = models.CharField(default='', max_length=100)
     observation_note = models.CharField(default='', max_length=300, null=True, blank=True)
     observation_reference_range = models.CharField(max_length=100, null=True)
     observation_version = models.IntegerField(default=0)
@@ -198,11 +197,11 @@ class ProcedureModel(models.Model):
     procedure_performer = models.CharField(max_length=100, null=True)
     procedure_performer_identifier = models.ForeignKey(PractitionerModel, null=True, on_delete=models.SET_NULL)
     procedure_location = models.CharField(max_length=100, null=True)
-    procedure_reason_code = models.CharField(max_length=100, null = True)
+    procedure_reason_code = models.CharField(max_length=1000, null = True)
     procedure_outcome = models.CharField(max_length=100, null=True, choices=PROCEDURE_OUTCOME_CHOICES)
-    procedure_complication = models.CharField(max_length=100, null=True, blank=True)
-    procedure_follow_up = models.CharField(max_length=100, null=True, blank=True)
-    procedure_note = models.CharField(max_length=100, null=True, blank=True)
+    procedure_complication = models.CharField(max_length=1000, null=True, blank=True)
+    procedure_follow_up = models.CharField(max_length=1000, null=True, blank=True)
+    procedure_note = models.CharField(max_length=1000, null=True, blank=True)
     procedure_used = models.CharField(max_length=100, null=True, blank=True)
     procedure_version = models.IntegerField(default=0)
 
@@ -235,14 +234,14 @@ class AllergyModel(models.Model):
     allergy_verification_status = models.CharField(max_length=100, default='confirmed')
     allergy_type = models.CharField(max_length=100, default='allergy')
     allergy_category = models.CharField(max_length=100, choices=CATEGORY_CHOICES)
-    allergy_code = models.CharField(max_length=100)
+    allergy_code = models.CharField(max_length=1000)
     allergy_criticality = models.CharField(max_length=100, choices=CRITICALITY_CHOICES)
     allergy_onset = models.DateField(null=True)
     allergy_last_occurrence = models.DateField(null=True, blank=True)
     allergy_reaction_substance = models.CharField(max_length=100, null=True, blank=True)
     allergy_reaction_manifestation = models.CharField(max_length=100, null=True)
     allergy_reaction_severity = models.CharField(max_length=100, choices=SEVERITY_CHOICES, blank=True)
-    allergy_reaction_note = models.CharField(max_length=100, null=True, blank=True)
+    allergy_reaction_note = models.CharField(max_length=1000, null=True, blank=True)
     allergy_version = models.IntegerField(default=0)
 
 
@@ -279,19 +278,19 @@ class MedicationModel(models.Model):
     medication_medication = models.CharField(max_length=100)
     medication_effective = models.DateField()
     medication_date_asserted = models.DateField(null=True)
-    medication_reason_code = models.CharField(max_length=100, default='')
+    medication_reason_code = models.CharField(max_length=1000, default='')
     dosage_additional_instruction = models.CharField(max_length=100, blank=True)
     dosage_patient_instruction = models.CharField(max_length=100, blank=True)
     dosage_frequency = models.PositiveIntegerField(default=1)
     dosage_period = models.PositiveIntegerField(default=1)
-    dosage_period_unit = models.CharField(max_length=10, choices=UNIT_CHOICES, null=True)
+    dosage_period_unit = models.CharField(max_length=100, choices=UNIT_CHOICES, null=True)
     dosage_duration = models.PositiveIntegerField(default=1)
-    dosage_duration_unit = models.CharField(max_length=10, choices=UNIT_CHOICES, null=True)
+    dosage_duration_unit = models.CharField(max_length=100, choices=UNIT_CHOICES, null=True)
     dosage_route = models.CharField(max_length=100)
     dosage_quantity = models.PositiveIntegerField(default=1)
-    dosage_quantity_unit = models.CharField(max_length=10)
+    dosage_quantity_unit = models.CharField(max_length=100)
     dosage_when = models.CharField(choices=DOSAGE_WHEN_CHOICES, max_length=100, blank=True)
-    dosage_offset = models.CharField(max_length=10, null=True, blank=True)
+    dosage_offset = models.CharField(max_length=100, null=True, blank=True)
     medication_version = models.IntegerField(default=0)
 
 
@@ -314,23 +313,23 @@ class DiagnosticReportModel(models.Model):
 
 
 class DischargeDisease(models.Model):
-    disease_code = models.CharField(max_length=10)
-    disease_name = models.CharField(max_length=100)    
-    disease_search = models.CharField(max_length=100)
+    disease_code = models.CharField(max_length=100)
+    disease_name = models.CharField(max_length=1000)    
+    disease_search = models.CharField(max_length=1000)
 
 
 class ComorbidityDisease(models.Model):
     discharge_diseases = models.ForeignKey(DischargeDisease, on_delete=models.CASCADE)
-    disease_code = models.CharField(max_length=10)
-    disease_name = models.CharField(max_length=100)
-    disease_search = models.CharField(max_length=100)
+    disease_code = models.CharField(max_length=100)
+    disease_name = models.CharField(max_length=1000)
+    disease_search = models.CharField(max_length=1000)
     
 
 class Schedule(models.Model):
     practitioner_name = models.CharField(max_length=100)
     practitioner_identifier = models.ForeignKey(PractitionerModel, on_delete=models.CASCADE)
     schedule_date = models.DateField()
-    session = models.CharField(max_length=20)
+    session = models.CharField(max_length=100)
   
     
 class AssignedEncounter(models.Model):
@@ -339,11 +338,11 @@ class AssignedEncounter(models.Model):
     practitioner_location = models.CharField(max_length=100, null=True)
     assigned_encounter = models.OneToOneField(EncounterModel, on_delete=models.CASCADE)
     encounter_date = models.DateField()
-    session = models.CharField(max_length=20)
+    session = models.CharField(max_length=100)
     
     
 class Medicine(models.Model):
-    medicine_name = models.CharField(max_length=200, unique=True)
+    medicine_name = models.CharField(max_length=1000, unique=True)
     medicine_unit = models.CharField(max_length=50, null=True)
     medicine_price_on_unit = models.IntegerField(null=True)
     

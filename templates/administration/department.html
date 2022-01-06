@@ -7,11 +7,11 @@
             <ul>
                 {% for department in departments|get_item:category %}
                     <li>{{department.department_name}}</li>
-                    <ol>
+                    <ul>
                         {% for practitioner in department.practitionermodel_set.all %}
                         <li>{{practitioner.name}} - {{practitioner.identifier}}</li>
                         {% endfor %}
-                    </ol>
+                    </ul>
                 {% endfor %}
             </ul>
         {% endfor %}
