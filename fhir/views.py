@@ -2704,7 +2704,7 @@ def delete(request):
                 messages.error(
                     request, "Kho FHIR không hoạt động, không thể ngừng chia sẻ tài nguyên")
                 return HttpResponseRedirect(url_next)
-            get_encounter = requests.delete(fhir_server + "/Encounter?identifier=urn:trinhcongminh|" +
+            get_encounter = requests.get(fhir_server + "/Encounter?identifier=urn:trinhcongminh|" +
                                             encounter.encounter_identifier, headers={'Content-type': 'application/xml'})
             if get_encounter.status_code == 200 and 'entry' in get_encounter.content.decode('utf-8'):
                 observations = ObservationModel.objects.filter(
