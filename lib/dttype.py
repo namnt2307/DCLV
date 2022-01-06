@@ -1588,7 +1588,7 @@ def query_service_history(service_id, version, query_type):
             # service['service_identifier'] = service_identifier
             status = service_resource.find('d:status', ns)
             if status != None:
-                service['service_status'] = status.attrib['value']
+                service['get_service_status_display'] = status.attrib['value']
             intent = service_resource.find('d:intent', ns)
             if intent != None:
                 service['service_intent'] = intent.attrib['value']
