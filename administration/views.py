@@ -4,14 +4,15 @@ from django.views import View
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
-from .forms import PractitionerForm
-from .models import PractitionerModel, ClinicalDepartment
+from .forms import PractitionerForm, AnnouncementForm
+from .models import PractitionerModel, ClinicalDepartment, Announcement
 from lib import dttype as dt
 from django.contrib import messages
 import requests
+import os
 from django.template.defaulttags import register
 # Create your views here.
-fhir_server = "http://10.0.0.25:8080/fhir"
+fhir_server = os.getenv('FHIR_SERVER', "http://34.101.85.15:8080/fhir")
 
 @register.filter
 def subtract(value, arg):
@@ -23,9 +24,34 @@ def make_range(num):
 
 @login_required(login_url='/login/')
 def administration_view(request):
-    return render(request, 'administration/index.html')
+    announcements = Announcement.objects.all()
+    context = {
+        'announcements': announcements
+    }
+    return render(request, 'administration/index.html', context)
 
 
+
+class announcement(LoginRequiredMixin, View):
+    login_url = '/login'
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.role != 'admin':
+            messages.error(request, "Bạn không có quyền truy cập trang này")
+            return HttpResponseRedirect('/')
+        return super().dispatch(request, *args, **kwargs)  
+    def get(self, request):
+        form = AnnouncementForm()
+        context = {
+            'form': form
+        }
+        return render(request, 'administration/announcement.html', context)
+    def post(self, request):
+        form = AnnouncementForm(request.POST or None)
+        if form.is_valid():
+            form.save()
+        else:
+            print(form.errors)
+        return HttpResponseRedirect('/')
 class staff(LoginRequiredMixin, View):
     login_url = "/login/"
      
@@ -183,3 +209,5 @@ class department(LoginRequiredMixin, View):
         except:
             messages.error(request, "Thêm không thành công")
             return HttpResponseRedirect(self.request.path_info)
+        
+        

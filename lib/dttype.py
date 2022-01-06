@@ -7,7 +7,7 @@ from datetime import datetime
 
 ns = {"d": "http://hl7.org/fhir"}
 
-fhir_server = os.getenv("FHIR_SERVER", "http://10.0.0.25:8080/fhir")
+fhir_server = os.getenv('FHIR_SERVER',"http://34.101.85.15:8080/fhir")
 
 
 def identifier_type(

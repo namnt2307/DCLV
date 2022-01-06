@@ -1,5 +1,5 @@
 import django.forms as forms
-from .models import PractitionerModel
+from .models import PractitionerModel, Announcement
 
 
 class PractitionerForm(forms.ModelForm):
@@ -10,3 +10,7 @@ class PractitionerForm(forms.ModelForm):
         
         
 
+class AnnouncementForm(forms.ModelForm):
+    class Meta:
+        model = Announcement
+        fields = ('title', 'date_issued', 'content')

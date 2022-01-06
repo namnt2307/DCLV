@@ -42,5 +42,8 @@ class PractitionerModel(models.Model):
 
 
     
-
+class Announcement(models.Model):
+    title = models.CharField(max_length=200)
+    date_issued = models.DateTimeField()
+    content = models.CharField(max_length=10000)
 
