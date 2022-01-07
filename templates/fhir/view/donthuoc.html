@@ -74,7 +74,7 @@
                             <tr>
                                 <td colspan="8" style="text-align: left;">
                                     <div class="flex_container">
-                                        <p class="title">Thời điểm sử dụng:</p><p class="value"> {{when|get_item:medication.dosage_when}} {%if medication.dosage_offset != '0'%}{{medication.dosage_offset}} phút {%endif%}</p>
+                                        <p class="title">Thời điểm sử dụng:</p><p class="value"> {{when|get_item:medication.dosage_when}} {%if medication.dosage_offset != None %}{{medication.dosage_offset}} phút {%endif%}</p>
                                     </div>
                                     <div class="flex_container">
                                         <p class="title">Hướng dẫn thêm:</p><p class="value"> {{medication.dosage_additional_instruction}}</p>
