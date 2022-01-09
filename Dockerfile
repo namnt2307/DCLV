@@ -7,7 +7,7 @@ EXPOSE 8000
 WORKDIR /doan
 
 COPY requirements.txt /doan
-RUN apk update && apk add --no-cache musl-dev build-base gcc alpine-sdk mariadb-connector-c-dev \
+RUN apk update && apk add --no-cache musl-dev build-base gcc alpine-sdk mariadb-connector-c-dev python3-dev py3-setuptools \
     && pip3 install -r requirements.txt && rm -rf /var/cache/apk/* 
 
 ENV FHIR_SERVER="http://35.219.75.55:8080/fhir"
