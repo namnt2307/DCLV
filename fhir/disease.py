@@ -110,8 +110,6 @@ for i in range(1, max_row + 1):
         Image.objects.create(image_name=image_name, image_category=category)
     except Exception as e:
         print(e)
-<<<<<<< HEAD
-=======
         
         
 wb = xl.load_workbook('fhir/KHOAKHAMBENH.xlsx', data_only=True)
@@ -130,4 +128,3 @@ for i in range(1, max_row + 1):
         ClinicalDepartment.objects.create(department_category=category, department_name=location_name, department_type=location_type)
     except Exception as e:
         print(e)
->>>>>>> github/minh-1
