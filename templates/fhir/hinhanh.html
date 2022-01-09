@@ -13,7 +13,6 @@
         <th class="cell-data-10">Ngày yêu cầu</th>
         <th class="cell-data-10">Bác sĩ yêu cầu</th>
         <th class="cell-data-10">Ghi chú</th>
-        <th class="cell-data-10">Kết quả hình ảnh</th>
         <th class="cell-data-10">Kết quả</th>
         {% if services %}
         <th></th>
@@ -31,8 +30,6 @@
             <td class="cell-data-10">{{service.service_authored|date:"d-m-Y"}}</td>
             <td class="cell-data-10">{{service.service_requester}}</td>
             <td class="cell-data-10">{{service.service_note|default_if_none:"Không"}}</td>
-            <td></td>
-            {%comment%}<td><a href="{%url 'fhir:ketquahinhanh'  data.Patient.identifier data.Encounter.encounter_identifier service.service_identifier %}"></a></td>{%endcomment%}
             <td class="cell-data-10"><a href="{%url 'fhir:chitiethinhanh'  data.Patient.identifier data.Encounter.encounter_identifier service.service_identifier%}">Kết quả</a></td>
             <td>
                 <form action="{% url 'fhir:delete' %}" method="POST">
