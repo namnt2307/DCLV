@@ -300,6 +300,16 @@ class MedicationModel(models.Model):
     medication_version = models.IntegerField(default=0)
 
 
+
+def upload_to_folder(instance, filename):
+    return "static/img/patient/procedure_results/" + '/'.join([instance.procedure_identifier.encounter_identifier.patient.identifier, instance.procedure_identifier.encounter_identifier.encounter_identifier, filename]) 
+
+
+class ImageResult(models.Model):
+    procedure_identifier = models.ForeignKey(ProcedureModel, on_delete=models.CASCADE)
+    image = models.ImageField(upload_to=upload_to_folder, null=True)
+
+
 class DiagnosticReportModel(models.Model):
     encounter_identifier = models.ForeignKey(EncounterModel, on_delete=models.CASCADE)
     service_identifier = models.OneToOneField(

@@ -15,7 +15,7 @@ from django.utils import timezone
 from login.forms import UserCreationForm
 from handlers import handlers
 from .forms import EncounterForm, ConditionForm, ProcedureForm, ProcedureDetailForm, MedicationForm, ServiceRequestForm, DiagnosticReportForm, AllergyForm, PatientForm
-from .models import AssignedEncounter, EncounterModel, MedicationModel, ServiceRequestModel, PatientModel, ConditionModel, ObservationModel, ProcedureModel, DiagnosticReportModel, AllergyModel, DischargeDisease, ComorbidityDisease, Schedule, Medicine, Test, Image
+from .models import AssignedEncounter, EncounterModel, MedicationModel, ServiceRequestModel, PatientModel, ConditionModel, ObservationModel, ProcedureModel, DiagnosticReportModel, AllergyModel, DischargeDisease, ComorbidityDisease, Schedule, Medicine, Test, Image, ImageResult
 import xml.etree.ElementTree as ET
 import requests
 import uuid
@@ -1893,6 +1893,7 @@ class chitiethinhanh(LoginRequiredMixin, View):
             encounter_identifier=encounter_instance, service_identifier=service_identifier)
         service_instance = ServiceRequestModel.objects.get(
             service_identifier=service_identifier)
+        images = ImageResult.objects.filter(procedure_identifier=procedure)
         try:
             diagnostic_report_instance = DiagnosticReportModel.objects.get(
                 service_identifier=service_instance)
@@ -1905,7 +1906,8 @@ class chitiethinhanh(LoginRequiredMixin, View):
             'service': service_instance,
             'procedure': procedure,
             'diagnostic_report': diagnostic_report_instance,
-            'diagnostic_form': diagnostic_form
+            'diagnostic_form': diagnostic_form,
+            'images': images
         }
         return render(request, 'fhir/chitietthuthuat.html', context)
 
@@ -1918,6 +1920,8 @@ class chitiethinhanh(LoginRequiredMixin, View):
             service_identifier=service_identifier)
         practitioner = PractitionerModel.objects.get(
             identifier=request.user.username)
+        print(request.POST)
+        print(request.FILES)
         form = ProcedureDetailForm(request.POST, instance=procedure_instance)
         if form.is_valid():
             print(request.POST)
@@ -1951,6 +1955,14 @@ class chitiethinhanh(LoginRequiredMixin, View):
                     DiagnosticReportModel.objects.create(**diagnostic_report)
             procedure_instance = ProcedureModel.objects.get(
                 encounter_identifier=encounter_instance, service_identifier=service_identifier)
+            if len(request.FILES) != 0:
+                uploaded_images = ImageResult.objects.filter(procedure_identifier=procedure_instance)
+                for image in uploaded_images:
+                    os.remove(image.image.path)
+                uploaded_images.delete()
+                upload_images = request.FILES.getlist('result_images')
+                for image in upload_images:
+                    new_image = ImageResult.objects.create(procedure_identifier=procedure_instance, image=image)
             service_instance.service_performer = practitioner.name
             service_instance.service_performer_identifier = practitioner
             service_instance.save()
@@ -2109,6 +2121,7 @@ class save(LoginRequiredMixin, View):
         data['Encounter']['location'] = encounter_instance.encounter_location.department_name
         data['Encounter']['reason_code'] = encounter_instance.encounter_reason
         data['Encounter']['length'] = encounter_instance.encounter_length
+        print(data['Encounter'])
         if get_encounter:
             data['Encounter']['id'] = get_encounter['id']
         encounter_data = dt.create_encounter_resource(
@@ -3158,6 +3171,7 @@ class view_thuthuat(LoginRequiredMixin, View):
         services_history = {}
         procedures_history = {}
         diagnostic_reports_history = {}
+        images = {}
         if encounter.encounter_storage == 'local':
             services = ServiceRequestModel.objects.filter(
                 encounter_identifier=encounter, service_category='Imaging')
@@ -3171,6 +3185,7 @@ class view_thuthuat(LoginRequiredMixin, View):
                 procedures[service.service_identifier] = ProcedureModel.objects.filter(
                     encounter_identifier=encounter, service_identifier=service)
                 for procedure in procedures[service.service_identifier]:
+                    images[procedure.procedure_identifier] = ImageResult.objects.filter(procedure_identifier=procedure)
                     if procedure.procedure_version > 1:
                         procedures_history[procedure.procedure_identifier] = []
                         procedure_id = dt.query_procedure(
@@ -3268,6 +3283,7 @@ class view_thuthuat(LoginRequiredMixin, View):
             'services': services,
             'procedures': procedures,
             'diagnostic_reports': diagnostic_reports,
+            'images': images,
             'services_history': services_history,
             'procedures_history': procedures_history,
             'diagnostic_reports_history': diagnostic_reports_history,

@@ -10,7 +10,7 @@
             {% if request.user.role == 'diagnostic imaging technician' %}
                 {% if procedure.procedure_status == 'preparation'%}
                     <div>
-                        <form action="" method="POST">
+                        <form action="" enctype="multipart/form-data" method="POST">
                             {%csrf_token%} 
                             <div style="margin: 0 auto">
                                 <div class="flex_container">
@@ -32,6 +32,10 @@
                                 <div class="flex_container">
                                     <label class="title title-long">Ghi chú của bác sĩ</label>
                                     {{procedure_form.procedure_note|add_class:"value"}}
+                                </div>
+                                <div class="flex_container" style="position: relative;">
+                                    <label for="files" class="title title-long">Hình ảnh chẩn đoán</label>
+                                    <input type="file" id="files" name='result_images' multiple class="value" style="border: none; z-index: 2;">
                                 </div>
                             </div>
                             <div style="margin-top: 10px">
@@ -66,11 +70,16 @@
                         <div class="flex_container">
                             <p class="title title-long"><b>Bác sĩ thực hiện</b></p> <p class="value">{{procedure.procedure_performer}}</p>
                         </div>
+                        <div style="display: flex; justify-content: space-evenly; flex-wrap: wrap">
+                            {% for image in images %}
+                                <img src="{{image.image.url}}" alt="{{image.image.name}}" style="width:500px; height: 600px; background-color:white; margin: 10px">
+                            {% endfor %}
+                        </div>
                         <p><b>Chẩn đoán của bác sĩ: {{diagnostic_report.diagnostic_performer|default_if_none:''}}</b></p>
                         <textarea name="" id="" cols="30" rows="10" disabled>{{diagnostic_report.diagnostic_conclusion}}</textarea>
                     </div>
                     <div id="form" style="display: none;">
-                        <form action="" method="POST">
+                        <form action="" enctype="multipart/form-data" method="POST">
                             {%csrf_token%}
                             {%with 'value:'|add:procedure.procedure_identifier as code%}
                                 {{procedure_form.procedure_identifier|attr:code|attr:'type:hidden'}}
@@ -106,6 +115,10 @@
                                 <p>{{procedure_form.procedure_note|attr:code|add_class:'value'}}</p>
                             </div>
                             {%endwith%}
+                            <div class="flex_container" style="position: relative;">
+                                <label for="files" class="title title-long">Hình ảnh chẩn đoán</label>
+                                <input type="file" id="files" name="result_images" multiple class="value" style="border: none; z-index: 2;">
+                            </div>
                             <p><b>Chẩn đoán của bác sĩ:</b></p>
                             <input type="hidden" name="diagnostic_report_identifier" id="" value="{{diagnostic_report.diagnostic_identifier}}">
                             <textarea name="diagnostic_report_conclusion" id="" cols="30" rows="10">{{diagnostic_report.diagnostic_conclusion}}</textarea>`
@@ -161,6 +174,11 @@
                 <div class="flex_container">
                     <p class="title title-long"><b>Bác sĩ thực hiện:</b></p> <p class="value">{{procedure.procedure_performer}}</p>
                 </div>
+                <div style="display: flex; justify-content: space-evenly; flex-wrap: wrap">
+                    {% for image in images %}
+                        <img src="{{image.image.url}}" alt="{{image.image.name}}" style="width:500px; height: 600px; background-color:white; margin: 10px">
+                    {% endfor %}
+                </div>
                 <p style="height: 45px;"><b>Chẩn đoán của bác sĩ: {{diagnostic_report.diagnostic_performer|default_if_none:''}}</b></p>
                 <textarea name="" id="" cols="30" rows="10" disabled>{{diagnostic_report.diagnostic_conclusion}}</textarea>
             </div>
@@ -187,6 +205,11 @@
             <div class="flex_container">
                 <p class="title title-long"><b>Bác sĩ thực hiện:</b></p> <p class="value">{{procedure.procedure_performer}}</p>
             </div>            
+            <div style="display: flex; justify-content: space-evenly; flex-wrap: wrap">
+                {% for image in images %}
+                    <img src="{{image.image.url}}" alt="{{image.image.name}}" style="width:500px; height: 600px; background-color:white; margin: 10px">
+                {% endfor %}
+            </div>
                 <p style="height: 45px;"><b>Chẩn đoán của bác sĩ: {{diagnostic_report.diagnostic_performer|default_if_none:''}}</b></p>
                 <div id="diagnostic_report_data" style="border: solid black 1px; min-height: 50px; padding:12px">
                     {{diagnostic_report.diagnostic_conclusion}}
