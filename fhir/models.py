@@ -179,9 +179,9 @@ class ObservationModel(models.Model):
         ServiceRequestModel, on_delete=models.CASCADE, null=True
     )
     observation_identifier = models.CharField(max_length=100, primary_key=True)
-    observation_status = models.CharField(default="registered", max_length=10)
+    observation_status = models.CharField(default="final", max_length=10)
     observation_category = models.CharField(default="", max_length=100)
-    observation_code = models.CharField(default="", max_length=255)
+    observation_code = models.CharField(default="", max_length=1000)
     observation_effective = models.DateTimeField(
         default=timezone.localtime(timezone.now())
     )

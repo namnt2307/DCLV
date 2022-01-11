@@ -242,7 +242,7 @@ def createobservations(encounter_instance, service_identifier, service_name):
     if request_observations:
         for key, value in request_observations.items():
             ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_instance, observation_identifier=service_identifier +
-                                            '_' + datetime.strftime(timezone.localtime(timezone.now()), "%d%m%Y%H%M%S%f"), observation_code=key, observation_category='laboratory', observation_value_unit=value['unit'], observation_reference_range=value['ref_range'])
+                                            '_' + datetime.strftime(timezone.localtime(timezone.now()), "%d%m%Y%H%M%S%f"), observation_status='final', observation_code=key, observation_category='laboratory', observation_value_unit=value['unit'], observation_reference_range=value['ref_range'])
     else:
         print('no valid data')
 
@@ -1475,7 +1475,7 @@ class chitietxetnghiem(LoginRequiredMixin, View):
                 print(value[1])
                 if value[0] != '' and value[1] != '':
                     ObservationModel.objects.create(encounter_identifier=encounter_instance, service_identifier=service_instance, observation_identifier=service_identifier +
-                                                    '_' + datetime.strftime(timezone.localtime(timezone.now()), "%d%m%Y%H%M%S%f"), observation_code=value[0], observation_category='laboratory', observation_value_quantity=value[1], observation_value_unit=value[3], observation_reference_range=value[2])
+                                                    '_' + datetime.strftime(timezone.localtime(timezone.now()), "%d%m%Y%H%M%S%f"), observation_status='final', observation_code=value[0], observation_category='laboratory', observation_value_quantity=value[1], observation_value_unit=value[3], observation_reference_range=value[2])
         service_instance.service_performer = practitioner.name
         service_instance.service_performer_identifier = practitioner
         service_instance.save()
@@ -2024,7 +2024,7 @@ class chandoan(LoginRequiredMixin, View):
                 diagnostic.service_identifier = service_instance
                 diagnostic.diagnostic_identifier = diagnostic_identifier
                 diagnostic.diagnostic_effective = timezone.localtime(timezone.now())
-                diagnostic.diagnostic_status = 'registered'
+                diagnostic.diagnostic_status = 'final'
                 diagnostic.diagnostic_category = service_instance.service_category
                 diagnostic.diagnostic_code = service_instance.service_code
                 diagnostic.diagnostic_performer = practitioner.name
