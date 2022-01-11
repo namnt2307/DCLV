@@ -2598,6 +2598,7 @@ class save(LoginRequiredMixin, View):
                     medication, patient['id'], patient['name'], encounter['id'])
                 test_medication = requests.post(fhir_server + '/MedicationStatement/$validate', headers={                    
                     'Content-type': 'application/xml'}, data=medication_data.decode('utf-8'))
+                print(test_medication.content.decode('utf-8'))
                 if get_medication:
                     put_medication = requests.put(fhir_server + "/MedicationStatement/" + get_medication['id'], headers={
                         'Content-type': 'application/xml'}, data=medication_data.decode('utf-8'))

@@ -108,16 +108,16 @@
             </div>
         </div>
         {% for service in services %}
-        <div class="flex_container">
-            {% if encounter.encounter_storage == 'local' %}
-            <p class="title">Lí DO THỰC HIỆN</p><p class="value"> {{service.service_reason_code}} </p>
-            <p class="title">NGÀY GIỜ CÓ KẾT QUẢ:</p><p class="value"> {{service.service_performed_date|date:'H:i:s d-m-Y'}} </p>
-            {% else %}
-            <p class="title">Lí DO THỰC HIỆN</p><p class="value"> {{service.service_reason_code}} </p>
-            <p class="title">NGÀY GIỜ CÓ KẾT QUẢ:</p><p class="value"> {{service.service_performed_date}} </p>
-            {% endif %}
-        </div>
             <div id="display-data__{{service.service_identifier}}">
+                <div class="flex_container">
+                    {% if encounter.encounter_storage == 'local' %}
+                    <p class="title">Lí DO THỰC HIỆN</p><p class="value"> {{service.service_reason_code}} </p>
+                    <p class="title">NGÀY GIỜ CÓ KẾT QUẢ:</p><p class="value"> {{service.service_performed_date|date:'H:i:s d-m-Y'}} </p>
+                    {% else %}
+                    <p class="title">Lí DO THỰC HIỆN</p><p class="value"> {{service.service_reason_code}} </p>
+                    <p class="title">NGÀY GIỜ CÓ KẾT QUẢ:</p><p class="value"> {{service.service_performed_date}} </p>
+                    {% endif %}
+                </div>
                 <div class="history-container">
                     {% if observations_history %}
                         {% for observation in observations|get_item:service.service_identifier %}   
