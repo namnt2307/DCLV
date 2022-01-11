@@ -99,14 +99,14 @@
             </div>
         </div>
         {% for service in services %}
-            <div class="flex_container">
-                {% if encounter.encounter_storage == 'local' %}
-                <p class="title">NGÀY GIỜ CÓ KẾT QUẢ:</p><p class="value"> {{service.service_performed_date|date:'d-m-Y'}}</p>
-                {% else %}
-                <p class="title">NGÀY GIỜ CÓ KẾT QUẢ:</p><p class="value"> {{service.service_performed_date}}</p>
-                {% endif %}
-            </div>
             <div  id="display-data__{{service.service_identifier}}">
+                <div class="flex_container">
+                    {% if encounter.encounter_storage == 'local' %}
+                    <p class="title">NGÀY GIỜ CÓ KẾT QUẢ:</p><p class="value"> {{service.service_performed_date|date:'d-m-Y'}}</p>
+                    {% else %}
+                    <p class="title">NGÀY GIỜ CÓ KẾT QUẢ:</p><p class="value"> {{service.service_performed_date}}</p>
+                    {% endif %}
+                </div>
                 <div class="right-body__section">
                     <h2>THÔNG TIN THỦ THUẬT</h2>
                     {% for procedure in procedures|get_item:service.service_identifier %}
