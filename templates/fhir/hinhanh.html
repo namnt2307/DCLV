@@ -6,14 +6,14 @@
 <h1>CÁC THỦ THUẬT XỬ LÍ HÌNH ẢNH</h1>
 <table>
     <thead>
-        <th class="cell-data-10">ID thủ thuật</th>
-        <th class="cell-data-10">Tên thủ thuật</th>
-        <th class="cell-data-10">Tình trạng thủ thuật</th>
-        <th class="cell-data-10">Ngày dự kiến thực hiện</th>
-        <th class="cell-data-10">Ngày yêu cầu</th>
-        <th class="cell-data-10">Bác sĩ yêu cầu</th>
-        <th class="cell-data-10">Ghi chú</th>
-        <th class="cell-data-10">Kết quả</th>
+        <th class="cell-data-8">ID thủ thuật</th>
+        <th class="cell-data-8">Tên thủ thuật</th>
+        <th class="cell-data-8">Tình trạng thủ thuật</th>
+        <th class="cell-data-8">Ngày dự kiến thực hiện</th>
+        <th class="cell-data-8">Ngày yêu cầu</th>
+        <th class="cell-data-8">Bác sĩ yêu cầu</th>
+        <th class="cell-data-8">Ghi chú</th>
+        <th class="cell-data-8">Kết quả</th>
         {% if services %}
         <th></th>
         {% endif %}
@@ -23,14 +23,14 @@
     <tbody>
         {% for service in services %}
         <tr>
-            <td class="cell-data-10">{{service.service_identifier}}</a></td>
-            <td class="cell-data-10">{{service.service_code}}</td>
-            <td class="cell-data-10">{{service.get_service_status_display}}</td>
-            <td class="cell-data-10">{{service.service_occurrence|date:"d-m-Y"}}</td>
-            <td class="cell-data-10">{{service.service_authored|date:"d-m-Y"}}</td>
-            <td class="cell-data-10">{{service.service_requester}}</td>
-            <td class="cell-data-10">{{service.service_note|default_if_none:"Không"}}</td>
-            <td class="cell-data-10"><a href="{%url 'fhir:chitiethinhanh'  data.Patient.identifier data.Encounter.encounter_identifier service.service_identifier%}">Kết quả</a></td>
+            <td class="cell-data-8">{{service.service_identifier}}</a></td>
+            <td class="cell-data-8">{{service.service_code}}</td>
+            <td class="cell-data-8">{{service.get_service_status_display}}</td>
+            <td class="cell-data-8">{{service.service_occurrence|date:"d-m-Y"}}</td>
+            <td class="cell-data-8">{{service.service_authored|date:"d-m-Y"}}</td>
+            <td class="cell-data-8">{{service.service_requester}}</td>
+            <td class="cell-data-8">{{service.service_note|default_if_none:"Không"}}</td>
+            <td class="cell-data-8"><a href="{%url 'fhir:chitiethinhanh'  data.Patient.identifier data.Encounter.encounter_identifier service.service_identifier%}">Kết quả</a></td>
             <td>
                 <form action="{% url 'fhir:delete' %}" method="POST">
                     {%csrf_token%}
@@ -101,11 +101,11 @@
     </div>
     {% if services %}
     <tr>
-        <td colspan="10"><button class="float-left submit-button btn" onclick="openForm('serviceForm')">Thêm chẩn đoán</button></td>
+        <td colspan="9"><button class="float-left submit-button btn" onclick="openForm('serviceForm')">Thêm chẩn đoán</button></td>
     </tr>
     {%else%}
     <tr>
-        <td colspan="9"><button class="float-left submit-button btn" onclick="openForm('serviceForm')">Thêm chẩn đoán</button></td>
+        <td colspan="8"><button class="float-left submit-button btn" onclick="openForm('serviceForm')">Thêm chẩn đoán</button></td>
     </tr>
     {%endif%}
 </table>
