@@ -183,6 +183,35 @@
                         <th></th>
                     </thead>
                     {% for allergy in allergies %}
+                        {% if allergy.allergy_storage == 'hapi' %}
+                        <tbody id="{{allergy.allergy_identifier}}-data-hapi">
+                            <tr>
+                                <td class="cell-data-6">{{allergy.get_allergy_clinical_status_display}}</td>
+                                <td class="cell-data-6">{{allergy.get_allergy_category_display}}</td>
+                                <td class="cell-data-6">{{allergy.allergy_code}}</td>
+                                <td class="cell-data-6">{{allergy.get_allergy_criticality_display}}</td>
+                                <td class="cell-data-6">{{allergy.allergy_onset|date:'d-m-Y'}}</td>
+                                <td class="cell-data-6">{{allergy.allergy_last_occurrence|date:'d-m-Y'}}</td>
+                                <td></td>
+                            </tr>
+
+                            <tr>
+                                <td colspan="6" style="text-align: left;">
+                                    <div class="flex_container">
+                                        <p class="title">Thành phần dị ứng:</p> <p>{{allergy.allergy_reaction_substance|default_if_none:"Không"}}</p>
+                                    </div>
+                                    <div class="flex_container">
+                                        <p class="title">Phản ứng:</p> <p>{{allergy.allergy_reaction_manifestation}}</p>
+                                    </div>
+                                    <div class="flex_container">
+                                        <p class="title">Mức độ phản ứng:</p> <p>{{allergy.get_allergy_reaction_severity_display}}</p>
+                                    </div>
+                                </td>
+                                <td>
+                                </td>
+                            </tr>
+                        </tbody>                        
+                        {% elif allergy.allergy_storage == 'local' %}
                         <tbody id="{{allergy.allergy_identifier}}-data">
                             <tr>
                                 <td class="cell-data-6">{{allergy.get_allergy_clinical_status_display}}</td>
@@ -271,6 +300,7 @@
                             
                             </form>
                        </tbody>
+                    {% endif %}
                     {% endfor %}
                     <form action="" method="POST">
                         <tbody>

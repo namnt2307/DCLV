@@ -903,6 +903,9 @@ def create_allergy_resource(allergy, patient_id, patient_name, encounter_id):
     if allergy.get('onset'):
         onset = ET.SubElement(root, 'onsetDateTime')
         onset.set('value', allergy['onset'])
+    if allergy.get('recorded_date'):
+        recorded_date = ET.SubElement(root, 'recordedDate')
+        recorded_date.set('value', allergy['recorded_date'])
     if allergy.get('last_occurrence'):
         last_occurrence = ET.SubElement(root, 'lastOccurrence')
         last_occurrence.set('value', allergy['last_occurrence'])
@@ -1467,6 +1470,7 @@ def query_allergy(allergy_identifier, query_type):
     allergy = {}
     get_allergy = requests.get(fhir_server + "/AllergyIntolerance?identifier=urn:trinhcongminh|" + allergy_identifier, headers={'Content-type': 'application/xml'})
     if get_allergy.status_code == 200 and 'entry' in get_allergy.content.decode('utf-8'):
+        print(get_allergy.content.decode('utf-8'))
         get_root = ET.fromstring(get_allergy.content.decode('utf-8'))
         entry = get_root.find('d:entry', ns)
         resource = entry.find('d:resource', ns)
@@ -1481,37 +1485,51 @@ def query_allergy(allergy_identifier, query_type):
         if query_type == 'all' or query_type == 'data':
             allergy['allergy_identifier'] = allergy_identifier
             clinical_status = allergy_resource.find('d:clinicalStatus', ns)
+            
             if clinical_status != None:
                 allergy['allergy_clinical_status'] = clinical_status.find('d:text', ns).attrib['value']
             verification_status = allergy_resource.find('d:verificationStatus', ns)
+            print(verification_status)
             if verification_status != None:
                 allergy['allergy_verification_status'] = verification_status.find('d:text', ns).attrib['value']
             category = allergy_resource.find('d:category', ns)
+            print(category)
             if category != None:
-                allergy['allergy_category'] = category.find('d:text', ns).attrib['value']
+                allergy['allergy_category'] = category.attrib['value']
             criticality = allergy_resource.find('d:criticality', ns)
+            print(criticality)
             if criticality != None:
-                allergy['get_allergy_criticality_display'] = criticality.find('d:text', ns).attrib['value']
+                allergy['allergy_criticality'] = criticality.attrib['value']
             code = allergy_resource.find('d:code', ns)
+            print(code)
             if code != None:
                 allergy['allergy_code'] = code.find('d:text', ns).attrib['value']
             onset = allergy_resource.find('d:onsetDateTime', ns)
+            print(onset)
             if onset != None:
                 allergy['allergy_onset'] = onset.attrib['value']
+            recorded_date = allergy_resource.find('d:recordedDate', ns)
+            if recorded_date != None:
+                allergy['allergy_recorded_date'] = recorded_date.attrib['value']
             last_occurrence = allergy_resource.find('d:lastOccurrence')
+            print(last_occurrence)
             if last_occurrence != None:
                 allergy['allergy_last_occurrence'] = last_occurrence.attrib['value']
             reaction = allergy_resource.find('d:reaction', ns)
+            print(reaction)
             if reaction != None:
                 substance = reaction.find('d:substance', ns)
+                print(substance)
                 if substance != None:
                     allergy['allergy_reaction_substance'] = substance.find('d:text', ns).attrib['value']
                 manifestation = reaction.find('d:manifestation', ns)
+                print(manifestation)
                 if manifestation != None:
                     allergy['allergy_reaction_manifestation'] = manifestation.find('d:text', ns).attrib['value']
-                severity = allergy_resource.find('d:severity', ns)
+                severity = reaction.find('d:severity', ns)
+                print(severity)
                 if severity != None:
-                    allergy['get_allergy_reaction_severity_display'] = severity.find('d:severity', ns).attrib['value']
+                    allergy['allergy_reaction_severity'] = severity.attrib['value']
     return allergy
 
 
