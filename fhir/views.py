@@ -340,6 +340,38 @@ class display_detail(LoginRequiredMixin, View):
                     except:
                         EncounterModel.objects.create(
                             **encounter, patient=instance, encounter_storage='hapi')
+            allergies = AllergyModel.objects.filter(
+                patient=instance, allergy_storage='hapi'
+            )
+            for allergy in allergies:
+                get_allergy = requests.get(fhir_server + "/AllergyIntolerance?identifier=urn:trinhcongminh|" +
+                                             allergy.allergy_identifier, headers={'Content-type': 'application/xml'})
+                if 'entry' not in get_allergy.content.decode('utf-8'):
+                    allergy.delete()
+            get_allergy_intolerances = requests.get(fhir_server + "/AllergyIntolerance?patient.identifier=urn:trinhcongminh|" + 
+                                                    patient_identifier, headers={'Content-type': 'application/xml'})
+            print(get_allergy_intolerances.content.decode('utf-8'))
+            if get_allergy_intolerances.status_code == 200 and 'entry' in get_allergy_intolerances.content.decode('utf-8'):
+                get_root = ET.fromstring(
+                    get_allergy_intolerances.content.decode('utf-8')
+                )
+                data['AllergyIntolerance'] = []
+                for entry in get_root.findall('d:entry', ns):
+                    allergy = {}
+                    resource = entry.find('d:resource', ns)
+                    allergy_resource = resource.find('d:AllergyIntolerance', ns)
+                    identifier = allergy_resource.find('d:identifier', ns)
+                    allergy_identifier = identifier.find('d:value', ns).attrib['value']
+                    allergy = dt.query_allergy(allergy_identifier, query_type='data')
+                    print(allergy)
+                    try:
+                        allergy_instance = AllergyModel.objects.get(allergy_identifier=allergy_identifier)
+                        if allergy_instance.allergy_storage == 'hapi':
+                            allergy_instance.delete()
+                            AllergyModel.objects.create(**allergy, patient=instance, allergy_storage='hapi')
+                    except Exception as e:
+                        print(e)
+                        AllergyModel.objects.create(**allergy, patient=instance, allergy_storage='hapi')
         except Exception as e:
             print(e)
             messages.error(request, "Kho FHIR không hoạt động")
@@ -896,6 +928,7 @@ class hoibenh(LoginRequiredMixin, View):
     def get(self, request, patient_identifier, encounter_identifier):
         data = {'Patient': {'identifier': patient_identifier},
                 'Encounter': {}}
+        patient = PatientModel.objects.get(identifier=patient_identifier)
         encounter_instance = EncounterModel.objects.get(
             encounter_identifier=encounter_identifier)
         data['Encounter'] = encounter_instance
@@ -904,7 +937,7 @@ class hoibenh(LoginRequiredMixin, View):
         resolved_conditions = ConditionModel.objects.all().filter(
             encounter_identifier=encounter_identifier, condition_note='resolved condition by patient')
         allergies = AllergyModel.objects.all().filter(
-            encounter_identifier=encounter_instance)
+            patient=patient)
         family_histories = None
         condition_form = ConditionForm()
         allergy_form = AllergyForm()
@@ -982,6 +1015,7 @@ class hoibenh(LoginRequiredMixin, View):
                 form = AllergyForm(request.POST or None)
                 if form.is_valid():
                     allergy = form.save(commit=False)
+                    allergy.patient = patient
                     allergy.allergy_identifier = allergy_identifier
                     allergy.encounter_identifier = encounter_instance
                     form.save()
@@ -2244,13 +2278,15 @@ class save(LoginRequiredMixin, View):
             allergy_instances = AllergyModel.objects.all().filter(
                 encounter_identifier=encounter_identifier)
             for allergy_instance in allergy_instances:
+                if allergy_instance.allergy_storage == 'hapi':
+                    continue
                 put_allergy = None
                 post_allergy = None
                 allergy = {}
                 allergy['identifier'] = allergy_instance.allergy_identifier
                 allergy['clinical_status'] = {}
                 allergy['clinical_status']['code'] = allergy_instance.allergy_clinical_status
-                allergy['clinical_status']['display'] = allergy_instance.get_allergy_clinical_status_display()
+                allergy['clinical_status']['display'] = allergy_instance.allergy_clinical_status
                 allergy['verification_status'] = allergy_instance.allergy_verification_status
                 allergy['category'] = allergy_instance.allergy_category
                 allergy['criticality'] = allergy_instance.allergy_criticality
@@ -2258,6 +2294,7 @@ class save(LoginRequiredMixin, View):
                 if allergy_instance.allergy_onset:
                     allergy['onset'] = allergy_instance.allergy_onset.strftime(
                         '%Y-%m-%d')
+                allergy['recorded_date'] = allergy_instance.allergy_recorded_date.strftime('%Y-%m-%d')
                 if allergy_instance.allergy_last_occurrence:
                     allergy['last_occurrence'] = allergy_instance.allergy_last_occurrence.strftime(
                         '%Y-%m-%d')
@@ -2528,8 +2565,8 @@ class save(LoginRequiredMixin, View):
                 observation['value_quantity'] = observation_instance.observation_value_quantity
                 observation['value_unit'] = observation_instance.observation_value_unit
                 observation['performer'] = {}
-                observation['performer']['id'] = service_performer_id['id']
-                observation['performer']['name'] = service_instance.service_performer                
+                observation['performer']['id'] =  participant_id['id']
+                observation['performer']['name'] = participant.name              
                 get_observation = dt.query_observation(
                     observation['identifier'], query_type='id')
                 if get_observation:
@@ -2814,7 +2851,8 @@ class view_benhan(LoginRequiredMixin, View):
         other_conditions = []
         diagnostic_reports = []
         diagnostic_reports_history = {}
-        allergies = []
+        allergies = AllergyModel.objects.all().filter(patient=patient, allergy_recorded_date__lte=encounter.encounter_end.date())
+        print(allergies)
         allergies_history = {}
         condition_displays = {}
         if encounter.encounter_storage == 'local':
@@ -2899,7 +2937,7 @@ class view_benhan(LoginRequiredMixin, View):
             #         diagnostic_reports_history[diagnostic_report.diagnostic_identifier] = []
             #         for i in range(diagnostic_report.diagnostic_version, 0, -1):
             #             diagnostic_reports_history[diagnostic_report.diagnostic_identifier].append(dt.query_diagnostic_report_history(diagnostic_id, str(i), query_type='all'))
-            allergies = AllergyModel.objects.all().filter(encounter_identifier=encounter)
+            
             # for allergy in allergies:
             #     if allergy.allergy_version > 1:
             #         allergy_id = dt.query_allergy(allergy.allergy_identifier, query_type='id')['id']
@@ -2978,22 +3016,22 @@ class view_benhan(LoginRequiredMixin, View):
                     #     observations_history[observation['observation_identifier']] = []
                     #     for i in range(int(observation['version'])-1, 0 , -1):
                     #         observations_history[observation['observation_identifier']].append(dt.query_observation_history(observation['id'], str(i), query_type='all'))
-            get_allergies = requests.get(fhir_server + "/AllergyIntolerance?encounter.identifier=urn:trinhcongminh|" +
-                                         encounter_identifier, headers={'Content-type': 'application/xml'})
-            if get_allergies.status_code == 200 and 'entry' in get_allergies.content.decode('utf-8'):
-                get_root = ET.fromstring(get_allergies.content.decode('utf-8'))
-                for entry in get_root.findall('d:entry', ns):
-                    allergy = {}
-                    resource = entry.find('d:resource', ns)
-                    allergy_resource = resource.find(
-                        'd:AllergyIntolerance', ns)
-                    allergy_identifier = allergy_resource.find(
-                        'd:identifier', ns)
-                    allergy_identifier_value = allergy_identifier.find(
-                        'd:value', ns).attrib['value']
-                    allergy = dt.query_allergy(
-                        allergy_identifier_value, query_type='all')
-                    allergies.append(allergy)
+            # get_allergies = requests.get(fhir_server + "/AllergyIntolerance?encounter.identifier=urn:trinhcongminh|" +
+            #                              encounter_identifier, headers={'Content-type': 'application/xml'})
+            # if get_allergies.status_code == 200 and 'entry' in get_allergies.content.decode('utf-8'):
+            #     get_root = ET.fromstring(get_allergies.content.decode('utf-8'))
+            #     for entry in get_root.findall('d:entry', ns):
+            #         allergy = {}
+            #         resource = entry.find('d:resource', ns)
+            #         allergy_resource = resource.find(
+            #             'd:AllergyIntolerance', ns)
+            #         allergy_identifier = allergy_resource.find(
+            #             'd:identifier', ns)
+            #         allergy_identifier_value = allergy_identifier.find(
+            #             'd:value', ns).attrib['value']
+            #         allergy = dt.query_allergy(
+            #             allergy_identifier_value, query_type='all')
+            #         allergies.append(allergy)
                     # if int(allergy['version']) > 1:
                     #     allergies_history[allergy['allergy_history']] = []
                     #     for i in range(int(allergy['version']), 0, -1):

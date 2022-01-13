@@ -257,9 +257,9 @@ class AllergyModel(models.Model):
         ("high", "mức độ cao"),
         ("unable-to-assess", "không đánh giá được"),
     )
-    SEVERITY_CHOICES = (("mild", "nhẹ"), ("moderate", "vừa phải"), ("severe", "dữ dội"))
-    encounter_identifier = models.ForeignKey(EncounterModel, on_delete=models.CASCADE)
-    allergy_identifier = models.CharField(max_length=100, primary_key=True)
+    patient = models.ForeignKey(PatientModel, on_delete=models.CASCADE, null=True)
+    encounter_identifier = models.ForeignKey(EncounterModel, on_delete=models.CASCADE, null=True)
+    allergy_identifier = models.CharField(max_length=100,primary_key=True)
     allergy_clinical_status = models.CharField(max_length=100, choices=CLINICAL_CHOICES)
     allergy_verification_status = models.CharField(max_length=100, default="confirmed")
     allergy_type = models.CharField(max_length=100, default="allergy")
@@ -267,13 +267,13 @@ class AllergyModel(models.Model):
     allergy_code = models.CharField(max_length=255)
     allergy_criticality = models.CharField(max_length=100, choices=CRITICALITY_CHOICES)
     allergy_onset = models.DateField(null=True)
+    allergy_recorded_date = models.DateField(default=timezone.localtime(timezone.now()))
     allergy_last_occurrence = models.DateField(null=True, blank=True)
     allergy_reaction_substance = models.CharField(max_length=100, null=True, blank=True)
     allergy_reaction_manifestation = models.CharField(max_length=100, null=True)
-    allergy_reaction_severity = models.CharField(
-        max_length=100, choices=SEVERITY_CHOICES, blank=True
-    )
-    allergy_reaction_note = models.CharField(max_length=255, null=True, blank=True)
+    allergy_reaction_severity = models.CharField(max_length=100, choices=SEVERITY_CHOICES, blank=True)
+    allergy_reaction_note = models.CharField(max_length=1000, null=True, blank=True)
+    allergy_storage = models.CharField(max_length=100, default='local')
     allergy_version = models.IntegerField(default=0)
 
 

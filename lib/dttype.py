@@ -1150,30 +1150,33 @@ def create_allergy_resource(allergy, patient_id, patient_name, encounter_id):
         # ]
         criticality.set("value", allergy["criticality"])
         # codeable_concept(criticality, codes, text=allergy['criticality'])
-    if allergy.get("code"):
-        code = ET.SubElement(root, "code")
-        codeable_concept(code, text=allergy["code"])
-    patient = ET.SubElement(root, "patient")
-    reference_type(patient, "Patient/" + patient_id, "Patient", display=patient_name)
-    encounter = ET.SubElement(root, "encounter")
-    reference_type(encounter, "Encounter/" + encounter_id, "Encounter")
-    if allergy.get("onset"):
-        onset = ET.SubElement(root, "onsetDateTime")
-        onset.set("value", allergy["onset"])
-    if allergy.get("last_occurrence"):
-        last_occurrence = ET.SubElement(root, "lastOccurrence")
-        last_occurrence.set("value", allergy["last_occurrence"])
-    if allergy.get("reaction"):
-        reaction = ET.SubElement(root, "reaction")
-        if allergy["reaction"].get("substance"):
-            substance = ET.SubElement(reaction, "substance")
-            codeable_concept(substance, text=allergy["reaction"]["substance"])
-        if allergy["reaction"].get("manifestation"):
-            manifestation = ET.SubElement(reaction, "manifestation")
-            codeable_concept(manifestation, text=allergy["reaction"]["manifestation"])
-        if allergy["reaction"].get("severity"):
-            severity = ET.SubElement(reaction, "severity")
-            severity.set("value", allergy["reaction"]["severity"])
+    if allergy.get('code'):
+        code = ET.SubElement(root, 'code')
+        codeable_concept(code, text=allergy['code'])
+    patient = ET.SubElement(root, 'patient')
+    reference_type(patient, 'Patient/' + patient_id, 'Patient', display=patient_name)
+    encounter = ET.SubElement(root, 'encounter')
+    reference_type(encounter, 'Encounter/' + encounter_id, 'Encounter')
+    if allergy.get('onset'):
+        onset = ET.SubElement(root, 'onsetDateTime')
+        onset.set('value', allergy['onset'])
+    if allergy.get('recorded_date'):
+        recorded_date = ET.SubElement(root, 'recordedDate')
+        recorded_date.set('value', allergy['recorded_date'])
+    if allergy.get('last_occurrence'):
+        last_occurrence = ET.SubElement(root, 'lastOccurrence')
+        last_occurrence.set('value', allergy['last_occurrence'])
+    if allergy.get('reaction'):
+        reaction = ET.SubElement(root, 'reaction')
+        if allergy['reaction'].get('substance'):
+            substance = ET.SubElement(reaction, 'substance')
+            codeable_concept(substance, text=allergy['reaction']['substance'])
+        if allergy['reaction'].get('manifestation'):
+            manifestation = ET.SubElement(reaction, 'manifestation')
+            codeable_concept(manifestation, text=allergy['reaction']['manifestation'])
+        if allergy['reaction'].get('severity'):
+            severity = ET.SubElement(reaction, 'severity')
+            severity.set('value', allergy['reaction']['severity'])
             # codes = [
             #     {'system': 'http://hl7.org/fhir/reaction-event-severity', 'code': allergy['reaction']['severity']}
             # ]
@@ -1849,76 +1852,68 @@ def query_diagnostic_report(diagnostic_report_identifier, query_type):
 
 def query_allergy(allergy_identifier, query_type):
     allergy = {}
-    get_allergy = requests.get(
-        fhir_server
-        + "/AllergyIntolerance?identifier=urn:trinhcongminh|"
-        + allergy_identifier,
-        headers={"Content-type": "application/xml"},
-    )
-    if get_allergy.status_code == 200 and "entry" in get_allergy.content.decode(
-        "utf-8"
-    ):
-        get_root = ET.fromstring(get_allergy.content.decode("utf-8"))
-        entry = get_root.find("d:entry", ns)
-        resource = entry.find("d:resource", ns)
-        allergy_resource = resource.find("d:AllergyIntolerance", ns)
-        if query_type == "all" or query_type == "meta":
-            meta = allergy_resource.find("d:meta", ns)
-            allergy["version"] = meta.find("d:versionId", ns).attrib["value"]
-            allergy["last_updated"] = getdatetime(
-                meta.find("d:lastUpdated").attrib["value"]
-            )
-        if query_type == "all" or query_type == "id":
-            id_ = allergy_resource.find("d:id", ns)
-            allergy["id"] = id_.attrib["value"]
-        if query_type == "all" or query_type == "data":
-            allergy["allergy_identifier"] = allergy_identifier
-            clinical_status = allergy_resource.find("d:clinicalStatus", ns)
+    get_allergy = requests.get(fhir_server + "/AllergyIntolerance?identifier=urn:trinhcongminh|" + allergy_identifier, headers={'Content-type': 'application/xml'})
+    if get_allergy.status_code == 200 and 'entry' in get_allergy.content.decode('utf-8'):
+        print(get_allergy.content.decode('utf-8'))
+        get_root = ET.fromstring(get_allergy.content.decode('utf-8'))
+        entry = get_root.find('d:entry', ns)
+        resource = entry.find('d:resource', ns)
+        allergy_resource = resource.find('d:AllergyIntolerance', ns)
+        if query_type == 'all' or query_type == 'meta':
+            meta = allergy_resource.find('d:meta', ns)
+            allergy['version'] = meta.find('d:versionId', ns).attrib['value']
+            allergy['last_updated'] = getdatetime(meta.find('d:lastUpdated').attrib['value'])
+        if query_type == 'all' or query_type == 'id':
+            id_ = allergy_resource.find('d:id', ns)
+            allergy['id'] = id_.attrib['value']
+        if query_type == 'all' or query_type == 'data':
+            allergy['allergy_identifier'] = allergy_identifier
+            clinical_status = allergy_resource.find('d:clinicalStatus', ns)
+            
             if clinical_status != None:
-                allergy["allergy_clinical_status"] = clinical_status.find(
-                    "d:text", ns
-                ).attrib["value"]
-            verification_status = allergy_resource.find("d:verificationStatus", ns)
+                allergy['allergy_clinical_status'] = clinical_status.find('d:text', ns).attrib['value']
+            verification_status = allergy_resource.find('d:verificationStatus', ns)
+            print(verification_status)
             if verification_status != None:
-                allergy["allergy_verification_status"] = verification_status.find(
-                    "d:text", ns
-                ).attrib["value"]
-            category = allergy_resource.find("d:category", ns)
+                allergy['allergy_verification_status'] = verification_status.find('d:text', ns).attrib['value']
+            category = allergy_resource.find('d:category', ns)
+            print(category)
             if category != None:
-                allergy["allergy_category"] = category.find("d:text", ns).attrib[
-                    "value"
-                ]
-            criticality = allergy_resource.find("d:criticality", ns)
+                allergy['allergy_category'] = category.attrib['value']
+            criticality = allergy_resource.find('d:criticality', ns)
+            print(criticality)
             if criticality != None:
-                allergy["get_allergy_criticality_display"] = criticality.find(
-                    "d:text", ns
-                ).attrib["value"]
-            code = allergy_resource.find("d:code", ns)
+                allergy['allergy_criticality'] = criticality.attrib['value']
+            code = allergy_resource.find('d:code', ns)
+            print(code)
             if code != None:
-                allergy["allergy_code"] = code.find("d:text", ns).attrib["value"]
-            onset = allergy_resource.find("d:onsetDateTime", ns)
+                allergy['allergy_code'] = code.find('d:text', ns).attrib['value']
+            onset = allergy_resource.find('d:onsetDateTime', ns)
+            print(onset)
             if onset != None:
-                allergy["allergy_onset"] = onset.attrib["value"]
-            last_occurrence = allergy_resource.find("d:lastOccurrence")
+                allergy['allergy_onset'] = onset.attrib['value']
+            recorded_date = allergy_resource.find('d:recordedDate', ns)
+            if recorded_date != None:
+                allergy['allergy_recorded_date'] = recorded_date.attrib['value']
+            last_occurrence = allergy_resource.find('d:lastOccurrence')
+            print(last_occurrence)
             if last_occurrence != None:
-                allergy["allergy_last_occurrence"] = last_occurrence.attrib["value"]
-            reaction = allergy_resource.find("d:reaction", ns)
+                allergy['allergy_last_occurrence'] = last_occurrence.attrib['value']
+            reaction = allergy_resource.find('d:reaction', ns)
+            print(reaction)
             if reaction != None:
-                substance = reaction.find("d:substance", ns)
+                substance = reaction.find('d:substance', ns)
+                print(substance)
                 if substance != None:
-                    allergy["allergy_reaction_substance"] = substance.find(
-                        "d:text", ns
-                    ).attrib["value"]
-                manifestation = reaction.find("d:manifestation", ns)
+                    allergy['allergy_reaction_substance'] = substance.find('d:text', ns).attrib['value']
+                manifestation = reaction.find('d:manifestation', ns)
+                print(manifestation)
                 if manifestation != None:
-                    allergy["allergy_reaction_manifestation"] = manifestation.find(
-                        "d:text", ns
-                    ).attrib["value"]
-                severity = allergy_resource.find("d:severity", ns)
+                    allergy['allergy_reaction_manifestation'] = manifestation.find('d:text', ns).attrib['value']
+                severity = reaction.find('d:severity', ns)
+                print(severity)
                 if severity != None:
-                    allergy["get_allergy_reaction_severity_display"] = severity.find(
-                        "d:severity", ns
-                    ).attrib["value"]
+                    allergy['allergy_reaction_severity'] = severity.attrib['value']
     return allergy
 
 
