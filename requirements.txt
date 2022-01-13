@@ -1,6 +1,10 @@
-djongo
 django
 django-restframework
 openpyxl
 django-widget-tweaks
 requests
+setuptools
+wheel
+mysqlclient
+tzdata
+Pillow

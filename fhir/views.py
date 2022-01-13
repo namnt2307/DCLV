@@ -2530,8 +2530,8 @@ class save(LoginRequiredMixin, View):
                 observation['value_quantity'] = observation_instance.observation_value_quantity
                 observation['value_unit'] = observation_instance.observation_value_unit
                 observation['performer'] = {}
-                observation['performer']['id'] = service_performer_id['id']
-                observation['performer']['name'] = service_instance.service_performer                
+                observation['performer']['id'] =  participant_id['id']
+                observation['performer']['name'] = participant.name              
                 get_observation = dt.query_observation(
                     observation['identifier'], query_type='id')
                 if get_observation:
