@@ -44,7 +44,7 @@
                     <tr onclick="displayToggle('{{service.service_identifier}}')">
                         <td>{{service.service_identifier}}</td>
                         <td>{{service.service_code}}</td>
-                        <td>{{service.service_status}}</td>
+                        <td>{{service_status|get_item:service.service_status}}</td>
                         <td>{{service.service_occurrence|date:"d-m-Y"}}</td>
                         <td>{{service.service_authored|date:"d-m-Y"}}</td>
                         <td>{{service.service_requester}}</td>
@@ -66,7 +66,7 @@
                     <tr onclick="displayToggle('{{service.service_identifier}}')">
                         <td>{{service.service_identifier}}</td>
                         <td>{{service.service_code}}</td>
-                        <td>{{service.get_service_status_display}}</td>
+                        <td>{{service_status|get_item:service.service_status}}</td>
                         <td>{{service.service_occurrence}}</td>
                         <td>{{service.service_authored}}</td>
                         <td>{{service.service_requester}}</td>
@@ -162,6 +162,9 @@
                         {%endfor%}
                     </tbody>
                 </table>
+                <div class="flex_container">
+                    <p class="title">CHẨN ĐOÁN CỦA BÁC SĨ:</p><p class="value"> {% for diagnostic_report in diagnostic_reports|get_item:service.service_identifier %}{{diagnostic_report.diagnostic_conclusion}}{% endfor %}</p>
+                </div>                
                 <div class="signature">
                     <div class="signature__content">
                     <p>BÁC SĨ THỰC HIỆN:</p> 

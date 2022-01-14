@@ -20,6 +20,7 @@ import xml.etree.ElementTree as ET
 import requests
 import uuid
 import os
+from pytz import timezone
 from lib import dttype as dt
 # from fhir.forms import EHRCreationForm
 from administration.models import PractitionerModel, ClinicalDepartment, Announcement
@@ -2144,9 +2145,10 @@ class save(LoginRequiredMixin, View):
         data['Encounter']['identifier'] = encounter_identifier
         data['Encounter']['status'] = encounter_instance.encounter_status
         data['Encounter']['period'] = {}
-        data['Encounter']['period']['start'] = encounter_instance.encounter_start.strftime(
+        data['Encounter']['period']['start'] = encounter_instance.encounter_start.astimezone(timezone('Asia/Ho_Chi_Minh')).strftime(
             '%Y-%m-%dT%H:%M:%S+07:00')
-        data['Encounter']['period']['end'] = encounter_instance.encounter_end.strftime(
+        print(encounter_instance.encounter_start)
+        data['Encounter']['period']['end'] = encounter_instance.encounter_end.astimezone(timezone('Asia/Ho_Chi_Minh')).strftime(
             '%Y-%m-%dT%H:%M:%S+07:00')
         data['Encounter']['class'] = encounter_instance.encounter_class
         data['Encounter']['type'] = encounter_instance.encounter_type
@@ -2252,7 +2254,7 @@ class save(LoginRequiredMixin, View):
                     condition, patient['id'], patient['name'], encounter['id'])
                 test_condition = requests.post(fhir_server + "/Condition/$validate",
                                                headers={'Content-type': 'application/xml'}, data=condition_data.decode('utf-8'))
-                print(test_condition.content.decode('utf-8'))
+                # print(test_condition.content.decode('utf-8'))
                 if get_condition:
                     put_condition = requests.put(fhir_server + "/Condition/"+get_condition['id'], headers={
                         'Content-type': 'application/xml'}, data=condition_data.decode('utf-8'))
@@ -2312,7 +2314,7 @@ class save(LoginRequiredMixin, View):
                     allergy, patient['id'], patient['name'], encounter['id'])
                 test_allergy = requests.post(fhir_server + '/AllergyIntolerance/$validate',
                                              headers={'Content-type': 'application/xml'}, data=allergy_data.decode('utf-8'))
-                print(test_allergy.content.decode('utf-8'))
+                # print(test_allergy.content.decode('utf-8'))
                 if get_allergy:
                     put_allergy = requests.put(fhir_server + '/AllergyIntolerance/' + allergy['id'],  headers={
                         'Content-type': 'application/xml'}, data=allergy_data.decode('utf-8'))
@@ -2357,7 +2359,7 @@ class save(LoginRequiredMixin, View):
                 service['code'] = service_instance.service_code
                 service['occurrence'] = service_instance.service_occurrence.strftime(
                     '%Y-%m-%d')
-                service['authored_on'] = service_instance.service_authored.strftime(
+                service['authored_on'] = service_instance.service_authored.astimezone(timezone('Asia/Ho_Chi_Minh')).strftime(
                     '%Y-%m-%d')
                 get_service = dt.query_service(
                     service['identifier'], query_type='id')
@@ -2367,7 +2369,7 @@ class save(LoginRequiredMixin, View):
                     service, patient['id'], patient['name'], encounter['id'])
                 test_service = requests.post(fhir_server + '/ServiceRequest/$validate', headers={                    
                     'Content-type': 'application/xml'}, data=service_data.decode('utf-8'))
-                print(test_service.content.decode('utf-8'))
+                # print(test_service.content.decode('utf-8'))
                 if get_service:
                     put_service = requests.put(fhir_server + "/ServiceRequest/" + get_service['id'], headers={
                         'Content-type': 'application/xml'}, data=service_data.decode('utf-8'))
@@ -2402,7 +2404,7 @@ class save(LoginRequiredMixin, View):
                             observation['status'] = observation_instance.observation_status
                             observation['code'] = observation_instance.observation_code
                             observation['category'] = observation_instance.observation_category
-                            observation['effective'] = observation_instance.observation_effective.strftime(
+                            observation['effective'] = observation_instance.observation_effective.astimezone(timezone('Asia/Ho_Chi_Minh')).strftime(
                                 '%Y-%m-%dT%H:%M:%S+07:00')
                             observation['value_quantity'] = observation_instance.observation_value_quantity
                             observation['value_unit'] = observation_instance.observation_value_unit
@@ -2418,7 +2420,7 @@ class save(LoginRequiredMixin, View):
                                 observation, patient['id'], patient['name'], encounter['id'], service_meta['id'])
                             test_observation = requests.post(fhir_server + '/Observation/$validate', headers={                                
                                 'Content-type': 'application/xml'}, data=observation_data.decode('utf-8'))
-                            print(test_observation.content.decode('utf-8'))
+                            # print(test_observation.content.decode('utf-8'))
                             if get_observation:
                                 put_observation = requests.put(fhir_server + "/Observation/" + get_observation['id'], headers={
                                     'Content-type': 'application/xml'}, data=observation_data.decode('utf-8'))
@@ -2455,7 +2457,7 @@ class save(LoginRequiredMixin, View):
                             procedure['category'] = procedure_instance.procedure_category
                             procedure['code'] = procedure_instance.procedure_code
                             if procedure_instance.procedure_performed_datetime:
-                                procedure['performed_datetime'] = procedure_instance.procedure_performed_datetime.strftime(
+                                procedure['performed_datetime'] = procedure_instance.procedure_performed_datetime.astimezone(timezone('Asia/Ho_Chi_Minh')).strftime(
                                     '%Y-%m-%dT%H:%M:%S+07:00')
                             procedure['reasonCode'] = procedure_instance.procedure_reason_code
                             procedure['outcome'] = procedure_instance.procedure_outcome
@@ -2475,7 +2477,7 @@ class save(LoginRequiredMixin, View):
                                 procedure, patient['id'], patient['name'], encounter['id'], service_meta['id'])
                             test_procedure = requests.post(fhir_server + '/Procedure/$validate', headers={                                
                                 'Content-type': 'application/xml'}, data=procedure_data.decode('utf-8'))
-                            print(test_procedure.content.decode('utf-8'))
+                            # print(test_procedure.content.decode('utf-8'))
                             if get_procedure:
                                 put_procedure = requests.put(fhir_server + "/Procedure/" + get_procedure['id'], headers={
                                     'Content-type': 'application/xml'}, data=procedure_data.decode('utf-8'))
@@ -2509,7 +2511,7 @@ class save(LoginRequiredMixin, View):
                         diagnostic_report['status'] = diagnostic_report_instance.diagnostic_status
                         diagnostic_report['category'] = diagnostic_report_instance.diagnostic_category
                         diagnostic_report['code'] = diagnostic_report_instance.diagnostic_code
-                        diagnostic_report['effective'] = diagnostic_report_instance.diagnostic_effective.strftime(
+                        diagnostic_report['effective'] = diagnostic_report_instance.diagnostic_effective.astimezone(timezone('Asia/Ho_Chi_Minh')).strftime(
                             '%Y-%m-%dT%H:%M:%S+07:00')
                         diagnostic_report['conclusion'] = diagnostic_report_instance.diagnostic_conclusion
                         diagnostic_report['performer'] = {}
@@ -2523,7 +2525,7 @@ class save(LoginRequiredMixin, View):
                             diagnostic_report, patient['id'], patient['name'], encounter['id'], service_meta['id'])
                         test_diagnostic_report = requests.post(fhir_server + '/DiagnosticReport/$validate', headers={                            
                             'Content-type': 'application/xml'}, data=diagnostic_report_data.decode('utf-8'))
-                        print(test_diagnostic_report.content.decode('utf-8'))
+                        # print(test_diagnostic_report.content.decode('utf-8'))
                         if get_diagnostic_report:
                             put_diagnostic_report = requests.put(fhir_server + '/DiagnosticReport/' + diagnostic_report['id'], headers={
                                 'Content-type': 'application/xml'}, data=diagnostic_report_data.decode('utf-8'))
@@ -2577,7 +2579,7 @@ class save(LoginRequiredMixin, View):
                     observation, patient['id'], patient['name'], encounter['id'])
                 test_observation = requests.post(fhir_server + '/Observation/$validate', headers={                                
                                 'Content-type': 'application/xml'}, data=observation_data.decode('utf-8'))
-                print(test_observation.content.decode('utf-8'))
+                # print(test_observation.content.decode('utf-8'))
                 if get_observation:
                     put_observation = requests.put(fhir_server + "/Observation/" + get_observation['id'], headers={
                         'Content-type': 'application/xml'}, data=observation_data.decode('utf-8'))
@@ -2635,7 +2637,8 @@ class save(LoginRequiredMixin, View):
                     medication, patient['id'], patient['name'], encounter['id'])
                 test_medication = requests.post(fhir_server + '/MedicationStatement/$validate', headers={                    
                     'Content-type': 'application/xml'}, data=medication_data.decode('utf-8'))
-                print(test_medication.content.decode('utf-8'))
+                # print(medication_data)
+                # print(test_medication.content.decode('utf-8'))
                 if get_medication:
                     put_medication = requests.put(fhir_server + "/MedicationStatement/" + get_medication['id'], headers={
                         'Content-type': 'application/xml'}, data=medication_data.decode('utf-8'))
@@ -2664,7 +2667,7 @@ class save(LoginRequiredMixin, View):
                 medication_instance.save()
             encounter_instance.encounter_sharing_status = True
             encounter_instance.save()
-            print(encounter_instance)
+            # print(encounter_instance)
             messages.success(request, "Lưu thành công")
             return HttpResponseRedirect('/fhir/display_detail/' + patient_identifier)
         else:
@@ -3100,6 +3103,7 @@ class view_xetnghiem(LoginRequiredMixin, View):
         services = []
         observations = {}
         services_history = {}
+        diagnostic_reports = {}
         observations_history = {}
         if encounter.encounter_storage == 'local':
             services = ServiceRequestModel.objects.filter(
@@ -3120,7 +3124,8 @@ class view_xetnghiem(LoginRequiredMixin, View):
                         observation_id = dt.query_observation(
                             observation.observation_identifier, query_type='id')['id']
                         # for i in range(observation.observation_version-1, 0, -1):
-                        #     observations_history[observation.observation_identifier].append(dt.query_observation_history(observation_id, str(i), query_type='all'))
+                        #     observations_history[observation.observation_identifier].append(dt.query_observation_history(observation_id, str(i), query_type='all'))                    
+                diagnostic_reports[service.service_identifier] = DiagnosticReportModel.objects.filter(service_identifier=service)
         elif encounter.encounter_storage == 'hapi':
             try:
                 connection_test = requests.get(fhir_server + "/Patient")
@@ -3176,6 +3181,18 @@ class view_xetnghiem(LoginRequiredMixin, View):
                         #     observations_history[observation['observation_identifier']] = []
                         #     for i in range(int(observation['version'])-1, 0, -1):
                         #         observations_history[observation['observation_identifier']].append(dt.query_observation_history(observation['id'], str(i), query_type='all'))
+                    diagnostic_reports[service['service_identifier']] = []
+                    diagnostic_reports = requests.get(fhir_server + "/DiagnosticReport?based-on.identifier=urn:trinhcongminh|" +
+                                                        service['service_identifier'], headers={'Content-type': 'application/xml'})
+                    if diagnostic_reports.status_code == 200 and 'entry' in diagnostic_reports.content.decode('utf-8'):
+                        get_root = ET.fromstring(diagnostic_reports.content.decode('utf-8'))
+                        for entry in get_root.findall('d:entry', ns):
+                            diagnostic_report = {}
+                            resource = entry.find('d:resource', ns)
+                            diagnostic_report_resource = resource.find('d:DiagnosticReport', ns)
+                            diagnostic_report_identifier = diagnostic_report_resource.find('d:identifier', ns)
+                            diagnostic_report = dt.query_diagnostic_report(diagnostic_report_identifier.attrib['value'])
+                            diagnostic_reports[service['service_identifier']].append(diagnostic_report)                                            
                     services.append(service)
         context = {
             'data': data,
@@ -3184,7 +3201,10 @@ class view_xetnghiem(LoginRequiredMixin, View):
             'services': services,
             'observations': observations,
             'services_history': services_history,
-            'observations_history': observations_history
+            'observations_history': observations_history,
+            'diagnostic_reports': diagnostic_reports,
+            'service_status': SERVICE_REQUEST_STATUS_CHOICES
+            
         }
         return render(request, 'fhir/view/phieuxetnghiem.html', context)
 
@@ -3328,6 +3348,7 @@ class view_thuthuat(LoginRequiredMixin, View):
             'services_history': services_history,
             'procedures_history': procedures_history,
             'diagnostic_reports_history': diagnostic_reports_history,
+            'service_status': SERVICE_REQUEST_STATUS_CHOICES
 
         }
         return render(request, 'fhir/view/phieuthuthuat.html', context)

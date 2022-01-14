@@ -161,41 +161,45 @@ def annotation_type(resource, text, author=None, time=None):
     textobject.set('value', text)
 
 
-def timing_type(resource, duration_value, frequency_value, period_value, when_value, offset_value=None, event_value=None):
+def timing_type(resource, duration_value=None, frequency_value=None, period_value=None, when_value=None, offset_value=None, event_value=None):
     if event_value:
         event = ET.SubElement(resource, 'event')
         event.set('value', event_value)
     repeat = ET.SubElement(resource, 'repeat')
-    get_duration = duration_value.split(' ')
-    duration = ET.SubElement(repeat, 'duration')
-    if '-' in get_duration[0]:
-        duration.set('value', get_duration[0].split('-')[0])
-        durationMax = ET.SubElement(repeat, 'durationMax')
-        durationMax.set('value', get_duration[0].split('-')[1])
-    else:
-        duration.set('value', get_duration[0])
-    durationUnit = ET.SubElement(repeat, 'durationUnit')
-    durationUnit.set('value', get_duration[1])
-    get_frequency = frequency_value.split(' ')
-    frequency = ET.SubElement(repeat, 'frequency')
-    if '-' in get_frequency[0]:
-        frequency.set('value', get_frequency[0].split('-')[0])
-        frequencyMax = ET.SubElement(repeat, 'frequencyMax')
-        frequencyMax.set('value', get_frequency[0].split('-')[1])
-    else:
-        frequency.set('value', get_frequency[0])
-    get_period = period_value.split(' ')
-    period = ET.SubElement(repeat, 'period')
-    if '-' in get_period[0]:
-        period.set('value', get_period[0].split('-')[0])
-        periodMax = ET.SubElement(repeat, 'periodMax')
-        periodMax.set('value', get_period[0].split('-')[1])
-    else:
-        period.set('value', get_period[0])
-    periodUnit = ET.SubElement(repeat, 'periodUnit')
-    periodUnit.set('value', get_period[1])
-    when = ET.SubElement(repeat, 'when')
-    when.set('value', when_value)
+    if duration_value:
+        get_duration = duration_value.split(' ')
+        duration = ET.SubElement(repeat, 'duration')
+        if '-' in get_duration[0]:
+            duration.set('value', get_duration[0].split('-')[0])
+            durationMax = ET.SubElement(repeat, 'durationMax')
+            durationMax.set('value', get_duration[0].split('-')[1])
+        else:
+            duration.set('value', get_duration[0])
+        durationUnit = ET.SubElement(repeat, 'durationUnit')
+        durationUnit.set('value', get_duration[1])
+    if frequency_value:
+        get_frequency = frequency_value.split(' ')
+        frequency = ET.SubElement(repeat, 'frequency')
+        if '-' in get_frequency[0]:
+            frequency.set('value', get_frequency[0].split('-')[0])
+            frequencyMax = ET.SubElement(repeat, 'frequencyMax')
+            frequencyMax.set('value', get_frequency[0].split('-')[1])
+        else:
+            frequency.set('value', get_frequency[0])
+    if period_value:
+        get_period = period_value.split(' ')
+        period = ET.SubElement(repeat, 'period')
+        if '-' in get_period[0]:
+            period.set('value', get_period[0].split('-')[0])
+            periodMax = ET.SubElement(repeat, 'periodMax')
+            periodMax.set('value', get_period[0].split('-')[1])
+        else:
+            period.set('value', get_period[0])
+        periodUnit = ET.SubElement(repeat, 'periodUnit')
+        periodUnit.set('value', get_period[1])
+    if when_value:
+        when = ET.SubElement(repeat, 'when')
+        when.set('value', when_value)
     if offset_value:
         offset = ET.SubElement(repeat, 'offset')
         offset.set('value', offset_value)
@@ -758,6 +762,7 @@ def create_procedure_resource(procedure, patient_id, patient_name, encounter_id,
 
 
 def create_medication_resource(medication, patient_id, patient_name, encounter_id):
+    print(medication)
     root = ET.Element('MedicationStatement')
     tree = ET.ElementTree(root)
     root.set('xmlns', 'http://hl7.org/fhir')
@@ -799,7 +804,7 @@ def create_medication_resource(medication, patient_id, patient_name, encounter_i
         patientInstruction = ET.SubElement(dosage, 'patientInstruction')
         patientInstruction.set('value', medication['patient_instruction'])
     timing = ET.SubElement(dosage, 'timing')
-    if medication.get('frequency') and medication.get('period') and medication.get('duration') and medication.get('when'):
+    if medication.get('frequency') or  medication.get('period') or medication.get('duration') or medication.get('when'):
         timing_type(timing, medication['duration'], medication['frequency'],
                     medication['period'], medication['when'], medication.get('offset'))
     if medication.get('route'):
@@ -1356,7 +1361,7 @@ def query_medication(medication_identifier, query_type):
                                     '-' + period_max.attrib['value']
                             period_unit = repeat.find('d:periodUnit', ns)
                             medication_statement['dosage_period'] = period_value
-                            medication_statement['dosage_period_value'] = period_unit
+                            medication_statement['dosage_period_unit'] = period_unit.attrib['value']
                         when = repeat.find('d:when', ns)
                         if when != None:
                             medication_statement['dosage_when'] = when.attrib['value']
