@@ -377,7 +377,7 @@ class display_detail(LoginRequiredMixin, View):
             print(e)
             messages.error(request, "Kho FHIR không hoạt động")
         data['Encounter'] = EncounterModel.objects.all().filter(
-            patient=patient_identifier)
+            patient=patient_identifier).order_by('-encounter_start')
         img_dir = f'/static/img/patient/{patient_identifier}.jpg'
         context = {
             'data': data,
