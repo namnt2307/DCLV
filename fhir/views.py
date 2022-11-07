@@ -232,8 +232,8 @@ service_dict = {
 }
 
 id_system = "urn:trinhcongminh"
-
-ns = {'d': "http://hl7.org/fhir"}
+fhir_url = "http://hl7.org/fhir"
+ns = {'d': fhir_url}
 
 
 def createobservations(encounter_instance, service_identifier, service_name):
