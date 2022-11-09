@@ -233,7 +233,6 @@ service_dict = {
 
 id_system = "urn:trinhcongminh"
 fhir_url = "http://hl7.org/fhir"
-test_url = "http://hl7.org/fhir/abc"
 ns = {'d': fhir_url}
 
 
