@@ -10,8 +10,7 @@ pipeline {
         stage('Checkout SCM'){
             steps {
 		checkout scm
-    	    	}
-	    	}
+    	    	}	    	
         }
         stage('SonarQube Analysis'){
             environment{
