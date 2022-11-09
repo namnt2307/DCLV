@@ -1,20 +1,50 @@
 {% extends 'fhir/doctor.html' %}
 {% block function %}
 {% load static %}
-<link rel="stylesheet" href="{% static 'css/fhir/doctor.css'%}">
+<link rel="stylesheet" href="{% static 'css/fhir/search.css'%}">
 <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
 <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
 <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
-    <div class="container">
-    	<div class="row">
-            <div class="search">
-                <form action="{% url 'fhir:search' group_name user_name %}" method="post">
-                    {% csrf_token %}
-                    <label for="identifier">Tìm kiếm hồ sơ</label>
-                    <input type="text" class="form-control input-sm" maxlength="64" placeholder="Search" name="identifier" id="identifier" />
-                    <button type="submit" class="btn btn-primary btn-sm">Search</button>
-                </form>
-            </div>
-        </div>
-    </div>
+<div class="searchpage">
+  <div class="search">
+    <form action="{% url 'fhir:search' group_name user_name %}" method="post" style="display:flex">
+      {% csrf_token %}
+      <label for="identifier">Tìm kiếm hồ sơ</label>
+      <input type="text" class="form-control input-sm" maxlength="64" placeholder="Search" name="identifier"
+        id="identifier" />
+      <button type="submit" class="btn btn-primary btn-sm">Search</button>
+    </form>
+  </div>
+  <div class="searchtable">
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">Mã y tế</th>
+          <th scope="col">Họ và tên</th>
+          <th scope="col">Giới tính</th>
+          <th scope="col">Ngày sinh</th>
+          <th scope="col">Địa chỉ</th>
+          <th scope="col">Nơi làm việc</th>
+          <th scope="col">Số điện thoại</th>
+        </tr>
+      </thead>
+      {% if data %}
+      <tbody>
+        <tr>
+          <td> <a
+              href="{% url 'fhir:display_detail' group_name user_name data.Patient.identifier %}">{{data.Patient.identifier}}</a>
+          </td>
+          <td>{{data.Patient.name}}</td>
+          <td>{{data.Patient.gender}}</td>
+          <td>{{data.Patient.birthDate}}</td>
+          <td>{{data.Patient.home_address}}</td>
+          <td>{{data.Patient.work_address}}</td>
+          <td>{{data.Patient.telecom}}</td>
+        </tr>
+      </tbody>
+      {% endif%}
+    </table>
+  </div>
+</div>
+
 {% endblock %}

@@ -1,0 +1,44 @@
+.display-box {
+    background-color: rgb(255, 255, 255);
+    color: black;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    border-radius: 25px;
+    width: 80%;
+    padding-left: 50px;
+    padding-bottom: 30px;
+
+}
+.display-box .display-data {
+    padding-top: 30px;
+    padding-left: 50px;
+}
+.patient-data {
+    display: flex;
+}
+h1 {
+    border-bottom: 2px solid rgb(0, 0, 0);
+    width: fit-content;
+}
+.patient {
+    display: flex;
+}
+.name {
+    margin-top: 30px;
+}
+.title {
+    width: 150px;
+    font-weight: bold;
+    /* padding-left: 100px; */
+}
+.patient-image {
+    padding-top: 30px;
+    padding-left: 50px;
+}
+img {
+    width: 150px;
+    height: 170px;
+}
+table, th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+  }

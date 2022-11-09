@@ -5,24 +5,114 @@
 <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
 <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
-<script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<style>
+    .servicePopup {
+        position: relative;
+        text-align: center;
+        width: 100%;
+      }
+      .formPopup {
+        display: none;
+        position: fixed;
+        left: 45%;
+        top: 5%;
+        transform: translate(-50%, 5%);
+        border: 3px solid #999999;
+        z-index: 9;
+      }
+      .formContainer {
+        max-width: 300px;
+        padding: 20px;
+        background-color: #fff;
+      }
+      .formContainer .btn {
+        padding: 12px 20px;
+        border: none;
+        background-color: #8ebf42;
+        color: #fff;
+        cursor: pointer;
+        width: 100%;
+        margin-bottom: 15px;
+        opacity: 0.8;
+      }
+      .formContainer .cancel {
+        background-color: #cc0000;
+      }
+      .formContainer .btn:hover,
+      .openButton:hover {
+        opacity: 1;
+      }
+</style>
+{% comment %} <div class="top-menu">
+    <ul class="menu">
+        <li><a href="{% url 'fhir:user_detail'  group_name user_name %}"><i class="fa fa-home" aria-hidden="true"></i> </a></li>
+        <li><a href="{% url 'fhir:register'  group_name user_name %}"> Tao ho so </a></li>
+        <li><a href="{% url 'fhir:upload'  group_name user_name %}"> Upload Excel </a></li>
+        <li><a href="{% url 'fhir:search'  group_name user_name %}"> Tim kiem ho so</a></li>
+    </ul>
+</div> {% endcomment %}
 
 <div class="top-menu">
     <ul class="menu">
-        <li><a href="{% url 'fhir:user_detail' user_name group_name %}"><i class="fa fa-home" aria-hidden="true"></i> </a></li>
-        <li><a href="{% url 'fhir:register' user_name group_name %}"> Tao ho so </a></li>
-        <li><a href="{% url 'fhir:upload' user_name group_name %}"> Upload Excel </a></li>
-        <li><a href="{% url 'fhir:search' user_name group_name %}"> Tim kiem ho so</a></li>
+        <li>
+            <div class="dropdown">
+                <a href="{% url 'fhir:user_detail' user_name group_name %}"><i class="fa fa-home"
+                        aria-hidden="true"></i></a>
+            </div>
+        </li>
+        <li>
+            <div class="dropdown">
+                <a href="{% url 'fhir:register' user_name group_name %}"> Quản lí hồ sơ </a>
+                <div class="dropdown-content">
+                    <a href="{% url 'fhir:register' user_name group_name %}">Tạo hồ sơ</a>
+                    <a href="">Tạo bệnh án</a>
+                    <a href="{% url 'fhir:upload' user_name group_name %}">Chuyển đổi excel</a>
+                    <a href="{% url 'fhir:search' user_name group_name %}">Tìm kiếm hồ sơ</a>
+                </div>
+                <!-- #328be4; -->
+            </div>
+        </li>
+        <li>
+            <div class="dropdown">
+                <a href="{% url 'fhir:upload' user_name group_name %}"> Quản lí lịch khám </a>
+                <div class="dropdown-content">
+                    <a href="">TEXT</a>
+                    <a href="">TEXT2</a>
+                </div>
+            </div>
+        </li>
+        <li>
+            <div class="dropdown">
+                <a href="{% url 'fhir:search' user_name group_name %}"> Tim kiem ho so</a>
+                <div class="dropdown-content">
+                    <a href="">TEXT</a>
+                    <a href="">TEXT2</a>
+                </div>
+            </div>
+        </li>
     </ul>
 </div>
 
 <div class="body">
     <div class="left-body">
-        <ul>
-            <li><a href=""> Func1 </a></li>
-            <li><a href=""> Func2 </a></li>
-            <li><a href=""> Func3 </a></li>
-        </ul>
+      {%block leftbody%}
+      {%endblock%}
+        {% comment %} <ul>
+            <li><a href={%block url1%}{%endblock%}> Thông tin hành chính </a></li>
+            <li><a href={%block url2%}{%endblock%}> Thông tin đăng ký khám </a></li>
+            <li><a href={%block url3%}{%endblock%}> Thông tin hỏi bệnh </a></li>
+            {%block leftbar%}
+            {%endblock%}
+      
+            <!-- <button id="myButton" class="float-left submit-button" >Add a service</button>
+            <script type="text/javascript">
+                document.getElementById("myButton").onclick = function () {
+                    location.href = " ";
+                };
+            </script> -->
+        </ul> {% endcomment %}
+    
     </div>
     <div class="verticle-line"></div>
     <div class="right-body">

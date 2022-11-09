@@ -1,39 +1,53 @@
 {% extends 'fhir/doctor.html' %}
+
+{%block leftbody%}
+
+
+{%endblock%}
 {% block function %}
 {% load static %}
-<link rel="stylesheet" href="{% static 'css/fhir/doctor.css'%}">
+<link rel="stylesheet" href="{% static 'css/fhir/create.css'%}">
 <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
 <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
 <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
     <div class="create">
-        <form class="create-form"action="{% url 'fhir:register' user_name group_name %}" method="post">
-            {% csrf_token %}   
-            <br>
-            <label for="full_name">Họ và tên</label>
-            {{form.full_name}}
-            <br>
-            <br>
-            <label for="gioi_tinh">Giới tính</label>
-            {{form.gender }}
-            <br>
-            <br>
-            <label for="ngay_sinh">Ngày sinh</label>
-            {{form.birth_date}}
-            <br>
-            <br>
-            <label for="dia_chi">Địa chỉ</label>
-            {{form.home_address}}
-            <br>
-            <br>
-            <label for="user_identifier">Mã y tế </label>
-            {{form.user_identifier}}
-            <br>
-            <br>
-            <label for="noi_lam_viec">Nơi làm việc</label>
-            {{form.work_address}}
-            <br>
-            <br>
-            <input type="submit" value="Submit">
-        </form>   
+        <div class="create-data">
+            <h1>Hồ sơ khám bệnh</h1>
+            <div class="text-data">
+            <form class="create-form"action="{% url 'fhir:register' group_name user_name  %}" method="post">
+                {% csrf_token %}   
+                    <div class="name patient">
+                        <label for="name"><h4 class="title">Họ và tên:</h4></label>
+                        <h4 class="value">{{form.name}}</h4>
+                    </div>
+                    <div class="gender patient">
+                        <label for="gioi_tinh"><h4 class="title">Giới tính:</h4></label>
+                        <h4 class="value">{{form.gender }}</h4>
+                    </div>
+                    <div class="birth patient">
+                        <label for="ngay_sinh"><h4 class="title">Ngày sinh:</h4></label>
+                        <h4 class="value">{{form.birthDate}}</h4>                
+                    </div>
+                    <div class="home patient">
+                        <label for="noi_lam_viec"><h4 class="title">Nơi làm việc:</h4></label>
+                        <h4 class="value">{{form.home_address}}</h4>
+                    </div>
+                    <div class="work patient">
+                        <label for="dia_chi"><h4 class="title">Địa chỉ:</h4></label>
+                        <h4 class="value">{{form.work_address}}</h4> 
+                    </div>
+                    <div class="identifier patient">
+                        <label for="user_identifier"><h4 class="title">Mã y tế:</h4></label>
+                        <h4 class="value">{{form.identifier}}</h4>               
+                    </div>
+                    <div class="telecom patient">
+                        <label for=""><h4 class="title">Số điện thoại:</h4></label>
+                        <h4 class="value">{{form.telecom}}</h4>               
+                    </div>
+                <button type="submit" class="btn btn-success">Tạo hồ sơ</button>
+            </form> 
+            </div>
+        </div>
+        
     </div> 
 {% endblock %}
