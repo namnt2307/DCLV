@@ -1,3 +1,0 @@
-˜
-ŽYour code is analyzed as compatible with python 2 and 3 by default. This will prevent the detection of issues specific to python 2 or python 3. You can get a more precise analysis by setting a python version in your configuration via the parameter "sonar.python.version"¢øä²Å0»
-±Using Node.js version 14 to execute analysis is deprecated and will stop being supported no earlier than May 1st, 2023. Please upgrade to a newer LTS version of Node.js [16, 18] Ëå²Å0

@@ -1,1 +1,0 @@
-L 2pyX‹hrfhir/migrations/0001_initial.py

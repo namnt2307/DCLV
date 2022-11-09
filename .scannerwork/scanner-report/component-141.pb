@@ -1,1 +1,0 @@
- 2cssX"hrstatic/css/fhir/patient.css
