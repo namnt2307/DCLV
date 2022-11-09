@@ -1,0 +1,14 @@
+{% extends 'fhir/doctor.html' %}
+{%block function %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/fhir/doctor.css'%}">
+<link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+<script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
+<script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+    <h1>Upload your excel file</h1>
+    <form action="{% url 'fhir:upload'%}" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="file" name="excel_file" id="excel_file">
+        <input type="submit" value="Submit">
+    </form>
+{%endblock%}

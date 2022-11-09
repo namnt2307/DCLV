@@ -1,0 +1,72 @@
+{% extends 'fhir/index.html' %}
+{% block doctor %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/fhir/doctor.css'%}">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css" integrity="sha384-AYmEC3Yw5cVb3ZcuHtOA93w35dYTsvhLPVnYs9eStHfGJvOvKxVfELGroGkvsg+p" crossorigin="anonymous"/>
+<div class="top-menu">
+    <ul class="menu">
+        <li class="home-button">
+            <div class="dropdown">
+                <a href="{% url 'fhir:user_detail'%}"><i class="fa fa-home"
+                        aria-hidden="true"></i></a>
+            </div>
+        </li>
+        <li class="function">
+            <div class="dropdown">
+                <a href="{% url 'fhir:manage' %}">Quản lí hồ sơ</a>
+                <!-- #328be4; -->
+            </div>
+        </li>
+        <li class="function">
+            <div class="dropdown">
+                <a {%if request.user.role == 'medical assistant' %} href="{% url 'fhir:manage_schedule' %}" {%else%} href="{% url 'fhir:schedule' request.user.username %}" {% endif %}> Quản lí lịch khám </a>
+                <!-- #328be4; -->
+            </div>
+        </li>
+    
+          <li class="function">
+              <div class="dropdown">
+                <a href="{% url 'fhir:manage_images' %}">Lịch chẩn đoán hình ảnh</a>
+              </div>
+          </li>
+          <li class="function">
+            <div class="dropdown">
+                <a href="{% url 'fhir:manage_tests' %}">Lịch xét nghiệm</a>
+            </div>
+        </li> 
+    </ul>
+</div>
+<div class="content">
+{%block function%}
+  <div class="index-content">
+    <div class="images">
+      <div class="slide-container">
+          <span id="slider-image-1"></span>
+          <span id="slider-image-2"></span>
+          <span id="slider-image-3"></span>
+          <div class="image-container">
+              <img src="{% static '/img/index/img1.jpg' %}" class="slider-image">
+              <img src="{% static '/img/index/img2.jpg' %}" class="slider-image">
+              <img src="{% static '/img/index/img3.jpg' %}" class="slider-image">
+          </div>
+          <div class="button-container">
+              <a href="#slider-image-1" class="slider-button"></a>
+              <a href="#slider-image-2" class="slider-button"></a>
+              <a href="#slider-image-3" class="slider-button"></a>
+          </div>
+      </div>
+  </div>
+  <div class="announcements">
+    {% for announcement in announcements %}
+        <div class="announcement">
+            <p><b>{{announcement.title}}</b></p>
+            <p>{{announcement.date_issued|date:'H:i:s d-m-Y'}} - {{announcement.content}}</p>
+        </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+</div>
+
+{% endblock %}

@@ -1,0 +1,1 @@
+Á 2webXfhr!templates/fhir/manage_images.html

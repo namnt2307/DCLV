@@ -1,0 +1,21 @@
+{% extends 'administration/index.html' %}
+{% block content %}
+<div style="margin: 20px 0px 0px 20px">
+    <form action="" method="post">
+        {% csrf_token %}
+        <div class="flex_data_container">
+            <label class="title">Tiêu đề:</label>
+            <input type="text" name="title" id="" class="value">
+        </div>
+        <div class="flex_data_container">
+            <label class="title">Ngày thông báo:</label>
+            <input type="datetime-local" name="date_issued" id="" class="value">
+        </div>
+        <div class="flex_data_container">
+            <label class="title">Nội dung:</label>
+        </div>
+        <textarea name="content" id="" cols="63" rows="10"></textarea>
+        <button class="btn">Thêm</button>
+    </form>
+</div>
+{% endblock %}

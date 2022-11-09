@@ -1,0 +1,76 @@
+h1{
+    text-align: center;
+}
+.right-body__section{
+    position: relative;
+}
+.history{
+    background-color: white;
+    border: 1px solid black;
+    padding: 12px;
+    position: absolute;
+    width: 80%;
+    margin: 0px auto;
+    top: 20px;
+    left: 0;
+    right: 0;
+    height: 300px;
+    overflow: scroll;
+}
+.history-header{
+    display: flex;
+    justify-content: space-between;
+}
+.history-header h1{
+    margin-top: 10px;
+}
+.history-header i{
+    padding-top: 12px
+}
+table{
+    width: 100%;
+    margin: 10px auto;
+    table-layout: fixed;
+}
+table th{
+    background-color: #58a6f5;
+}
+table tbody{
+    width: 100%;
+}
+table th,td {
+    width: 14.2%;
+    text-overflow: ellipsis;
+    word-break: normal;
+    padding: 5px;
+    border: 1px solid;
+    text-align: center;
+    overflow: hidden;
+}
+
+.flex_container{
+    display: flex;
+}
+
+.flex_container .value{
+    border-bottom: dotted black 2px;
+    flex: 1;
+    white-space: pre-wrap;
+}
+
+
+.text-line{
+    border-bottom: dotted black 2px;
+    min-height: 25px;
+}
+
+.signature{
+    display: flex;
+    justify-content: flex-end;
+    margin: 50px;
+}
+.signature__content{
+    text-align: center;
+    margin-bottom: 50px;
+    max-width: 250px;
+}

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+    <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
+    <title>Trang Khám bệnh</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/fhir/index.css'%}">
+    {% if messages %}
+        {% for message in messages %}
+            <script>
+                alert('{{message}}');
+            </script>
+        {% endfor %}
+    {% endif %}     
+</head>
+<body>
+    <div class="header">
+        <div class="left-header">
+            <img src="{% static 'img/logo.png'%}" alt="logo-bach-khoa">
+            <h3>Bệnh viện Bình Thạnh</h3>
+        </div>
+        <div class="right-header">
+            <a href="{% url 'administration:staff_info' request.user.username%}">{{request.user.username}}</a>
+            <a href="{% url 'login:change_password' %}">Đổi mật khẩu</a>
+            <a href="{% url 'login:logout' %}">Đăng xuất</a>
+        </div>
+    </div>
+        {% block doctor %}
+             <!-- Slideshow container -->
+        
+        {% endblock %}
+        {% block patient %}
+        {% endblock %}    
+    <div class="footer">
+
+    </div>
+    <script>
+        
+        var inputs = document.querySelectorAll("input[type=text]");
+        for (var i = 0; i < inputs.length; i++) {
+        // When the value of the input changes…
+        inputs[i].addEventListener('change', function() {
+            this.value = this.value.replace(/\s\s+/g, ' ');
+            this.value = this.value.replace(' ,',',');
+            this.value = this.value.replace(' .','.');
+            this.value = this.value.trim();
+            // Determine whether an option exists with the current value of the input.
+            // use the setCustomValidity function of the Validation API
+            // to provide an user feedback if the value does not exist in the datalist
+        });
+        }
+        
+
+        var textAreas = document.querySelectorAll("textarea");
+        for (var i = 0; i < textAreas.length; i++) {
+        textAreas[i].addEventListener('change', function() {
+            this.value = this.value.replace(/  +/g, ' ');
+            this.value = this.value.trim();
+            // Determine whether an option exists with the current value of the input.
+            // use the setCustomValidity function of the Validation API
+            // to provide an user feedback if the value does not exist in the datalist
+        });
+        }
+
+    </script>    
+</body>
+</html>

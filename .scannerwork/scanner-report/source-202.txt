@@ -1,0 +1,133 @@
+{% extends 'fhir/view/base.html' %}
+{% block right-body %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/fhir/donthuoc.css' %}">
+<div style="border: 1px solid black; padding: 20px;">
+    <div>
+        <h1>ĐƠN THUỐC</h1>
+        <div class="flex_container">
+            <p class="title">HỌ TÊN:</p><p class="value"> {{patient.name}}</p>
+        </div>
+        <div class="flex_container">
+            <p class="title">GIỚI:</p><p class="value"> {{patient.gender}}</p>
+        </div>  
+        <div class="flex_container">
+            <p class="titile">NGÀY SINH:</p><p class="value"> {{patient.birthdate|date:'d-m-Y'}}</p>
+        </div>
+        <div class="flex_container">
+            <p class="title">ĐỊA CHỈ:</p><p class="value"> {{patient.home_address}}</p>
+        </div>
+    </div>
+    <div class="right-body__body-section">
+    {% if medications_history %}
+        <div class="history-container">
+            {% for medication in medications %}
+                <div class="history" id="{{medication.medication_identifier}}-history" style="display: none;">
+                    <div class="history-header">
+                        <h2>Lịch sử chỉnh sửa</h2>
+                        <i class="fa fa-times" aria-hidden="true" onclick="displayHistory('{{medication.medication_identifier}}-history')"></i>
+                    </div>
+                    <div>
+                        {% for medication_history in medications_history|get_item:medication.medication_identifier %}
+                            <p>Thuốc: {{medication_history.medication_medication}} </p>
+                            <p>Lý do dùng thuốc: {{medication_history.medication_reason_code}}</p>
+                            <p>Bắt đầu dùng thuốc: {{medication_history.medication_effective}}</p>
+                            <p>Tần suất dùng thuốc: {{medication_history.dosage_frequency}}</p>
+                            <p>Liều dùng: {{medication_history.dosage_quantity}}</p>
+                            <p>Thời gian sử dụng: {{medication_history.dosage_duration}}</p>
+                            <p>Đường dùng: {{medication_history.dosage_route}}</p>
+                            <p>Ngày chỉ định: {{medication_history.medication_date_asserted}}</p>            
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+        <table>
+            <thead>
+                <th>Thuốc</th>
+                <th>Lý do dùng thuốc</th>
+                <th>Bắt đầu dùng thuốc từ</th>
+                <th>Tần suất dùng thuốc</th>
+                <th>Liều dùng</th>
+                <th>Thời gian sử dụng</th>
+                <th>Đường dùng</th>
+                <th>Ngày chỉ định</th>
+            </thead>
+            <tbody>
+                {% if encounter.encounter_storage == 'local' %}
+                    {% if medications %}
+                        {% for medication in medications %}
+                            <tr>
+                                <td>{{medication.medication_medication}}</td>
+                                <td>{{medication.medication_reason_code}}</td>
+                                <td>{{medication.medication_effective|date:"d-m-Y"}}</td>
+                                <td>{{medication.dosage_frequency}} lần/{{medication.dosage_period}} {{unit|get_item:medication.dosage_period_unit}}</td>
+                                <td>{{medication.dosage_quantity}} {{medication.dosage_quantity_unit}}</td>
+                                <td>{{medication.dosage_duration}} {{unit|get_item:medication.dosage_duration_unit}}</td>
+                                <td>{{medication.dosage_route}}</td>
+                                <td>{{medication.medication_date_asserted|date:"d-m-Y"}}</td>
+                                {% if medications_history|get_item:medication.medication_identifier %}
+                                    <td><button onclick="displayHistory('{{medication.medication_identifier}}-history')">xem lich su</button></td>
+                                {% endif %}
+                            </tr>
+                            <tr>
+                                <td colspan="8" style="text-align: left;">
+                                    <div class="flex_container">
+                                        <p class="title">Thời điểm sử dụng:</p><p class="value"> {% if medication.dosage_when %} {{when|get_item:medication.dosage_when}} {%if medication.dosage_offset != None %}{{medication.dosage_offset}} phút {%endif%}{%endif%}</p>
+                                    </div>
+                                    <div class="flex_container">
+                                        <p class="title">Hướng dẫn thêm:</p><p class="value"> {{medication.dosage_additional_instruction}}</p>
+                                    </div>
+                                    <div class="flex_container">
+                                        <p class="title">Hướng dẫn đặc biệt:</p><p class="value"> {{medication.dosage_patient_instruction}}</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% endif %}
+                {% elif encounter.encounter_storage == 'hapi' %}
+                    {% if medications %}
+                        {% for medication in medications %}
+                            <tr>
+                                <td>{{medication.medication_medication}}</td>
+                                <td>{{medication.medication_reason_code}}</td>
+                                <td>{{medication.medication_effective}}</td>
+                                <td>{{medication.dosage_frequency}}/ {{medication.dosage_period}} {{unit|get_item:medication.dosage_period_unit}}</td>
+                                <td>{{medication.dosage_quantity}}</td>
+                                <td>{{medication.dosage_duration}} {{unit|get_item:medication.dosage_duration_unit}}</td>
+                                <td>{{medication.dosage_route}}</td>
+                                <td>{{medication.medication_date_asserted}}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="8" style="text-align: left;">
+                                    <div class="flex_container">
+                                        <p class="title">Thời điểm sử dụng:</p><p class="value"> {% if medication.dosage_when %} {{when|get_item:medication.dosage_when}} {%if medication.dosage_offset != '0'%}{{medication.dosage_offset}} phút{%endif%}{%endif%}</p>
+                                    </div>
+                                    <div class="flex_container">
+                                        <p class="title">Hướng dẫn thêm:</p><p class="value"> {{medication.dosage_additional_instruction}}</p>
+                                    </div>
+                                    <div class="flex_container">
+                                        <p class="title">Hướng dẫn đặc biệt:</p><p class="value"> {{medication.dosage_patient_instruction}}</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% endif %}                        
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+<script>
+    function displayHistory(element_id) {
+        getElement = document.getElementById(element_id);
+        if (getElement.style.display == 'none') {
+            getElement.style.display = 'block';
+        }
+        else {
+            getElement.style.display = 'none';
+        }
+    }
+</script>
+{% endblock %}

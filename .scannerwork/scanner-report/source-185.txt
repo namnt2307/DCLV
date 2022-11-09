@@ -1,0 +1,178 @@
+{%extends 'fhir/base.html'%}
+{%block function%}
+    {% if service %}
+        <h1>KẾT QUẢ XÉT NGHIỆM</h1>
+        <form action="" method="POST">
+            {% csrf_token %}
+        <table>
+            <thead>
+                <th class="cell-data-4">Chỉ số</th>
+                <th class="cell-data-4">Kết quả</th>
+                <th class="cell-data-4">Trị số bình thường</th>
+                <th class="cell-data-4">Đơn vị</th>
+                {% if request.user.role == 'medical laboratory technician' and service.service_status == 'active' %}
+                <th> </th>
+            </thead>
+            <tr>
+                <td colspan="5"><b>{{service.service_code}}</b></td>
+            </tr>
+            {% else %}
+                
+            </thead>
+            <tr>
+                <td colspan="4"><b>{{service.service_code}}</b></td>
+            </tr>            
+            {% endif %}
+            {% if service.service_status == 'active'%}                            
+                {% if request.user.role == 'medical laboratory technician' %}                
+                <tbody id="observation-input-container">
+                    {%for observation in observations%}
+                    <tr>                    
+                        <td><input type="text" class="checkValue" name="{{observation.observation_identifier}}" value="{{observation.observation_code}}"></td>                  
+                        <td><input type="text" class="checkValue" name="{{observation.observation_identifier}}" value="{{observation.observation_value_quantity}}"></td>
+                        <td><input type="text" name="{{observation.observation_identifier}}" id="" value="{{observation.observation_reference_range}}"></td>
+                        <td><input type="text" name="{{observation.observation_identifier}}" id="" value="{{observation.observation_value_unit}}"></td>
+                        <td>
+                            <button type="button" class="btn cancel" onclick="submitDelForm('{{observation.observation_identifier}}')">Xóa</button>                
+                        </td>
+                    </tr>
+                    {%endfor%}
+                </tbody>
+                <tr>
+                    <td colspan="5"><button type="button" onclick="addCode('observation-input-container')" class="btn">Thêm giá trị</button></td>
+                </tr> 
+                {% else %}
+                <tbody>
+                    {%for observation in observations%}
+                    <tr>
+                        <td><input type="text" class="checkValue" name="{{observation.observation_identifier}}" disabled value="{{observation.observation_code}}"></td>    
+                        <td><input type="text" class="checkValue" name="{{observation.observation_identifier}}" disabled value="{{observation.observation_value_quantity}}"></td>                    
+                        <td><input type="text" name="{{observation.observation_identifier}}" disabled id="" value="{{observation.observation_reference_range}}"></td>
+                        <td><input type="text" name="{{observation.observation_identifier}}" disabled id="" value="{{observation.observation_value_unit}}"></td>                        
+                    </tr>
+                    {%endfor%}
+                </tbody>
+                {% endif %}                           
+            {%else%}
+                <tbody id='data'>
+                {%for observation in observations%}
+                <tr>
+                    <td>{{observation.observation_code}}</td>
+                    <td>{{observation.observation_value_quantity}}</td>
+                    <td>{{observation.observation_reference_range}}</td>
+                    <td>{{observation.observation_value_unit}}</td>
+                </tr>
+                {%endfor%}
+                </tbody>
+            {%endif%}            
+        </table>
+        <h1>Chẩn đoán</h1>
+        {% if service.service_status == 'active' %}
+            {% if request.user.role == 'medical laboratory technician' %}            
+                {% if diagnostic_report %}
+                    <input type="hidden" name="diagnostic_report_identifier" id="" value="{{diagnostic_report.diagnostic_identifier}}">
+                    <textarea name="diagnostic_report_conclusion" id="" cols="30" rows="10">{{diagnostic_report.diagnostic_conclusion}}</textarea>
+                {% else %}
+                    <textarea name="diagnostic_report_conclusion" id="" cols="30" rows="10"></textarea>            
+                {% endif %}
+                <div style="text-align: center; margin-top: 10px">
+                    <button type="submit" class="btn">Lưu lại</button>
+                </div>
+            {% else %}
+                <textarea name="diagnostic_report_conclusion" id="" cols="30" rows="10" disabled>{{diagnostic_report.diagnostic_conclusion}}</textarea> 
+            {% endif %}
+        {% else %}
+            <div id="diagnostic_report_data" style="margin: 20px 60px; border: solid black 1px; min-height: 50px">
+                {{diagnostic_report.diagnostic_conclusion}}
+            </div>
+        {% endif %}
+        </form>
+        <h1>Bác sĩ làm xét nghiệm: {{service.service_performer|default_if_none:"Xét nghiệm chưa được thực hiện"}}</h1>
+
+        <form action="{% url 'fhir:delete' %}" method="post" id="delete-form" style="display: none;">
+            {% csrf_token %}
+            <input type="hidden" name="resource_type" id="" value="observation">
+            <input type="hidden" name="resource_identifier" id="id_resource_identifier" value="">
+            <input type="hidden" name="url_next" id="" value="{{request.get_full_path}}">
+        </form>
+        <script>
+            checkInput();
+
+            function changeDisplay(){
+                button = document.getElementById('clickButton');
+                data = document.getElementById('data');
+                form = document.getElementById('form');
+                diagnosticData = document.getElementById('diagnostic_report_data');
+                diagnosticForm = document.getElementById('diagnostic_report_form');
+                if (button.textContent == "Chỉnh sửa"){
+                    data.style.display = "none";
+                    form.style.display = "table-row-group";
+                    diagnosticData.style.display = "none";
+                    diagnosticForm.style.display = "block";
+                    button.textContent = "Hủy bỏ";
+                }
+                else{
+                    data.style.display = "table-row-group";
+                    form.style.display = "none";
+                    diagnosticData.style.display = "block";
+                    diagnosticForm.style.display = "none";
+                    button.textContent = "Chỉnh sửa"
+                }
+            }
+
+
+            var count = 1;
+            function addCode(element) {
+                elementToAdd = document.getElementById(element);
+                elementToAdd.innerHTML +=`
+                <tr id="observation_${count}">
+                    <td><input type="text" class="checkValue" name="observation_${count}" required></td>
+                    <td><input type="text" class="checkValue" name="observation_${count}" required></td>
+                    <td><input type="text" name="observation_${count}"></td>
+                    <td><input type="text" name="observation_${count}"></td>
+                    <td><button type="button" class="btn cancel" onclick="delCode('observation_${count}')">Xóa</button></td>
+                </tr>
+                `;
+                count += 1;
+                checkInput();
+            }
+
+
+            function delCode(element){
+                elementToDel = document.getElementById(element);
+                elementToDel.remove();
+            }
+
+
+        function checkInput(){
+            var inputs = document.querySelectorAll("input[type=text].checkValue");
+                for (var i = 0; i < inputs.length; i++) {
+                    // When the value of the input changes…
+                    inputs[i].addEventListener('change', function() {
+                    var inputEmpty = false;
+                    console.log(this.value.trim().length)
+                    if (this.value.length != 0 && this.value.trim().length == 0){
+                        inputEmpty = true;
+                        this.value = this.value.trim();
+                    }
+                    // Determine whether an option exists with the current value of the input.
+                    // use the setCustomValidity function of the Validation API
+                    // to provide an user feedback if the value does not exist in the datalist
+                    if (inputEmpty == false) {
+                        this.setCustomValidity('');
+                    } else {
+                        this.setCustomValidity('Please input a valid value.');
+                    }
+                });
+            }
+        }
+
+        function submitDelForm(observationIdentifier){
+            delForm = document.getElementById('delete-form');
+            identifierInput = document.getElementById('id_resource_identifier');
+            identifierInput.value = observationIdentifier;
+            delForm.submit();
+        }
+        </script>
+    {%endif%}
+{%endblock%}

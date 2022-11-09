@@ -1,0 +1,227 @@
+{% extends 'fhir/view/base.html' %}
+{% block right-body %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/fhir/phieuxetnghiem.css' %}">
+<link rel="stylesheet" href="">
+<div class="right-body__section">
+    {% if services_history %}
+        {% for service in services %}   
+            <div class="history" id="{{service.service_identifier}}-history" style="display: none;">
+                <div>
+                    <h1>Lịch sử chỉnh sửa</h1>
+                    <i class="fa fa-times" aria-hidden="true" onclick="displayHistory('{{service.service_identifier}}-history')"></i>
+                </div>
+                {% for service_history in services_history|get_item:service.service_identifier %}
+                    <div>
+                        <h2>Chỉnh sửa ngày: {{service_history.last_updated}}</h2>
+                        <p>Tên xét nghiệm: {{service_history.service_code}}</p>
+                        <p>Ngày dự kiến: {{service_history.service_occurrence}}</p>
+                        <p>Ngày yêu cầu: {{service_history.service_authored}}</p>
+                        <p>Bác sĩ yêu cầu: {{service_history.service_requester}}</p>
+                        <p>Ghi chú: {{service_history.service_note}}</p>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+    {% endif %}
+    <table>
+        <thead>
+            <th>ID thủ thuật</th>
+            <th>Tên thủ thuật</th>
+            <th>Tình trạng thủ thuật</th>
+            <th>Ngày dự kiến thực hiện</th>
+            <th>Ngày yêu cầu</th>
+            <th>Bác sĩ yêu cầu</th>
+            <th>Ghi chú</th>
+        </thead>
+        <tbody>
+            {% if encounter.encounter_storage == 'local' %}
+                {% if services %}
+                    {% for service in services %}
+                    <tr onclick="displayToggle('{{service.service_identifier}}')">
+                        <td>{{service.service_identifier}}</td>
+                        <td>{{service.service_code}}</td>
+                        <td>{{service_status|get_item:service.service_status}}</td>
+                        <td>{{service.service_occurrence|date:"d-m-Y"}}</td>
+                        <td>{{service.service_authored|date:"d-m-Y"}}</td>
+                        <td>{{service.service_requester}}</td>
+                        <td>{{service.service_note|default_if_none:"Không"}}</td>
+                    </tr>
+                    {% endfor %}
+                    {% if services_history|get_item:service.service_identifier %}
+                        <button onclick="displayHistory('{{service.service_identifier}}-history')">xem lịch sử</button>
+                    {% endif %}
+                {% else %}
+                <tr>
+                    <td colspan="7">Không có xét nghiệm được thực hiện</td>
+                </tr>
+                {% endif %}
+            {% elif encounter.encounter_storage == 'hapi' %}
+                {% if services %}
+                    {% for service in services %}
+                    <tr onclick="displayToggle('{{service.service_identifier}}')">
+                        <td>{{service.service_identifier}}</td>
+                        <td>{{service.service_code}}</td>
+                        <td>{{service_status|get_item:service_status}}</td>
+                        <td>{{service.service_occurrence}}</td>
+                        <td>{{service.service_authored}}</td>
+                        <td>{{service.service_requester}}</td>
+                        <td>{{service.service_note|default_if_none:"Không"}}</td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="7">Không có xét nghiệm được thực hiện</td>
+                    </tr>        
+                {% endif %}    
+            {% endif %}
+        </tbody>
+    </table>
+    <div class="display-data" id="display-data" style="display: none; border: 1px solid black; padding: 20px;">
+        <div class="">
+            <h1>PHIẾU KẾT QUẢ THỦ THUẬT</h1>
+            <div>
+                <div class="flex_container">
+                    <p class="title">HỌ TÊN:</p><p class="value"> {{patient.name}}</p>
+                </div>
+                <div class="flex_container">
+                    <p class="title">GIỚI:</p><p class="value"> {{patient.gender}}</p>
+                </div>
+                <div class="flex_container">
+                    <p class="title">NGÀY SINH:</p><p class="value"> {{patient.birthdate|date:'d-m-Y'}}</p>
+                </div>
+                <div class="flex_container">
+                    <p class="title">ĐỊA CHỈ:</p><p class="value"> {{patient.home_address}}</p>
+                </div>
+                <div class="flex_container">
+                    <p class="title">BS CHỈ ĐỊNH:</p><p class="value"> {{encounter.encounter_participant}}</p>
+                </div>                                
+            </div>
+        </div>
+        {% for service in services %}
+            <div  id="display-data__{{service.service_identifier}}">
+                <div class="flex_container">
+                    {% if encounter.encounter_storage == 'local' %}
+                    <p class="title">NGÀY GIỜ CÓ KẾT QUẢ:</p><p class="value"> {{service.service_performed_date|date:'d-m-Y'}}</p>
+                    {% else %}
+                    <p class="title">NGÀY GIỜ CÓ KẾT QUẢ:</p><p class="value"> {{service.service_performed_date}}</p>
+                    {% endif %}
+                </div>
+                <div class="right-body__section">
+                    <h2>THÔNG TIN THỦ THUẬT</h2>
+                    {% for procedure in procedures|get_item:service.service_identifier %}
+                        {% if procedures_history|get_item:procedure.procedure_identifier %}
+                        <div class="history" id="{{procedure.procedure_identifier}}-history" style="display: none;">
+                            <div class="history-header">
+                                <h2>LỊCH SỬ CHỈNH SỬA</h2>
+                                <i class="fa fa-times" aria-hidden="true" onclick="displayHistory('{{procedure.procedure_identifier}}-history')"></i>
+                            </div>
+                            {% for procedure_history in procedures_history|get_item:procedure.procedure_identifier %}
+                                <div>
+                                    <h2>Ngày chỉnh sửa: {{procedure_history.last_updated}}</h2>
+                                    <p>Ngày thực hiện: {{procedure_history.procedure_performed_datetime}}</p>
+                                    <p>Kết quả thử thuật, phẫu thuật: {{procedure_history.procedure_outcome}}</p>
+                                    <p>Các biến chứng sau thử thuật, phẫu thuật: {{procedure_history.procedure_complication}}</p>
+                                    <p>Các hướng dẫn sau thủ thuật, phẫu thuật: {{procedure_history.procedure_follow_up}}</p>
+                                    <p>Thiết bị: {{procedure_history.procedure_used}}</p>
+                                    <p>Ghi chú: {{procedure_history.procedure_note}}</p>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        <div class="flex_container">
+                            <p class="title">THỦ THUẬT THỰC HIỆN:</p><p class="value"> {{ procedure.procedure_code }}</p>
+                        </div>
+                        <div class="flex_container">
+                            <p class="title">LÝ DO THỰC HIỆN:</p><p class="value"> {{ procedure.procedure_reason_code }}</p>
+                        </div>
+                        <div class="flex_container">
+                            <p class="title">NGÀY THỰC HIỆN:</p><p class="value"> {{ procedure.procedure_performed_datetime|date:"H:i:s d-m-Y" }}</p>
+                        </div>
+                        <div class="flex_container">
+                            <p class="title">KẾT QUẢ:</p><p class="value"> {{procedure.get_procedure_outcome_display}}</p>
+                        </div>
+                        <div class="flex_container">
+                            <p class="title">THIẾT BỊ SỬ DỤNG:</p><p class="value"> {{procedure.procedure_used|default_if_none:"Không"}}</p>
+                        </div>
+                        <div class="flex_container">
+                            <p class="title">BIẾN CHỨNG SAU THỦ THUẬT:</p><p class="value"> {{procedure.procedure_complication|default_if_none:"Không"}}</p>
+                        </div>
+                        <div class="flex_container">
+                            <p class="title">HƯỚNG DẪN SAU THỦ THUẬT:</p><p class="value"> {{procedure.procedure_follow_up|default_if_none:"Không"}}</p>
+                        </div>
+                        <div class="flex_container">
+                            <p class="title">BÁC SĨ THỰC HIỆN:</p><p class="value"> {{procedure.procedure_performer}}</p>
+                        </div>
+                        <div style="display: flex; justify-content: space-evenly; flex-wrap: wrap">
+                            {% for image in images|get_item:procedure.procedure_identifier %}
+                                <img src="{{image.image.url}}" alt="{{image.image.name}}" style="width:500px; height: 600px; background-color:white; margin: 10px">
+                            {% endfor %}
+                        </div>
+                        {% if procedures_history|get_item:procedure.procedure_identifier %}
+                            <button onclick="displayHistory('{{procedure.procedure_identifier}}-history')">xem lich su</button>
+                        {% endif %}
+                    {% endfor %}    
+                </div>
+                <div class="right-body_section">
+                    <h2>CHẨN ĐOÁN</h2>
+                    {% for diagnostic_report in diagnostic_reports|get_item:service.service_identifier %}
+                        {% if diagnostic_reports_history|get_item:diagnostic_report.diagnostic_identifier %}
+                            <div class="history" style="display: none;" id="{{diagnostic_report.diagnostic_identifier}}-history">
+                                <div class="history-header">
+                                    <h2>LỊCH SỬ CHỈNH SỬA</h2>
+                                    <i class="fa fa-times" aria-hidden="true" onclick="displayHistory('{{diagnostic_report.diagnostic_identifier}}-history')"></i>
+                                </div>
+                                {% for diagnostic_history in diagnostic_reports_history|get_item:diagnostic_report.diagnostic_identifier %}
+                                    <div>
+                                        <h2>Ngày chỉnh sửa: {{diagnostic_history.last_updated}}</h2>
+                                        <p>Chẩn đoán: {{diagnostic_history.diagnostic_conclusion}}</p>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <p class="text-line">{{diagnostic_report.diagnostic_conclusion|default_if_none:"Không"}}</p>
+                        <div class="flex_container">
+                            <p class="title">BÁC SĨ CHẨN ĐOÁN:</p><p class="value"> {{diagnostic_report.diagnostic_performer|default_if_none:"Không"}}</p>
+                        </div>
+                        {% if diagnostic_reports_history|get_item:diagnostic_report.diagnostic_identifier %}
+                            <button onclick="displayHistory('{{diagnostic_report.diagnostic_identifier}}-history')">xem lich su</button>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+<script>
+    function displayToggle(service_identifier){
+        container = document.getElementById('display-data');
+        dataGroups = document.querySelectorAll('[id^="display-data__"]');
+        if (container.style.display == 'none'){
+            container.style.display = 'block';
+            console.log(container)
+            for (let i = 0; i < dataGroups.length; i++){
+                if (dataGroups[i].id ==('display-data__'+service_identifier)) {
+                    dataGroups[i].style.display = "block";
+                }
+                else{
+                    dataGroups[i].style.display = 'none';
+                }
+            }
+        }
+        else {
+            container.style.display = 'none';
+        }
+    }
+
+    function displayHistory(element_id) {
+        getElement = document.getElementById(element_id);
+        if (getElement.style.display == 'none') {
+            getElement.style.display = 'block';
+        }
+        else {
+            getElement.style.display = 'none';
+        }
+    }
+</script>
+{% endblock %}

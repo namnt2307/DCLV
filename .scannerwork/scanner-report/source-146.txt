@@ -1,0 +1,48 @@
+h1{
+    text-align: center;
+}
+.history-container{
+    position: relative;
+}
+.history{
+    background-color: white;
+    border: 1px solid black;
+    padding: 12px;
+    position: absolute;
+    width: 80%;
+    margin: 0px auto;
+    top: 20px;
+    left: 0;
+    right: 0;
+    height: 300px;
+    overflow: scroll;
+    z-index: 1;
+}
+.history-header{
+    display: flex;
+    justify-content: space-between;
+}
+
+table{
+    width: 90%;
+    margin: 10px auto;
+}
+
+table tbody{
+    width: 100%;
+}
+table th,td {
+    padding: 5px;
+    border: 1px solid;
+    text-align: center;
+}
+
+.flex_container{
+    display: flex;
+}
+
+.flex_container .value{
+    border-bottom: dotted black 2px;
+    flex: 1;
+    white-space: pre-wrap;
+}

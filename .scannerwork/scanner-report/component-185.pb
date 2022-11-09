@@ -1,0 +1,1 @@
+¹ 2webX²hr$templates/fhir/chitietxetnghiem.html

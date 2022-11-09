@@ -1,0 +1,23 @@
+{% extends 'fhir/doctor.html' %}
+{%block function %}
+        <h1>Thông tin bệnh nhân</h1>
+        <p>Mã y tế: {{data.Patient.identifier}}</p>
+        <p>Họ và tên: {{data.Patient.name}}</p>
+        <p>Giới tính: {{data.Patient.gender}}</p>
+        <p>Ngày sinh: {{data.Patient.birthDate}}</p>
+        {%for addr in data.Patient.address %}
+            {%if addr.use == 'home'%}
+                <p>Địa chỉ: {{addr.address}}</p>
+            {%elif addr.use == 'work'%}
+                <p>Nơi làm việc: {{addr.address}}</p>
+            {%endif%}
+        {%endfor%}
+
+        <button id="myButton" class="float-left submit-button" >Home</button>
+
+        <script type="text/javascript">
+            document.getElementById("myButton").onclick = function () {
+                location.href = "";
+            };
+        </script>
+{%endblock%}

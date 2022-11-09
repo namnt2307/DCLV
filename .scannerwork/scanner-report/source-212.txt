@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
+    <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    {% load static %}    
+    <link rel="stylesheet" href="{% static 'css/administration/administration.css' %}">
+    <title>Trang Quản Lý</title>
+</head>
+<body>
+    {% if messages %}
+        {% for message in messages %}
+            <script>
+                alert('{{message}}');
+            </script>
+        {% endfor %}
+    {% endif %}    
+    
+    <div class="header">
+        <div class="left-header">
+            <img src="{% static 'img/logo.png'%}" alt="logo-bach-khoa">
+            <h3>TRANG QUẢN LÝ</h3>
+        </div>
+        <div class="right-header">
+            {% if request.user.role != 'admin' %}
+            <a href="{% url 'administration:staff_info' request.user.username">{{request.user.username}}</a>
+            {% endif %}
+            <a href="{% url 'login:change_password' %}">Đổi mật khẩu</a>
+            <a href="{% url 'login:logout' %}">Đăng xuất</a>
+        </div>
+    </div>
+    {% if request.user.role == 'admin' %}
+    <div class="top-menu">
+        <ul class="menu">
+            <li class="home-button">
+                <div class="dropdown">
+                    <a href="{% url 'administration:administration'%}"><i class="fa fa-home"
+                            aria-hidden="true"></i></a>
+                </div>
+            </li>
+            <li class="function">
+                <div class="dropdown">
+                    <a href="{% url 'administration:staff' %}">Quản lý nhân sự</a>
+                    <!-- #328be4; -->
+                </div>
+            </li>
+            <li class="function">
+                <div class="dropdown">
+                    <a href="{% url 'administration:department' %}">Quản lý phòng ban</a>
+                </div>
+            </li>
+        </ul>
+    </div>
+    {% else %}
+    <div class="top-menu">
+        <ul class="menu">
+            <li class="home-button">
+                <div class="dropdown">
+                    <a href="{% url 'fhir:user_detail'  %}"><i class="fa fa-home"
+                            aria-hidden="true"></i></a>
+                </div>
+            </li>
+            <li class="function">
+                <div class="dropdown">
+                    <a href="{% url 'fhir:manage'  %}"> Quản lí hồ sơ </a>
+                    <!-- #328be4; -->
+                </div>
+            </li>
+            <li class="function">
+              <div class="dropdown">
+                <a {%if request.user.role == 'medical assistant' %} href="{% url 'fhir:manage_schedule' %}" {%else%} href="{% url 'fhir:schedule' request.user.username %}" {% endif %}> Quản lí lịch khám </a>
+                  <!-- #328be4; -->
+              </div>
+          </li>
+      
+            <li class="function">
+                <div class="dropdown">
+                  <a href="{% url 'fhir:manage_images' %}">Lịch chẩn đoán hình ảnh</a>
+                </div>
+            </li>
+            <li class="function">
+              <div class="dropdown">
+                  <a href="{% url 'fhir:manage_tests' %}">Lịch xét nghiệm</a>
+              </div>
+          </li>      
+        </ul>
+      </div>
+      {% endif %}
+    <div class="content">
+        {%block content%}
+        <div class="index-content">
+            <div class="images">
+                <div class="slide-container">
+                    <span id="slider-image-1"></span>
+                    <span id="slider-image-2"></span>
+                    <span id="slider-image-3"></span>
+                    <div class="image-container">
+                        <img src="{% static '/img/index/img1.jpg' %}" class="slider-image">
+                        <img src="{% static '/img/index/img2.jpg' %}" class="slider-image">
+                        <img src="{% static '/img/index/img3.jpg' %}" class="slider-image">
+                    </div>
+                    <div class="button-container">
+                        <a href="#slider-image-1" class="slider-button"></a>
+                        <a href="#slider-image-2" class="slider-button"></a>
+                        <a href="#slider-image-3" class="slider-button"></a>
+                    </div>
+                </div>
+            </div>
+
+                <div class="announcements">
+                    {% for announcement in announcements %}
+                        <div class="announcement">
+                            <p><b>{{announcement.title}}</b></p>
+                            <p>{{announcement.date_issued|date:'H:i:s d-m-Y'}} - {{announcement.content}}</p>
+                        </div>
+                    {% endfor %}
+                    <br>
+                    <a href="{% url 'administration:announcement' %}"> Thêm bài viết</a>
+                </div>
+            </div>
+        {% endblock%}
+    </div>
+</body>
+</html>

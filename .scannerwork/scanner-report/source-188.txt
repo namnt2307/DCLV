@@ -1,0 +1,19 @@
+{%extends 'fhir/base.html'%}
+{%block function%}
+    {%if data%}
+    <h1>THÔNG TIN BỆNH NHÂN</h1>
+    <p>Mã y tế: {{data.Patient.identifier}}</p>
+    <p>Họ và tên: {{data.Patient.name}}</p>
+    <p>Giới tính: {{data.Patient.gender}}</p>
+    <p>Ngày sinh: {{data.Patient.birthdate|date:"d-m-Y"}}</p>
+    <p>Địa chỉ: {{data.Patient.home_address}}</p>
+    <p>Nơi làm việc: {{data.Patient.work_address}}</p>
+    <h2>Thông tin người liên hệ</h2>
+    <p>Quan hệ: {{data.Patient.get_contact_relationship_display}}</p>
+    <p>Họ và tên: {{data.Patient.contact_name}}</p>
+    <p>Địa chỉ: {{data.Patient.contact_address}}</p>
+    <p>Số điện thoại: {{data.Patient.contact_telecom}}</p>
+    {%else%}
+    <h1>404 Not Found</h1>
+    {%endif%}
+{%endblock%}

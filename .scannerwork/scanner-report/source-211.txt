@@ -1,0 +1,39 @@
+{% extends 'administration/index.html' %}
+{% block content %}
+    <div>
+        <h1>KHOA KHÁM BỆNH</h1>
+        {% for category in department_categories %}
+            <h2>{{category}}</h2>
+            <ul>
+                {% for department in departments|get_item:category %}
+                    <li>{{department.department_name}}</li>
+                    <ul>
+                        {% for practitioner in department.practitionermodel_set.all %}
+                        <li>{{practitioner.name}} - {{practitioner.identifier}}</li>
+                        {% endfor %}
+                    </ul>
+                {% endfor %}
+            </ul>
+        {% endfor %}
+        <div>
+            <form action="" method="POST">
+                {% csrf_token %}
+                <label for="department_category">Phân loại khoa</label>
+                <input list="department_category_list" name="department_category" id="department_category">
+                <datalist id="department_category_list">
+                    {% for category in department_categories %}
+                        <option value="{{category}}">{{category}}</option>
+                    {% endfor %}
+                </datalist>
+                <label for="department_name">Tên khoa</label>
+                <input type="text" name="department_name" id="department_name">
+                <label for="id_department_type">Chức năng khoa</label>
+                <select name="department_type" id="id_department_type">
+                    <option value="lâm sàng">Lâm sàng</option>
+                    <option value="cận lâm sàng">Cận lâm sàng</option>
+                </select>
+                <button>Thêm khoa</button>
+            </form>
+        </div>
+    </div>
+{% endblock %}

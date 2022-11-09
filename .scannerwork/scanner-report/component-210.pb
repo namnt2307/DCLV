@@ -1,0 +1,1 @@
+Ò 2webXhr*templates/administration/announcement.html
